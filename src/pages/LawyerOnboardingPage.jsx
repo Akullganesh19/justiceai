@@ -173,7 +173,7 @@ export default function LawyerOnboardingPage() {
                           <Camera className="w-10 h-10 opacity-20" />
                           <div className="absolute inset-0 bg-gold/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-sm flex items-center justify-center text-midnight cursor-pointer hover:bg-gold-dark transition-all border-2 border-gold-light/20 shadow-hard">
+                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-sm flex items-center justify-center text-midnight cursor-pointer hover:bg-gold-dark transition-all border-2 border-gold/40 shadow-hard">
                           <Plus className="w-5 h-5" />
                         </div>
                       </div>
@@ -458,7 +458,7 @@ export default function LawyerOnboardingPage() {
                           placeholder="INPUT_PROFESSIONAL_MANIFESTO_HERE..."
                           value={formData.bio}
                           onChange={(e) => updateFormData('bio', e.target.value)}
-                          className="w-full bg-void border-2 border-white/5 rounded-sm p-6 text-sm text-white focus:border-red/60 outline-none transition-all placeholder:text-text-tertiary/20 resize-none font-mono uppercase italic tracking-tighter"
+                          className="w-full bg-void border-2 border-white/5 rounded-sm p-6 text-sm text-white focus:border-gold/60 outline-none transition-all placeholder:text-text-tertiary/20 resize-none font-mono uppercase italic tracking-tighter"
                         />
                         <div className="absolute bottom-4 right-4 opacity-5">
                           <Briefcase className="w-8 h-8 text-white" />
