@@ -43,12 +43,12 @@ export default function DisclaimerPage() {
           className="space-y-16"
         >
           <div className="text-center space-y-8">
-            <div className="inline-flex items-center gap-4 px-5 py-2 bg-void text-red text-[11px] uppercase font-extrabold tracking-[0.5em] rounded-sm border-2 border-red/40 shadow-hard-red/10 italic">
+            <div className="inline-flex items-center gap-4 px-5 py-2 bg-void text-gold text-[11px] uppercase font-extrabold tracking-[0.5em] rounded-sm border-2 border-gold/40 shadow-hard italic">
               <AlertTriangle className="w-5 h-5" />
               <span>LEGAL_DISCLAIMER_INDEX_V4.2</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic text-white">
-              SERVICE <span className="text-red">DISCLOSURE</span>
+              SERVICE <span className="text-gold">DISCLOSURE</span>
             </h1>
             <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.4em] italic opacity-60">
               CRITICAL OPERATIONAL BOUNDARIES OF AI_DRIVEN LEGAL INTELLIGENCE AND SYSTEM_LIMITATIONS.
@@ -64,11 +64,11 @@ export default function DisclaimerPage() {
                 transition={{ delay: i * 0.1 }}
                 className="p-10 rounded-sm bg-void border-2 border-white/5 flex flex-col md:flex-row gap-8 items-start hover:border-red/40 transition-all group shadow-hard relative overflow-hidden"
               >
-                {/* Tactical Accent */}
-                <div className="absolute top-0 left-0 w-2 h-full bg-red/10 group-hover:bg-red transition-all" />
+                {/* Statutory Accent */}
+                <div className="absolute top-0 left-0 w-2 h-full bg-gold/10 group-hover:bg-gold transition-all" />
                 
-                <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-red/40 transition-all shadow-inner">
-                  <section.icon className="w-8 h-8 text-red" />
+                <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-gold/40 transition-all shadow-inner">
+                  <section.icon className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-lg font-display font-bold text-white uppercase tracking-tighter italic">{section.title}</h3>
@@ -80,14 +80,14 @@ export default function DisclaimerPage() {
             ))}
           </div>
 
-          <div className="p-12 rounded-sm bg-red/[0.03] border-2 border-red/15 text-center space-y-6 shadow-hard relative overflow-hidden">
+          <div className="p-12 rounded-sm bg-gold/[0.03] border-2 border-gold/15 text-center space-y-6 shadow-hard relative overflow-hidden">
              {/* Diagonal Stripes */}
-             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ff0000_10px,#ff0000_11px)]" />
+             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#d4af37_10px,#d4af37_11px)]" />
              
             <p className="text-[12px] text-text-tertiary uppercase tracking-[0.6em] italic font-bold opacity-80 relative z-10 leading-relaxed">
               "JUSTICE IS THE CONSTANT AND PERPETUAL WILL TO ALLOT TO EVERY MAN HIS DUE."
             </p>
-            <p className="text-[11px] uppercase tracking-[0.4em] font-extrabold text-red relative z-10">
+            <p className="text-[11px] uppercase tracking-[0.4em] font-extrabold text-gold relative z-10">
               — ULPIAN, ROMAN_JURIST_REF_ALPHA
             </p>
           </div>

@@ -15,8 +15,10 @@ import {
   ChevronUp,
   ExternalLink,
   Shield,
+  ArrowRight,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
+import Footer from '../components/ui/Footer';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Rights', icon: Scale },
@@ -32,34 +34,34 @@ const RIGHTS_DATA = [
   {
     id: 1,
     category: 'consumer',
-    title: 'Right to be Protected Against Hazardous Products',
+    title: 'Right to Protection Against Hazards',
     summary:
-      'Protection against marketing of goods and services that are hazardous to life and property.',
+      'Safeguarding against the marketing of goods and services hazardous to life and property.',
     details:
-      'Under the Consumer Protection Act, 2019, every consumer has the right to be protected against the marketing of goods and services which are hazardous to life and property. Product liability claims can be filed against manufacturers, sellers, and service providers.',
+      'Under the Consumer Protection Act, 2019, every consumer possesses the statutory right to be protected against the marketing of goods and services which are hazardous to life and property. Product liability claims can be formally filed against manufacturers, sellers, and service providers for any such violations.',
     articles: [
       'Section 2(9) — Consumer Protection Act, 2019',
-      'Art. 21 — Right to Life includes safety',
+      'Article 21 — Fundamental Right to Life and Safety',
     ],
     remedies: [
-      'File complaint at District/State/National Consumer Commission',
-      'Product liability action under Chapter VI',
-      'Claim compensation for injury/damage',
+      'Lodge a formal complaint with the District/State/National Consumer Commission',
+      'Initiate product liability proceedings under Chapter VI of the CPA 2019',
+      'Seek legal compensation for any injury or material damage sustained',
     ],
   },
   {
     id: 2,
     category: 'consumer',
-    title: 'Right to Refund for Defective Products',
+    title: 'Right to Redressal for Defective Goods',
     summary:
-      'Return defective goods and claim a full refund or replacement within warranty period.',
+      'Provisions to return defective merchandise and claim a formal refund or replacement.',
     details:
-      "If a product has manufacturing defects or does not match the seller's description, you are entitled to a replacement, repair, or full refund. Filing at Consumer Forum requires no lawyer and a minimal ₹100-₹5000 fee.",
-    articles: ['Section 35 — Consumer Protection Act, 2019', 'Section 39 — Remedies available'],
+      "Statutory provisions entitle consumers to a replacement, repair, or full consideration refund if a product exhibits manufacturing defects or fails to align with the seller's representations. Procedural filing at the Consumer Forum is streamlined and requires minimal oversight.",
+    articles: ['Section 35 — Consumer Protection Act, 2019', 'Section 39 — Statutory Remedies'],
     remedies: [
-      'File consumer complaint online at edaakhil.nic.in',
-      'No lawyer required for filing',
-      'Court fee: ₹100 (claims < ₹5L) to ₹5000 (claims > ₹1Cr)',
+      'Execute a consumer complaint via the institutional portal: edaakhil.nic.in',
+      'Leverage simplified filing procedures; legal counsel is optional for the initial phase',
+      'Standard filing fees range from ₹100 to ₹5000 based on claim valuation',
     ],
   },
   {
@@ -67,81 +69,81 @@ const RIGHTS_DATA = [
     category: 'consumer',
     title: 'Right Against Unfair Trade Practices',
     summary:
-      'Protection against false advertising, misleading claims, and unfair business tactics.',
+      'Legal safeguards against deceptive advertising, misleading representations, and predatory tactics.',
     details:
-      'Unfair trade practices include false representation about quality, misleading advertisements, and bait-and-switch tactics. The CCPA (Central Consumer Protection Authority) can impose penalties up to ₹10 lakh on first offense.',
-    articles: ['Section 2(47) — Unfair Trade Practice definition', 'Section 18 — CCPA powers'],
+      'Unfair trade practices encompass false representations regarding quality, misleading digital advertisements, and bait-and-switch strategies. The Central Consumer Protection Authority (CCPA) is mandated to impose stringent penalties on such commercial violations.',
+    articles: ['Section 2(47) — Definition of Unfair Trade Practices', 'Section 18 — Statutory Powers of the CCPA'],
     remedies: [
-      'Complain to CCPA via consumerhelpline.gov.in',
-      'File at Consumer Forum',
-      'Report misleading ads to ASCI (ascionline.in)',
+      'Submit a formal grievance to the CCPA through consumerhelpline.gov.in',
+      'Initiate proceedings before the competent Consumer Forum',
+      'Submit reports regarding misleading advertisements to the ASCI',
     ],
   },
   {
     id: 4,
     category: 'tenant',
-    title: 'Right to Security Deposit Refund',
+    title: 'Right to Security Deposit Restoration',
     summary:
-      'Landlord must return your security deposit (minus legitimate deductions) when you vacate.',
+      'Mandatory return of security deposits, subject only to legitimate and documented deductions.',
     details:
-      'Most state Rent Control Acts mandate return of security deposit within 1-3 months of vacating. Deductions can only be made for actual damage beyond normal wear and tear, with itemized proof. In many states, unreasonable withholding is actionable.',
-    articles: ['State Rent Control Acts (varies by state)', 'Model Tenancy Act, 2021 — Section 11'],
+      'State-specific Rent Control Acts mandate the restoration of security deposits within a stipulated timeline upon vacating the premises. Deductions are strictly limited to actual structural damage beyond reasonable wear and tear, requiring itemized substantiation.',
+    articles: ['State Specific Rent Control Acts', 'Model Tenancy Act, 2021 — Section 11'],
     remedies: [
-      'Send legal notice demanding return within 15 days',
-      'File civil suit in Small Causes Court',
-      'Approach Rent Authority (if state has adopted Model Tenancy Act)',
+      'Serve a formal legal notice demanding restoration within 15 days',
+      'Initiate a civil suit in the Court of Small Causes',
+      'Petition the designated Rent Authority in states where the Model Tenancy Act is adopted',
     ],
   },
   {
     id: 5,
     category: 'tenant',
     title: 'Right Against Arbitrary Eviction',
-    summary: 'A landlord cannot evict you without proper legal process and valid grounds.',
+    summary: 'Procedural safeguards ensuring eviction proceeds only through valid legal grounds and due process.',
     details:
-      'Eviction requires proper notice (usually 1-3 months), valid legal grounds (non-payment, personal use, subletting without consent, etc.), and a court order. Self-help eviction (changing locks, cutting utilities) is illegal.',
+      'Eviction requires the issuance of a formal notice and substantiation of valid legal grounds, such as non-payment or unauthorized subletting. Summary or self-help evictions, including utility disconnection, constitute a violation of tenant rights.',
     articles: [
-      'State Rent Control Acts',
-      'Art. 21 — Right to shelter as part of Right to Life',
+      'State Rent Control Statutes',
+      'Article 21 — Jurisprudential Right to Shelter',
       'Model Tenancy Act, 2021 — Section 22',
     ],
     remedies: [
-      'File police complaint if forceful eviction attempted',
-      'Approach Rent Controller/Civil Court for stay',
-      'File suit for injunction against landlord',
+      'Lodge a police report if extra-judicial eviction is attempted',
+      'Petition the Rent Controller or Civil Court for an interim stay of proceedings',
+      'Initiate a suit for permanent injunction against the lessor',
     ],
   },
   {
     id: 6,
     category: 'tenant',
-    title: 'Right to Essential Services',
+    title: 'Right to Essential Services Maintenance',
     summary:
-      'Landlord cannot cut electricity, water, or other essential services to force eviction.',
+      'Ensuring continued access to electricity, water, and essential utilities regardless of tenancy disputes.',
     details:
-      'Cutting essential services is a criminal offense under most state laws. Even during disputes, landlords must maintain basic services. You can file a police complaint (criminal intimidation) and approach the Rent Controller.',
+      'Disconnecting essential utilities is a punishable offence under state legislation. Lessors are legally obligated to maintain basic services even during active disputes. Affected tenants may seek criminal and civil redressal for such actions.',
     articles: [
       'Section 503/506 IPC — Criminal Intimidation',
       'State Rent Control Acts',
-      'Art. 21 — Right to dignified living',
+      'Article 21 — Right to Dignified Existence',
     ],
     remedies: [
-      'File police complaint immediately',
-      'Approach Rent Controller for restoration order',
-      'File civil suit for mandatory injunction',
+      'Initiate immediate criminal proceedings via local law enforcement',
+      'Petition the Rent Controller for a restoration of services order',
+      'Initiate a civil suit seeking a mandatory injunction',
     ],
   },
   {
     id: 7,
     category: 'employee',
-    title: 'Right to Minimum Wages',
+    title: 'Right to Minimum Remuneration',
     summary:
-      'Every worker is entitled to wages not below the minimum wage fixed by the government.',
+      'Statutory entitlement to wages not below the floor limit established by the competent government authority.',
     details:
-      'The Code on Wages, 2019 (replacing the Minimum Wages Act) mandates a floor wage set by the Central Government. State governments can set higher minimums. Both scheduled and non-scheduled employment are covered.',
-    articles: ['Code on Wages, 2019 — Section 6', 'Art. 43 — Living wage for workers (DPSP)'],
+      'The Code on Wages, 2019, mandates a floor wage threshold. State governments are empowered to establish higher minimum remuneration limits. These provisions apply comprehensively to both scheduled and non-scheduled employment sectors.',
+    articles: ['Code on Wages, 2019 — Section 6', 'Article 43 — Directive Principle for Living Wages'],
     remedies: [
-      'Complain to Labour Commissioner',
-      'File claim in Labour Court',
-      'Helpline: 1800-11-0039 (Shram Suvidha)',
+      'Submit a formal grievance to the jurisdictional Labour Commissioner',
+      'Initiate a formal claim within the Labour Court',
+      'Utilize the national Shram Suvidha helpline for reporting violations',
     ],
   },
   {
@@ -149,55 +151,55 @@ const RIGHTS_DATA = [
     category: 'employee',
     title: 'Right Against Wrongful Termination',
     summary:
-      'Employer must follow due process for termination including notice period and valid grounds.',
+      'Procedural requirement for employers to adhere to due process, notice periods, and valid justifications for dismissal.',
     details:
-      'Under the Industrial Disputes Act and employment contracts, retrenchment requires 1 month notice or pay in lieu, valid grounds, and compliance with "last in, first out" principle. Establishments with 100+ workers need government permission.',
+      'Under the Industrial Disputes Act, retrenchment necessitates a mandatory notice period or compensation, valid operational grounds, and adherence to the "last in, first out" principle. Establishments exceeding a specific size require prior governmental authorization.',
     articles: [
       'Industrial Disputes Act, 1947 — Section 25F',
-      'Art. 14 — Equality; Art. 16 — Equal opportunity',
+      'Articles 14 and 16 — Constitutional Guarantees of Equality and Opportunity',
     ],
     remedies: [
-      'File complaint with Labour Commissioner',
-      'Approach Labour Court/Industrial Tribunal',
-      'Constitutional remedy via High Court (Art. 226) for government employees',
+      'Register a formal dispute with the Labour Commissioner',
+      'Approach the competent Labour Court or Industrial Tribunal',
+      'Public sector employees may exercise constitutional remedies via Writ Petitions',
     ],
   },
   {
     id: 9,
     category: 'employee',
-    title: 'Right to Workplace Safety',
-    summary: 'Every employee has the right to a safe working environment free from hazards.',
+    title: 'Right to Occupational Safety',
+    summary: 'Entitlement to a workplace environment free from recognized hazards and compliant with health standards.',
     details:
-      'The Occupational Safety, Health and Working Conditions Code, 2020 covers workplace safety. Employers must provide safety equipment, training, health checkups, and maintain safe premises. Violation can result in imprisonment up to 2 years.',
+      'The Occupational Safety, Health and Working Conditions Code, 2020, stipulates rigorous standards for workplace environments. Employers are legally obligated to provide protective equipment, training, and regular health assessments. Non-compliance invites penal consequences.',
     articles: [
-      'OSH Code, 2020 — Chapter III & IV',
-      'Art. 21 — Right to healthy working conditions',
+      'OSH Code, 2020 — Chapters III & IV',
+      'Article 21 — Jurisprudential Right to Healthy Working Conditions',
       'Factories Act, 1948 — Sections 11-20',
     ],
     remedies: [
-      'Report to Factory Inspector / Chief Inspector',
-      "File workmen's compensation claim",
-      'Approach NHRC for systemic violations',
+      'Report environmental violations to the Factory Inspectorate',
+      "Initiate a claim for compensation under the Workmen's Compensation framework",
+      'Petition the National Human Rights Commission (NHRC) for systemic failures',
     ],
   },
   {
     id: 10,
     category: 'women',
-    title: 'Right Against Sexual Harassment at Workplace',
+    title: 'Right Against Workplace Sexual Harassment',
     summary:
-      'Protection against sexual harassment at workplace with mandatory complaint mechanism.',
+      'Constitutional protection against harassment with mandatory internal grievance mechanisms.',
     details:
-      'The POSH Act (2013) mandates every organization with 10+ employees to form an Internal Complaints Committee (ICC). Complaints can be filed within 3 months (extendable to 6 months). Employer failure to comply attracts ₹50,000 penalty.',
+      'The POSH Act (2013) mandates the constitution of an Internal Complaints Committee (ICC) in organizations exceeding ten employees. Violations and failures to implement these mechanisms attract significant statutory penalties.',
     articles: [
-      'Sexual Harassment of Women at Workplace Act, 2013',
+      'Workplace Protection (Sexual Harassment) Act, 2013',
       'Vishaka Guidelines (1997)',
-      'Art. 14 & 21 — Equality and Dignified Life',
+      'Articles 14 and 21 — Fundamental Rights to Equality and Dignity',
     ],
     remedies: [
-      'File complaint with Internal Complaints Committee (ICC)',
-      'Approach Local Complaints Committee (LCC) if ICC absent',
-      'File police complaint under IPC Sec 354A',
-      'National Commission for Women: ncw.nic.in',
+      'Submit a formal complaint to the Internal Complaints Committee (ICC)',
+      'Approach the Local Complaints Committee (LCC) if the ICC is not constituted',
+      'Register a criminal complaint under Section 354A of the IPC/BNS',
+      'Utilize the National Commission for Women (NCW) grievance portal',
     ],
   },
   {
@@ -205,76 +207,76 @@ const RIGHTS_DATA = [
     category: 'women',
     title: 'Right Against Domestic Violence',
     summary:
-      'Protection from physical, emotional, verbal, sexual, and economic abuse by partners/relatives.',
+      'Safeguards against physical, emotional, and economic abuse within domestic relationships.',
     details:
-      "The Protection of Women from Domestic Violence Act, 2005 provides civil remedies including protection orders, residence orders, monetary relief, and custody orders. You don't need to file for divorce to seek protection.",
+      "The Protection of Women from Domestic Violence Act, 2005, provides comprehensive civil remedies, including protection and residence orders. These legal provisions are independent of matrimonial proceedings.",
     articles: [
-      'Protection of Women from DV Act, 2005',
-      'IPC Section 498A — Cruelty by husband/relatives',
-      'Art. 21 — Right to live with dignity',
+      'Domestic Violence Protection Act, 2005',
+      'IPC Section 498A — Provisions regarding matrimonial cruelty',
+      'Article 21 — Right to an Existence with Dignity',
     ],
     remedies: [
-      'Call Women Helpline: 181 (24x7)',
-      'File complaint at nearest police station',
-      'Apply for protection order through Protection Officer or Court',
-      'File under Section 12 of DV Act in Magistrate court',
+      'Contact the national women’s helpline at 181 for immediate assistance',
+      'Register a formal complaint at the nearest police station',
+      'Petition the Magistrate for immediate protection and maintenance orders',
+      'Engage the services of the designated Protection Officer',
     ],
   },
   {
     id: 12,
     category: 'women',
-    title: 'Right to Equal Pay',
-    summary: 'Women are entitled to equal remuneration for equal work or work of similar nature.',
+    title: 'Right to Equal Remuneration',
+    summary: 'Entitlement to parity in wages for work of identical or similar nature across all sectors.',
     details:
-      'The Code on Wages, 2019 prohibits gender discrimination in wages and recruitment for the same work or work of similar nature. This applies to all establishments regardless of size.',
+      'The Code on Wages, 2019, strictly prohibits gender-based discrimination in remuneration and recruitment processes for identical work. These statutory obligations apply universally across all employment establishments.',
     articles: [
       'Code on Wages, 2019 — Section 3',
-      'Equal Remuneration Act, 1976 (now subsumed)',
-      'Art. 39(d) — Equal pay for equal work (DPSP)',
+      'Equal Remuneration Act (subsumed)',
+      'Article 39(d) — Directive Principle for Equal Pay for Equal Work',
     ],
     remedies: [
-      'File complaint with Labour Commissioner',
-      'Approach Labour Court',
-      'File writ petition in High Court for government jobs',
+      'Formalize a grievance with the Labour Commissionerate',
+      'Seek adjudication through the Labour Court',
+      'Public sector employees may petition the High Court for systemic wage disparity',
     ],
   },
   {
     id: 13,
     category: 'digital',
-    title: 'Right to Data Privacy',
+    title: 'Right to Digital Privacy',
     summary:
-      'Your personal data cannot be collected, processed, or shared without your informed consent.',
+      'Statutory protection over personal data, requiring informed consent for collection and processing.',
     details:
-      'The Digital Personal Data Protection Act, 2023 gives individuals rights over their data including consent management, right to correction, right to erasure, and right to nominate. Data fiduciaries must obtain clear, informed consent.',
+      'The Digital Personal Data Protection Act, 2023, grants individuals comprehensive rights over their data, including the right to correction and erasure. Data fiduciaries are legally required to obtain explicit, informed consent.',
     articles: [
       'Digital Personal Data Protection Act, 2023',
-      'IT Act, 2000 — Section 43A',
-      'K.S. Puttaswamy v. Union of India (2017) — Right to Privacy as Fundamental Right',
+      'Information Technology Act — Section 43A',
+      'Puttaswamy Judgment (SC) — Declaring Privacy as a Fundamental Right',
     ],
     remedies: [
-      'File complaint with Data Protection Board',
-      'Withdraw consent from data fiduciaries',
-      'Report violations at grievance portal of the organization',
+      'Lodge a formal complaint with the Data Protection Board',
+      'Exercise the right to withdraw consent from data fiduciaries',
+      'Utilize institutional grievance redressal mechanisms for data violations',
     ],
   },
   {
     id: 14,
     category: 'digital',
-    title: 'Right Against Cyber Fraud',
+    title: 'Protection Against Cyber Fraud',
     summary:
-      'Legal protection against online fraud, phishing, identity theft, and financial cyber crimes.',
+      'Safeguards against online deception, phishing, and unauthorized financial transactions.',
     details:
-      'Cyber fraud is punishable under the IT Act with imprisonment up to 3 years and fine up to ₹5 lakh. For financial fraud, banks must credit back unauthorized transactions reported within 3 working days (RBI guidelines).',
+      'Cyber fraud is a criminal offence punishable under the IT Act. RBI guidelines provide for limited liability of customers in cases of unauthorized transactions when reported within specified timelines.',
     articles: [
-      'IT Act, 2000 — Section 66C (Identity Theft), 66D (Cheating)',
-      'IPC Section 420 — Cheating',
-      'RBI Circular on Limited Liability of Customers',
+      'IT Act — Section 66C and 66D',
+      'Section 420 IPC — Cheating/Fraud',
+      'RBI Guidelines on Limited Customer Liability',
     ],
     remedies: [
-      'Report immediately at cybercrime.gov.in',
-      'Call Cyber Helpline: 1930',
-      'File complaint at nearest Cyber Crime Police Station',
-      'Report to bank within 3 days for zero liability',
+      'Immediate reporting via the national portal: cybercrime.gov.in',
+      'Utilization of the Cyber Helpline: 1930',
+      'Filing a formal report at the nearest Cyber Crime Cell',
+      'Notifying the financial institution within 72 hours for liability protection',
     ],
   },
   {
@@ -282,79 +284,79 @@ const RIGHTS_DATA = [
     category: 'digital',
     title: 'Right Against Online Defamation',
     summary:
-      'Protection against false, defamatory content published about you on social media or websites.',
+      'Legal protection against the publication of false and injurious content on digital platforms.',
     details:
-      'Online defamation is actionable both as a civil wrong (damages) and criminal offense (imprisonment up to 2 years). Intermediaries like social media platforms must take down content within 36 hours of a court order.',
+      'Digital defamation constitutes both a civil tort and a criminal offence. Intermediaries are legally obligated to remove defamatory content upon receipt of a judicial or government order.',
     articles: [
       'IPC Section 499/500 — Defamation',
-      'IT Act Section 79 — Intermediary Liability',
-      'IT Rules, 2021 — Grievance redressal mechanism',
+      'IT Act Section 79 — Provisions for Intermediary Liability',
+      'Information Technology (Intermediary Guidelines) Rules, 2021',
     ],
     remedies: [
-      'Send takedown notice to platform (grievance officer)',
-      'File criminal complaint under IPC 500',
-      'File civil suit for damages and injunction',
-      'Report at cybercrime.gov.in for cyberstalking',
+      'Serve a takedown notice to the platform’s Grievance Officer',
+      'Initiate criminal proceedings for defamation',
+      'File a civil suit for damages and mandatory take-down injunctions',
+      'Report incidents of cyberstalking via official channels',
     ],
   },
   {
     id: 16,
     category: 'student',
-    title: 'Right to Education',
+    title: 'Right to Compulsory Education',
     summary:
-      'Free and compulsory education for every child aged 6-14 years. No child can be denied admission.',
+      'Fundamental right to free and mandatory education for children between the ages of 6 and 14.',
     details:
-      'The Right of Children to Free and Compulsory Education Act, 2009 mandates free education in neighborhood schools. Private schools must reserve 25% seats for EWS/disadvantaged groups. No screening procedures or capitation fees allowed for admission.',
+      'The RTE Act, 2009, mandates the provision of free education in local government-funded schools. Private institutions are obligated to reserve seats for disadvantaged sections under statutory requirements.',
     articles: [
-      'Art. 21A — Right to Education (Fundamental Right)',
+      'Article 21A — Primary Fundamental Right to Education',
       'RTE Act, 2009',
-      '86th Constitutional Amendment',
+      '86th Constitutional Amendment Act',
     ],
     remedies: [
-      'Approach School Management Committee',
-      'Complain to Block/District Education Officer',
-      'File complaint at edudel.nic.in (Delhi) or state portal',
-      'Approach National Commission for Protection of Child Rights (NCPCR)',
+      'Engage with the School Management Committee for grievances',
+      'Report violations to the District Education Officer (DEO)',
+      'Submit formal complaints via state education portals',
+      'Petition the NCPCR for systemic denial of educational rights',
     ],
   },
   {
     id: 17,
     category: 'student',
-    title: 'Right Against Ragging',
+    title: 'Statutory Protection Against Ragging',
     summary:
-      'Zero tolerance for ragging in educational institutions with strict criminal penalties.',
+      'Zero-tolerance policy regarding physical or psychological abuse in educational institutions.',
     details:
-      'Ragging is a criminal offense punishable with imprisonment up to 2 years. Every institution must constitute an Anti-Ragging Committee and an Anti-Ragging Squad. UGC regulations mandate FIR registration for complaints.',
+      'Ragging is a criminal offence with substantial penal consequences. Educational institutions are statutorily required to maintain Anti-Ragging Committees. UGC regulations mandate immediate FIR registration for documented incidents.',
     articles: [
-      'UGC Regulations on Curbing Ragging, 2009',
-      'Supreme Court directions in Vishwa Jagriti Mission v. CBI (2019)',
-      'IPC 340, 342, 506 — Wrongful confinement, Intimidation',
+      'UGC Regulations on Curbing Ragging in Higher Education',
+      'Supreme Court Directives (Aman Kachroo Case)',
+      'IPC Provisions for Wrongful Confinement and Intimidation',
     ],
     remedies: [
-      'Call National Anti-Ragging Helpline: 1800-180-5522',
-      'File complaint at antiragging.in',
-      'File FIR at police station',
-      "Complain to institution's Anti-Ragging Committee",
+      'Contact the National Anti-Ragging Helpline at 1800-180-5522',
+      'Register a digital complaint via antiragging.in',
+      'Lodge a First Information Report (FIR) at the local police station',
+      'Formally notify the institution’s disciplinary committee',
     ],
   },
   {
     id: 18,
     category: 'student',
-    title: 'Right to Fair Examination & Evaluation',
+    title: 'Right to Fair Academic Evaluation',
     summary:
-      'Students have the right to transparent and fair examination, and access to their evaluated answer sheets.',
+      'Entitlement to transparency in examination processes and access to evaluated academic records.',
     details:
-      'Under RTI Act, you can access your evaluated answer sheets. Universities must have transparent evaluation criteria. Marks/grades must be communicated within a reasonable time. Arbitrary marking can be challenged.',
+      'Under RTI provisions, students are entitled to access their evaluated answer scripts. Institutions must maintain transparent evaluation criteria and communicate academic results within reasonable timeframes.',
     articles: [
-      'RTI Act, 2005 — Section 6',
-      'CBSE Examination Bye-Laws',
-      'Art. 14 — Right to fair treatment',
+      'RTI Act, 2005 — Provisions regarding Access to Information',
+      'Institutional Examination Bye-Laws',
+      'Article 14 — Right to Fair and Non-Arbitrary Treatment',
     ],
     remedies: [
-      'File RTI for evaluated answer sheets',
-      'Apply for revaluation/rechecking (as per institution rules)',
-      'Approach university grievance cell',
-      'File writ petition in High Court for arbitrary evaluation',
+      'File an RTI application for access to evaluated answer scripts',
+      'Apply for formal re-evaluation under institutional regulations',
+      'Petition the institutional grievance cell for marking discrepancies',
+      'High Court intervention via Writ Jurisdiction for arbitrary failures',
     ],
   },
 ];
@@ -366,29 +368,28 @@ function RightCard({ right, isExpanded, onToggle }) {
   return (
     <motion.div
       layout
-      className="bg-void rounded border-2 border-white/5 overflow-hidden hover:border-red/40 transition-all duration-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] group"
+      className="bg-void rounded-sm border-2 border-white/5 overflow-hidden hover:border-gold/30 transition-all duration-300 shadow-hard group"
     >
-      <button onClick={onToggle} className="w-full text-left p-6 flex items-start gap-5">
-        <div className="w-12 h-12 rounded bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 mt-1 transition-all group-hover:border-red/40 shadow-inner">
-          <CategoryIcon className="w-6 h-6 text-white/40 group-hover:text-red transition-all" />
+      <button onClick={onToggle} className="w-full text-left p-8 flex items-start gap-6">
+        <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 mt-1 transition-all group-hover:border-gold shadow-hard">          <CategoryIcon className="w-7 h-7 text-white/40 group-hover:text-gold transition-all" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-[9px] uppercase tracking-[0.3em] text-red font-extrabold px-3 py-1 bg-red/10 rounded border-2 border-red/20 italic">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-[9px] uppercase tracking-widest text-gold font-extrabold px-4 py-1.5 bg-gold/5 rounded-sm border-2 border-gold/20 italic shadow-hard">
               {right.category}
             </span>
           </div>
-          <h3 className="text-xl font-display font-bold text-white uppercase tracking-tighter italic leading-tight pr-6">
+          <h3 className="text-2xl font-display font-bold text-white tracking-tight leading-none pr-8 group-hover:text-gold transition-colors uppercase italic">
             {right.title}
           </h3>
-          <p className="text-sm text-text-tertiary font-body mt-2 leading-relaxed uppercase tracking-wider italic opacity-80">
+          <p className="text-[14px] text-text-tertiary font-body mt-3 leading-relaxed opacity-60">
             {right.summary}
           </p>
         </div>
         <div
-          className={`p-2 rounded border-2 transition-all flex-shrink-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] ${isExpanded ? 'bg-red border-red text-white' : 'bg-void border-white/10 text-white/20'}`}
+          className={`w-10 h-10 rounded-sm border-2 transition-all flex-shrink-0 flex items-center justify-center shadow-hard ${isExpanded ? 'bg-gold border-gold text-midnight' : 'bg-void border-white/10 text-white/20'}`}
         >
-          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </button>
 
@@ -401,23 +402,23 @@ function RightCard({ right, isExpanded, onToggle }) {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-6 space-y-6 border-t-2 border-white/5 pt-6 ml-16">
+            <div className="px-8 pb-10 space-y-10 border-t border-white/5 pt-10 ml-0 md:ml-20">
               {/* Full Details */}
-              <p className="text-[13px] text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic opacity-80">
+              <p className="text-[15px] text-text-tertiary leading-relaxed font-body opacity-80 border-l border-gold/20 pl-6 italic">
                 {right.details}
               </p>
 
               {/* Legal References */}
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-red italic opacity-60">
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] uppercase font-bold tracking-widest text-gold opacity-60">
                   <BookOpen className="w-4 h-4" />
-                  STATUTORY_REFERENCE_INDEX
+                  Statutory Reference Indices
                 </label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   {right.articles.map((art, i) => (
                     <span
                       key={i}
-                      className="text-[11px] px-4 py-2 bg-void text-white rounded border-2 border-white/10 font-mono tracking-tighter shadow-inner italic"
+                      className="text-[11px] px-5 py-2.5 bg-void text-white rounded-sm border-2 border-white/10 font-extrabold tracking-widest shadow-hard italic"
                     >
                       {art}
                     </span>
@@ -426,18 +427,18 @@ function RightCard({ right, isExpanded, onToggle }) {
               </div>
 
               {/* Remedies */}
-              <div className="space-y-4">
-                <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-blue italic opacity-60">
+              <div className="space-y-6">
+                <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-widest text-gold opacity-60">
                   <Shield className="w-4 h-4" />
-                  OPERATIONAL_REMEDIES
+                  Institutional Remedies
                 </label>
-                <ul className="grid gap-3">
+                <ul className="grid gap-4">
                   {right.remedies.map((remedy, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-3 text-[11px] text-text-tertiary font-body uppercase tracking-widest italic bg-void p-3 rounded border-2 border-blue/10 shadow-sm"
+                      className="flex items-start gap-4 text-[13px] text-text-tertiary font-body bg-void p-5 rounded-sm border-2 border-gold/10 shadow-hard italic"
                     >
-                      <span className="text-blue font-bold">»</span>
+                      <ArrowRight className="w-4 h-4 text-gold shrink-0 mt-0.5" />
                       {remedy}
                     </li>
                   ))}
@@ -477,46 +478,45 @@ export default function RightsPage() {
   }, [activeCategory, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-void pb-32">
+    <div className="min-h-screen bg-void pb-32 font-mono text-slate-200">
       <Header />
 
-      <main className="max-w-5xl mx-auto px-6 pt-32 space-y-12">
+      <main className="max-w-5xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
-        <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-red/10 text-red-light text-[10px] uppercase font-extrabold tracking-[0.4em] rounded border-2 border-red/20 shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)] font-display italic">
-            <Scale className="w-4 h-4" />
-            <span>Rights_Explorer_Terminal</span>
+        <div className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
+            <Scale className="w-5 h-5" />
+            <span>REGULATORY_DATABASE_V4.2</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic">
-            Know Your <span className="text-red">Rights</span>
+          <h1 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter leading-none text-white italic">
+            STATUTORY <span className="text-gold">PROTECTIONS</span>
           </h1>
-          <p className="text-lg text-text-tertiary leading-relaxed max-w-2xl mx-auto font-body uppercase tracking-wider italic">
-            Explore your fundamental and statutory mandates under Indian law. Every node includes
-            legal reference indices and tactical remedies.
+          <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] font-mono italic opacity-40">
+            EXPLORE YOUR FUNDAMENTAL AND STATUTORY PROTECTIONS UNDER THE INDIAN CONSTITUTION. EACH SECTION INCLUDES STATUTORY REFERENCES AND INSTITUTIONAL REMEDIES.
           </p>
         </div>
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto">
           <div className="relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-hover:text-red transition-all" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-hover:text-gold transition-all" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="SEARCH_RIGHTS_REGISTRY..."
-              className="w-full bg-void border-2 border-white/5 rounded px-16 py-5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-red/40 transition-all font-display font-bold tracking-widest uppercase italic shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] shadow-inner"
+              placeholder="SEARCH_STATUTORY_PROTECTIONS..."
+              className="w-full bg-void border-2 border-white/5 rounded-sm px-16 py-6 text-[14px] font-extrabold text-white placeholder:text-white/10 focus:outline-none focus:border-gold/40 transition-all shadow-hard italic uppercase tracking-widest"
             />
             {searchQuery && (
-              <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] text-red font-extrabold uppercase tracking-[0.2em] italic">
-                {filteredRights.length} HITS
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] text-gold font-bold uppercase tracking-widest">
+                {filteredRights.length} Matches
               </span>
             )}
           </div>
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 overflow-x-auto pb-4 no-scrollbar">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
@@ -531,16 +531,16 @@ export default function RightsPage() {
                   setActiveCategory(cat.id);
                   setExpandedId(null);
                 }}
-                className={`flex items-center gap-3 px-5 py-2.5 rounded border-2 text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] active:translate-x-[1px] active:translate-y-[1px] italic ${
+                className={`flex items-center gap-3 px-6 py-3 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-luxe active:translate-y-[2px] italic ${
                   isActive
-                    ? 'bg-red border-red text-white shadow-[6px_6px_0px_0px_rgba(159,18,57,0.3)]'
-                    : 'bg-void border-white/10 text-white/40 hover:text-white hover:border-white/30'
+                    ? 'bg-gold border-gold text-midnight shadow-luxe'
+                    : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-gold/30'
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{cat.label}</span>
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-void/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
+                  className={`text-[9px] px-2 py-0.5 rounded-sm border ${isActive ? 'bg-midnight/20 border-midnight/20 text-midnight' : 'bg-white/5 border-white/5 text-white/20'}`}
                 >
                   {count}
                 </span>
@@ -550,8 +550,8 @@ export default function RightsPage() {
         </div>
 
         {/* Rights Grid */}
-        <motion.div layout className="grid gap-4">
-          <AnimatePresence>
+        <motion.div layout className="grid gap-6">
+          <AnimatePresence mode="popLayout">
             {filteredRights.map((right) => (
               <RightCard
                 key={right.id}
@@ -563,14 +563,14 @@ export default function RightsPage() {
           </AnimatePresence>
 
           {filteredRights.length === 0 && (
-            <div className="text-center py-24 bg-void rounded border-2 border-dashed border-white/10 shadow-inner space-y-8">
+            <div className="text-center py-24 space-y-10 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-hard">
               <Search className="w-16 h-16 text-white/10 mx-auto" />
-              <div className="space-y-2">
-                <p className="text-xl font-display font-bold text-white uppercase tracking-tighter italic">
-                  ZERO_RESULTS_FETCHED
+              <div className="space-y-4">
+                <p className="text-3xl font-display font-bold text-white uppercase tracking-tight">
+                  No Results Found
                 </p>
-                <p className="text-xs text-text-tertiary uppercase tracking-[0.4em] italic opacity-60">
-                  THE REQUESTED RIGHT DOES NOT EXIST IN LOCAL STATUTORY RECORDS.
+                <p className="text-xs text-text-tertiary/40 max-w-lg mx-auto leading-relaxed">
+                  No statutory records found matching your search. Try adjusting the filters or consult our AI advisor for specific clarification.
                 </p>
               </div>
 
@@ -580,9 +580,9 @@ export default function RightsPage() {
                     setSearchQuery('');
                     setActiveCategory('all');
                   }}
-                  className="px-8 py-4 rounded border-2 border-white/10 text-white/60 text-[11px] font-extrabold uppercase tracking-widest hover:text-white hover:border-white/30 transition-all italic shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)]"
+                  className="px-10 py-4 rounded-sm border-2 border-white/10 text-text-tertiary text-[11px] font-extrabold uppercase tracking-widest hover:text-white hover:border-gold/30 transition-all shadow-hard italic"
                 >
-                  PURGE_REGISTRY_FILTERS
+                  Clear Filters
                 </button>
                 <button
                   onClick={() =>
@@ -593,16 +593,18 @@ export default function RightsPage() {
                       },
                     })
                   }
-                  className="px-8 py-4 rounded bg-red text-white text-[11px] font-extrabold uppercase tracking-widest hover:bg-red-dark transition-all flex items-center gap-3 italic shadow-[6px_6px_0px_0px_rgba(159,18,57,0.4)]"
+                  className="px-10 py-4 rounded-sm bg-gold text-midnight text-[11px] font-extrabold uppercase tracking-widest hover:bg-gold-light transition-all flex items-center gap-3 shadow-hard italic"
                 >
-                  <Scale className="w-4 h-4" />
-                  CONSULT_AI_ORACLE
+                  <Scale className="w-5 h-5" />
+                  Ask the AI_STATUTORY_CO_PILOT
                 </button>
               </div>
             </div>
           )}
         </motion.div>
       </main>
+
+      <Footer />
     </div>
   );
 }

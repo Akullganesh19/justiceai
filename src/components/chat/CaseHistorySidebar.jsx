@@ -15,12 +15,12 @@ export function CaseHistorySidebar({
     <motion.div
       initial={false}
       animate={{ width: isOpen ? 320 : 0 }}
-      className="relative bg-void border-r-2 border-white/5 h-full flex flex-col group overflow-hidden"
+      className="relative bg-midnight border-r border-white/5 h-full flex flex-col group overflow-hidden"
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-12 bg-red border-2 border-red-light/20 flex items-center justify-center text-white shadow-[4px_0px_15px_rgba(225,29,72,0.3)] z-50 transition-all hover:w-10 ${isOpen ? 'rounded-l-lg' : 'rotate-180 hover:bg-red-dark rounded-r-lg'}`}
+        className={`absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-14 bg-gold border border-gold-light/20 flex items-center justify-center text-midnight shadow-luxe z-50 transition-all hover:w-10 ${isOpen ? 'rounded-l-2xl' : 'rotate-180 hover:bg-gold-light rounded-r-2xl'}`}
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
@@ -34,18 +34,18 @@ export function CaseHistorySidebar({
             className="flex-1 flex flex-col min-w-[320px] overflow-hidden"
           >
             {/* Sidebar Header */}
-            <div className="p-8 border-b-2 border-white/5 space-y-6 bg-void/50">
+            <div className="p-8 border-b border-white/5 space-y-6 bg-midnight-slate/20">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-red">
+                <div className="flex items-center gap-3 text-gold">
                   <History className="w-5 h-5" />
-                  <span className="text-[10px] uppercase font-extrabold tracking-[0.4em]">
-                    Historical_Logs
+                  <span className="text-[10px] uppercase font-bold tracking-widest opacity-80">
+                    Consultation History
                   </span>
                 </div>
                 <button
                   onClick={onNew}
-                  className="p-3 rounded bg-void border-2 border-red/40 text-red hover:bg-red hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)] active:translate-x-[1px] active:translate-y-[1px]"
-                  title="Initialize New Session"
+                  className="p-3 rounded-xl bg-gold text-midnight hover:bg-gold-light transition-all shadow-luxe active:translate-y-[1px]"
+                  title="New Consultation"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -53,40 +53,39 @@ export function CaseHistorySidebar({
             </div>
 
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(255,255,255,0.02)_0%,transparent_50%)]">
+            <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
               {history.length === 0 ? (
-                <div className="text-center py-20 px-8 space-y-6">
-                  <div className="w-16 h-16 rounded bg-void border-2 border-white/5 flex items-center justify-center mx-auto text-white/20 shadow-inner">
+                <div className="text-center py-20 px-8 space-y-6 opacity-40">
+                  <div className="w-16 h-16 rounded-2xl bg-midnight border border-white/5 flex items-center justify-center mx-auto text-white shadow-inner">
                     <FileText className="w-8 h-8" />
                   </div>
-                  <p className="text-[10px] text-text-tertiary leading-relaxed font-extrabold uppercase tracking-widest italic opacity-40">
-                    No active sessions detected. Initialize primary objective.
+                  <p className="text-[10px] text-text-tertiary leading-relaxed font-bold uppercase tracking-widest italic">
+                    No history found. Start a new consultation to begin.
                   </p>
                 </div>
               ) : (
                 history.map((item) => (
                   <div
                     key={item.id}
-                    className={`group relative p-5 rounded border-2 transition-all cursor-pointer ${
+                    className={`group relative p-5 rounded-2xl border transition-all cursor-pointer ${
                       currentCaseId === item.id
-                        ? 'bg-void border-red/60 shadow-[8px_8px_0px_0px_rgba(159,18,57,0.2)]'
-                        : 'bg-void border-white/5 hover:border-white/20'
+                        ? 'bg-midnight-slate/40 border-gold/40 shadow-premium'
+                        : 'bg-midnight border-white/5 hover:border-white/10'
                     }`}
                     onClick={() => onSelect(item.id)}
                   >
                     <div className="space-y-2 pr-8">
                       <h4
-                        className={`text-xs font-bold uppercase tracking-tight truncate italic transition-colors ${currentCaseId === item.id ? 'text-red' : 'text-white/60 group-hover:text-white'}`}
+                        className={`text-xs font-display font-bold uppercase tracking-tight truncate transition-colors ${currentCaseId === item.id ? 'text-gold' : 'text-white/60 group-hover:text-white'}`}
                       >
-                        {item.title || 'NULL_SESSION_LOG'}
+                        {item.title || 'Untitled Consultation'}
                       </h4>
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-1 h-1 rounded-full ${currentCaseId === item.id ? 'bg-red animate-pulse' : 'bg-void/10'}`}
+                          className={`w-1 h-1 rounded-full ${currentCaseId === item.id ? 'bg-gold animate-pulse' : 'bg-white/10'}`}
                         />
-                        <p className="text-[9px] text-text-tertiary font-extrabold tracking-widest opacity-60">
-                          {new Date(item.timestamp).toLocaleDateString()} // SESSION_
-                          {item.id.slice(-4)}
+                        <p className="text-[9px] text-text-tertiary font-bold tracking-widest opacity-60">
+                          {new Date(item.timestamp).toLocaleDateString()} • ID_{item.id.slice(-4)}
                         </p>
                       </div>
                     </div>
@@ -96,7 +95,7 @@ export function CaseHistorySidebar({
                         e.stopPropagation();
                         onDelete(item.id);
                       }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded text-text-tertiary hover:bg-red/10 hover:text-red opacity-0 group-hover:opacity-100 transition-all border-2 border-transparent hover:border-red/20 shadow-sm"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-xl text-text-tertiary hover:bg-gold/10 hover:text-gold opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-gold/20"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -34,7 +34,7 @@ export default function NotFoundPage() {
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           className="mb-12 relative"
         >
-          <div className="absolute inset-0 bg-red/20 blur-2xl rounded-full" />
+          <div className="absolute inset-0 bg-gold/10 blur-2xl rounded-sm" />
           <div className="w-32 h-32 rounded bg-void border-2 border-red/40 flex items-center justify-center relative z-10 shadow-hard-red">
             <AlertTriangle className="w-16 h-16 text-red" />
           </div>

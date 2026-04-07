@@ -1,7 +1,7 @@
 export const DOCUMENT_TEMPLATES = [
   {
     id: 'legal-notice',
-    title: 'Legal Notice',
+    title: 'STATUTORY_DEMAND_NOTICE',
     description:
       'A formal notice sent before filing a civil suit. Required under Section 80 CPC for government bodies.',
     icon: 'FileWarning',
@@ -91,7 +91,7 @@ qualified advocate before sending any legal communication.
   },
   {
     id: 'consumer-complaint',
-    title: 'Consumer Complaint',
+    title: 'CONSUMER_PETITION',
     description:
       'File a complaint with the Consumer Disputes Redressal Commission under the Consumer Protection Act, 2019.',
     icon: 'ShoppingBag',
@@ -218,7 +218,7 @@ filing.
   },
   {
     id: 'rti-application',
-    title: 'RTI Application',
+    title: 'RTI_STATUTORY_REQUEST',
     description:
       "Right to Information request under the RTI Act, 2005. Every citizen's right to access government information.",
     icon: 'FileSearch',
@@ -331,7 +331,7 @@ purposes only.
   },
   {
     id: 'fir-draft',
-    title: 'FIR Draft Helper',
+    title: 'BNSS_INCIDENT_REPORT',
     description:
       'Prepare a structured First Information Report draft to present at the police station.',
     icon: 'Shield',

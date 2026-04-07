@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, FileText, Send, Download, Scale, Milestone } from 'lucide-react';
+import { CheckCircle2, XCircle, FileText, Send, Download, Scale, Milestone, Info } from 'lucide-react';
 import { VerdictCard } from './VerdictCard';
 import { StrategyList, LawsList } from './Lists';
 import { Timeline } from './Timeline';
@@ -9,17 +9,17 @@ import { CourtroomPrepCard } from './CourtroomPrepCard';
 
 export function ArgumentsPanel({ forArgs, againstArgs }) {
   return (
-    <div className="grid md:grid-cols-2 gap-8 pt-8 border-t-2 border-white/5">
+    <div className="grid md:grid-cols-2 gap-8 pt-10 border-t border-white/5">
       <div className="space-y-6">
-        <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-accent-success">
+        <label className="flex items-center gap-3 text-[10px] uppercase font-bold tracking-widest text-emerald-400">
           <CheckCircle2 className="w-4 h-4" />
-          <span>Proactive Arguments</span>
+          <span>Strategic Arguments</span>
         </label>
         <ul className="space-y-3">
           {forArgs?.map((arg, i) => (
             <li
               key={i}
-              className="text-[11px] text-text-secondary leading-relaxed bg-void p-5 rounded border-2 border-accent-success/20 font-body shadow-[4px_4px_0px_0px_rgba(34,197,94,0.05)] italic"
+              className="text-[12px] text-text-secondary leading-relaxed bg-midnight-slate/30 p-5 rounded-2xl border border-emerald-400/20 font-body shadow-premium italic"
             >
               {arg}
             </li>
@@ -28,15 +28,15 @@ export function ArgumentsPanel({ forArgs, againstArgs }) {
       </div>
 
       <div className="space-y-6">
-        <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-red">
+        <label className="flex items-center gap-3 text-[10px] uppercase font-bold tracking-widest text-gold">
           <XCircle className="w-4 h-4" />
-          <span>Counter Measures</span>
+          <span>Risks & Counters</span>
         </label>
         <ul className="space-y-3">
           {againstArgs?.map((arg, i) => (
             <li
               key={i}
-              className="text-[11px] text-text-secondary leading-relaxed bg-void p-5 rounded border-2 border-red/20 font-body shadow-[4px_4px_0px_0px_rgba(225,29,72,0.05)] italic"
+              className="text-[12px] text-text-secondary leading-relaxed bg-midnight-slate/30 p-5 rounded-2xl border border-gold/20 font-body shadow-premium italic"
             >
               {arg}
             </li>
@@ -98,22 +98,21 @@ export default function AnalysisPanel({
 
   if (!analysis && progress < 20) {
     return (
-      <div className="h-full flex flex-col pt-4">
+      <div className="h-full flex flex-col pt-4 bg-midnight">
         <div className="px-8 pb-6">
           <ProgressBar progress={progress} />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-8">
-          <div className="w-24 h-24 rounded-2xl bg-void border-2 border-white/5 flex items-center justify-center shadow-[12px_12px_0px_0px_rgba(0,0,0,0.8)] relative group">
-            <div className="absolute inset-0 bg-red/5 p-2 animate-pulse rounded-2xl" />
-            <Scale className="w-12 h-12 text-red relative z-10 group-hover:scale-110 transition-transform" />
+          <div className="w-24 h-24 rounded-3xl bg-midnight border border-white/10 flex items-center justify-center shadow-premium relative group">
+            <div className="absolute inset-0 bg-gold/5 p-2 animate-pulse rounded-3xl" />
+            <Scale className="w-12 h-12 text-gold relative z-10 group-hover:scale-110 transition-transform" />
           </div>
-          <div className="space-y-3">
-            <h3 className="text-2xl font-display font-bold text-white uppercase tracking-widest">
-              Awaiting Case Log
+          <div className="space-y-4">
+            <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tight">
+              Awaiting Consultation
             </h3>
-            <p className="text-xs text-text-tertiary max-w-[320px] leading-relaxed mx-auto font-body uppercase tracking-wider italic">
-              Initialize the Engine via the Command Console or upload an evidence dossier to begin
-              the tactical strategy sequence.
+            <p className="text-xs text-text-tertiary max-w-[320px] leading-relaxed mx-auto font-body opacity-60">
+              Provide your case details or upload a document to begin generating your strategic legal assessment.
             </p>
           </div>
         </div>
@@ -121,28 +120,28 @@ export default function AnalysisPanel({
     );
   }
 
-  // Loading state with Research Pulse
+  // Loading state
   if (isLoading || (!analysis && progress >= 20)) {
     return (
-      <div className="h-full flex flex-col pt-4">
+      <div className="h-full flex flex-col pt-4 bg-midnight">
         <div className="px-8 pb-6">
           <ProgressBar progress={progress} />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-10">
           <div className="relative">
             <motion.div
-              animate={{ scale: [1, 1.4, 1], opacity: [0.1, 0.4, 0.1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="absolute inset-x-[-60px] inset-y-[-60px] bg-red/20 rounded-full blur-3xl opacity-20"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-x-[-60px] inset-y-[-60px] bg-gold/10 rounded-full blur-3xl opacity-20"
             />
-            <div className="w-16 h-16 rounded-xl border-4 border-white/5 border-t-red animate-spin relative z-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]" />
+            <div className="w-16 h-16 rounded-sm border-2 border-white/5 border-t-gold animate-spin relative z-10 shadow-hard" />
           </div>
           <div className="space-y-4 relative z-10">
-            <p className="text-lg text-red font-display font-bold italic tracking-[0.4em] uppercase">
-              RAG ENGINE PULSE
+            <p className="text-lg text-gold font-display font-bold tracking-widest uppercase italic">
+              ANALYZING_STATUTORY_PARAMETERS
             </p>
-            <p className="text-[10px] text-text-tertiary font-extrabold uppercase tracking-[0.3em] animate-pulse">
-              DECODING {selectedJurisdiction} STATUTES...
+            <p className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest animate-pulse opacity-60">
+              Correlating {selectedJurisdiction} Statutes...
             </p>
           </div>
         </div>
@@ -154,22 +153,23 @@ export default function AnalysisPanel({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-full flex flex-col pt-2 md:pt-4"
+      className="h-full flex flex-col pt-2 md:pt-4 bg-void"
     >
-      {/* Fixed Progress at top */}
-      <div className="px-6 pb-4">
+      <div className="px-8 pb-6">
         <ProgressBar progress={progress} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 space-y-12 pb-24 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-8 space-y-12 pb-24 custom-scrollbar">
         {/* Header Section */}
         <div className="space-y-8">
-          <div className="flex items-center justify-between border-b-2 border-white/5 pb-4">
-            <span className="px-4 py-1.5 bg-red/10 text-red-light text-[10px] uppercase font-extrabold tracking-[0.3em] rounded border-2 border-red/20 shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]">
-              {analysis.caseType || 'Operational Logic'}
-            </span>
-            <span className="text-[9px] text-white/40 font-extrabold tracking-[0.2em] uppercase">
-              SEQ-ID: JAI-{Math.floor(Math.random() * 89999) + 10000}
+          <div className="flex items-center justify-between border-b border-white/5 pb-6">
+            <div className="flex items-center gap-3">
+              <span className="px-4 py-1.5 bg-gold/10 text-gold text-[10px] uppercase font-extrabold tracking-widest rounded-sm border-2 border-gold/20 shadow-hard italic">
+                {analysis.caseType || 'STRATEGIC_ANALYSIS_MANDATE'}
+              </span>
+            </div>
+            <span className="text-[9px] text-white/20 font-bold tracking-widest uppercase">
+              REFERENCE: JAI-{Math.floor(Math.random() * 89999) + 10000}
             </span>
           </div>
 
@@ -177,33 +177,33 @@ export default function AnalysisPanel({
         </div>
 
         {/* Localized Resources */}
-        <div className="p-6 bg-void rounded-2xl border-2 border-blue/20 space-y-6 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.8)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue/5 blur-3xl rounded-full" />
+        <div className="p-8 bg-void rounded-sm border-2 border-white/5 space-y-6 shadow-hard relative overflow-hidden group/resource">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-3xl rounded-sm opacity-50 group-hover/resource:bg-gold/10 transition-all" />
           <div className="flex items-center gap-3 relative z-10">
-            <Scale className="w-5 h-5 text-blue" />
-            <h4 className="text-[11px] uppercase font-extrabold tracking-[0.3em] text-white">
-              Jurisdictional Node: {selectedJurisdiction}
+            <Scale className="w-5 h-5 text-gold" />
+            <h4 className="text-[11px] uppercase font-extrabold tracking-widest text-white">
+              JURISDICTION: {selectedJurisdiction.toUpperCase()}
             </h4>
           </div>
-          <div className="grid grid-cols-2 gap-4 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
             <a
               href={resource.link}
               target="_blank"
               rel="noreferrer"
-              className="p-4 bg-void rounded border-2 border-white/5 hover:border-blue/40 transition-all group shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]"
+              className="p-5 bg-void border-2 border-white/5 rounded-sm hover:border-gold/40 transition-all group shadow-hard"
             >
-              <p className="text-[10px] text-text-tertiary uppercase font-extrabold mb-1.5 tracking-widest opacity-60">
-                Official Archive
+              <p className="text-[10px] text-text-tertiary uppercase font-extrabold mb-2 tracking-widest opacity-40 italic">
+                OFFICIAL_PORTAL
               </p>
-              <p className="text-[11px] text-white font-display font-bold uppercase tracking-tight group-hover:text-blue truncate italic">
+              <p className="text-xs text-white font-display font-bold uppercase tracking-tight group-hover:text-gold truncate italic">
                 {resource.court}
               </p>
             </a>
-            <div className="p-4 bg-void rounded border-2 border-white/5 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] border-l-4 border-l-blue">
-              <p className="text-[10px] text-text-tertiary uppercase font-extrabold mb-1.5 tracking-widest opacity-60">
-                Support Protocol
+            <div className="p-5 bg-void border-2 border-white/5 rounded-sm shadow-hard border-l-4 border-l-gold">
+              <p className="text-[10px] text-text-tertiary uppercase font-extrabold mb-2 tracking-widest opacity-40 italic">
+                LEGAL_AID_HELPLINE
               </p>
-              <p className="text-sm text-blue font-bold tracking-widest italic">{resource.help}</p>
+              <p className="text-sm text-gold font-bold tracking-widest">{resource.help}</p>
             </div>
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function AnalysisPanel({
         <Timeline timeline={analysis.timeline} />
 
         {/* Actionable Content */}
-        <div className="grid gap-12 pt-8 border-t border-white/5">
+        <div className="grid gap-12 pt-8">
           <StrategyList strategy={analysis.strategy} />
           <LawsList laws={analysis.laws} />
         </div>
@@ -227,15 +227,13 @@ export default function AnalysisPanel({
         />
 
         {/* Export Action */}
-        <div className="pt-10 border-t-2 border-white/5 pb-16">
+        <div className="pt-16 border-t border-white/5 pb-16">
           <button
             onClick={onExport}
-            className="w-full flex items-center justify-center gap-4 bg-void hover:bg-neutral-900 text-red border-2 border-red/40 px-8 py-6 rounded transition-all group active:translate-x-[2px] active:translate-y-[2px] shadow-[12px_12px_0px_0px_rgba(159,18,57,1)]"
+            className="w-full flex items-center justify-center gap-4 bg-gold text-midnight px-10 py-6 rounded-sm border-2 border-gold-light/20 font-extrabold text-lg uppercase tracking-widest hover:bg-gold-light transition-all shadow-hard active:translate-y-[2px] italic"
           >
-            <Download className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            <span className="text-lg font-bold uppercase tracking-widest italic">
-              Commit & Export Log Archive
-            </span>
+            <Download className="w-6 h-6" />
+            <span>EXPORT_STRATEGY_REPORT</span>
           </button>
         </div>
       </div>

@@ -9,31 +9,31 @@ const ToastContext = createContext(null);
 const toastConfig = {
   success: {
     icon: CheckCircle,
-    bgColor: 'bg-accent-success/10',
-    borderColor: 'border-accent-success/30',
-    textColor: 'text-accent-success',
-    iconColor: 'text-accent-success',
+    bgColor: 'bg-void border-2 border-emerald-500/20',
+    borderColor: 'border-emerald-500/40',
+    textColor: 'text-emerald-400',
+    iconColor: 'text-emerald-400',
   },
   error: {
     icon: AlertCircle,
-    bgColor: 'bg-accent-error/10',
-    borderColor: 'border-accent-error/30',
-    textColor: 'text-accent-error',
-    iconColor: 'text-accent-error',
+    bgColor: 'bg-void border-2 border-red/20',
+    borderColor: 'border-red/40',
+    textColor: 'text-red',
+    iconColor: 'text-red',
   },
   warning: {
     icon: AlertTriangle,
-    bgColor: 'bg-accent-warning/10',
-    borderColor: 'border-accent-warning/30',
-    textColor: 'text-accent-warning',
-    iconColor: 'text-accent-warning',
+    bgColor: 'bg-void border-2 border-gold/20',
+    borderColor: 'border-gold/40',
+    textColor: 'text-gold',
+    iconColor: 'text-gold',
   },
   info: {
     icon: Info,
-    bgColor: 'bg-accent-info/10',
-    borderColor: 'border-accent-info/30',
-    textColor: 'text-accent-info',
-    iconColor: 'text-accent-info',
+    bgColor: 'bg-void border-2 border-blue-400/20',
+    borderColor: 'border-blue-400/40',
+    textColor: 'text-blue-400',
+    iconColor: 'text-blue-400',
   },
 };
 
@@ -58,8 +58,9 @@ function ToastItem({ id, type, title, message, duration = 5000, onRemove }) {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 100, scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      className={`w-full max-w-md p-4 rounded-2xl border backdrop-blur-md premium-blur ${config.bgColor} ${config.borderColor} shadow-xl`}
+      className={`w-full max-w-sm p-5 rounded-sm border-2 backdrop-blur-xl ${config.bgColor} ${config.borderColor} shadow-hard relative overflow-hidden`}
     >
+      <div className="absolute top-0 right-0 w-16 h-16 bg-white/[0.02] rotate-45 -mr-8 -mt-8 pointer-events-none" />
       <div className="flex items-start gap-3">
         <Icon className={`w-5 h-5 ${config.iconColor} flex-shrink-0 mt-0.5`} />
         <div className="flex-1 min-w-0">
@@ -68,7 +69,7 @@ function ToastItem({ id, type, title, message, duration = 5000, onRemove }) {
         </div>
         <button
           onClick={() => onRemove(id)}
-          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-void/10 transition-colors text-text-tertiary hover:text-white"
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-sm border border-transparent hover:border-white/10 hover:bg-white/5 transition-all text-text-tertiary hover:text-white"
         >
           <X className="w-4 h-4" />
         </button>

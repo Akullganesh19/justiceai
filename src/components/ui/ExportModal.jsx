@@ -27,23 +27,23 @@ export default function ExportModal({ isOpen, onClose, summary }) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-2xl premium-blur border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+            className="relative w-full max-w-2xl bg-void border-2 border-white/10 rounded-sm overflow-hidden shadow-hard"
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-raised">
               <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-purple" />
-                <h3 className="text-xl font-display text-white">Case Summary Report</h3>
+                <FileText className="w-5 h-5 text-gold" />
+                <h3 className="text-xl font-display text-white italic uppercase tracking-tighter">STRATEGY_SUMMARY_REPORT</h3>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-void/5 rounded-full text-text-tertiary transition-colors"
+                className="p-2 hover:bg-white/5 rounded-sm text-text-tertiary transition-colors border-2 border-transparent hover:border-white/10 shadow-hard"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 bg-void/50">
-              <div className="bg-raised/80 border border-white/5 p-6 rounded-2xl h-[400px] overflow-y-auto custom-scrollbar font-mono text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap selection:bg-purple/20">
+              <div className="bg-void border-2 border-white/5 p-6 rounded-sm h-[400px] overflow-y-auto custom-scrollbar font-mono text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap selection:bg-gold/20 italic opacity-80 uppercase tracking-widest">
                 {summary}
               </div>
             </div>
@@ -51,14 +51,14 @@ export default function ExportModal({ isOpen, onClose, summary }) {
             <div className="p-6 bg-raised border-t border-white/5 flex flex-col md:flex-row gap-3">
               <button
                 onClick={handleCopy}
-                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-medium transition-all active:scale-95 ${
+                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-sm font-extrabold transition-all active:translate-y-[2px] uppercase text-[11px] tracking-[0.2em] italic shadow-hard border-2 ${
                   copied
-                    ? 'bg-accent-success/20 text-accent-success border border-accent-success/30'
-                    : 'bg-purple text-void hover:bg-purple-light'
+                    ? 'border-emerald-400 bg-emerald-400/10 text-emerald-400'
+                    : 'bg-gold text-midnight border-gold-light/40 hover:bg-gold-light'
                 }`}
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                <span>{copied ? 'Copied to Clipboard' : 'Copy Text Summary'}</span>
+                <span>{copied ? 'CACHED_TO_BUFFER' : 'EXFILTRATE_TEXT_SUMMARY'}</span>
               </button>
 
               <button
@@ -71,10 +71,10 @@ export default function ExportModal({ isOpen, onClose, summary }) {
                   link.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-void/5 text-text-primary hover:bg-void/10 border border-white/10 transition-all font-medium active:scale-95"
+                className="flex items-center justify-center gap-3 px-8 py-4 rounded-sm bg-void text-text-primary hover:bg-white/5 border-2 border-white/10 transition-all font-extrabold uppercase text-[11px] tracking-[0.2em] italic shadow-hard active:translate-y-[2px]"
               >
                 <Download className="w-5 h-5" />
-                <span>Save .txt</span>
+                <span>SAVE_AS_TEXT</span>
               </button>
             </div>
           </motion.div>

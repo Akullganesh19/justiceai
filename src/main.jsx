@@ -36,14 +36,17 @@ const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const ModelSettingsPage = lazy(() => import('./pages/ModelSettingsPage.jsx'));
+const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 // Loading fallback component
 function PageLoader() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center">
-      <LoadingSpinner />
+    <div className="min-h-screen bg-void flex flex-col items-center justify-center space-y-6 font-mono">
+      <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-sm animate-spin shadow-luxe" />
+      <p className="text-[10px] text-gold font-extrabold uppercase tracking-[0.4em] animate-pulse italic">
+        INITIALIZING_SYSTEM_CORE...
+      </p>
     </div>
   );
 }
@@ -79,7 +82,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<ModelSettingsPage />} />
+              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
   IndianRupee,
@@ -11,6 +11,7 @@ import {
   Info,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
+import Footer from '../components/ui/Footer.jsx';
 
 const CASE_TYPES = [
   {
@@ -124,38 +125,37 @@ function SelectCard({ item, isSelected, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`text-left p-6 rounded border-2 transition-all duration-300 relative group overflow-hidden ${
+      className={`text-left p-6 rounded-sm border-2 transition-all duration-300 relative group overflow-hidden ${
         isSelected
-          ? 'bg-void border-red shadow-[8px_8px_0px_0px_rgba(225,29,72,0.2)] scale-[1.02]'
+          ? 'bg-void border-gold shadow-hard scale-[1.02]'
           : 'bg-void border-white/5 hover:border-white/20'
       }`}
     >
       {isSelected && (
-        <div className="absolute top-0 right-0 w-12 h-12 bg-red/10 blur-2xl rounded-full" />
+        <div className="absolute top-0 right-0 w-12 h-12 bg-gold/10 blur-2xl rounded-sm" />
       )}
       {children}
     </button>
   );
 }
 
-function ResultCard({ icon: Icon, label, value, sublabel, color = 'red' }) {
+function ResultCard({ icon: Icon, label, value, sublabel, color = 'gold' }) {
   const colorMap = {
-    red: 'text-red bg-void border-red/40 shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]',
-    blue: 'text-blue bg-void border-blue/40 shadow-[4px_4px_0px_0px_rgba(37,99,235,0.1)]',
-    success:
-      'text-accent-success bg-void border-accent-success/40 shadow-[4px_4px_0px_0px_rgba(34,197,94,0.1)]',
-    warning: 'text-red bg-void border-red shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]',
+    gold: 'text-gold bg-void border-gold/40 shadow-hard',
+    blue: 'text-gold/80 bg-void border-gold/20 shadow-hard',
+    success: 'text-gold/90 bg-void border-gold/30 shadow-hard',
+    warning: 'text-gold bg-void border-gold shadow-hard',
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-6 rounded border-2 bg-void border-white/10 ${colorMap[color] || colorMap.red} shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]`}
+      className={`p-6 rounded-sm border-2 bg-void border-white/10 ${colorMap[color] || colorMap.gold} shadow-hard`}
     >
       <div className="flex items-start gap-5">
         <div
-          className={`w-12 h-12 rounded border-2 flex items-center justify-center flex-shrink-0 bg-void ${colorMap[color]}`}
+          className={`w-12 h-12 rounded-sm border-2 flex items-center justify-center flex-shrink-0 bg-void ${colorMap[color]}`}
         >
           <Icon className="w-6 h-6" />
         </div>
@@ -299,18 +299,18 @@ export default function EstimatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void pb-32">
+    <div className="min-h-screen bg-void pb-32 font-mono text-slate-200">
       <Header />
 
-      <main className="max-w-6xl mx-auto px-6 pt-32 space-y-12">
+      <main className="max-w-6xl mx-auto px-6 pt-32 space-y-12 pb-24">
         {/* Page Header */}
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-red/10 text-red-light text-[10px] uppercase font-extrabold tracking-[0.4em] rounded border-2 border-red/20 shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)] font-display italic">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-gold/5 text-gold text-[10px] uppercase font-extrabold tracking-[0.4em] rounded-sm border-2 border-gold/20 shadow-hard font-display italic">
             <Calculator className="w-4 h-4" />
-            <span>Operational_Cost_Estimator</span>
+            <span>FISCAL_ANALYSIS_PROTOCOL_V4.2</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none">
-            Legal <span className="text-red italic">Finance</span> Matrix
+          <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic">
+            FISCAL <span className="text-gold italic">PROJECTION</span> MATRIX
           </h1>
           <p className="text-lg text-text-tertiary leading-relaxed max-w-2xl mx-auto font-body uppercase tracking-wider italic">
             Analyze court fees, counselor mandates, and temporal projections for the Indian
@@ -323,8 +323,8 @@ export default function EstimatorPage() {
           <div className="space-y-10">
             {/* Step 1: Case Type */}
             <div className="space-y-6">
-              <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-red-light">
-                <span className="w-8 h-8 rounded bg-red text-white flex items-center justify-center text-[10px] font-extrabold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] italic">
+              <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-gold">
+                <span className="w-8 h-8 rounded-sm bg-gold text-midnight flex items-center justify-center text-[10px] font-extrabold shadow-hard italic">
                   01
                 </span>
                 LOG_CASE_TYPE
@@ -341,7 +341,7 @@ export default function EstimatorPage() {
                       {ct.icon}
                     </div>
                     <h4
-                      className={`text-xs uppercase font-extrabold tracking-widest italic ${caseType === ct.id ? 'text-red' : 'text-white/60 group-hover:text-white'}`}
+                      className={`text-xs uppercase font-extrabold tracking-widest italic ${caseType === ct.id ? 'text-gold' : 'text-white/60 group-hover:text-white'}`}
                     >
                       {ct.label}
                     </h4>
@@ -361,8 +361,8 @@ export default function EstimatorPage() {
               >
                 {/* Step 2: Claim Amount */}
                 <div className="space-y-6">
-                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-blue">
-                    <span className="w-8 h-8 rounded bg-blue text-white flex items-center justify-center text-[10px] font-extrabold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] italic">
+                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-gold/80">
+                    <span className="w-8 h-8 rounded-sm bg-gold/80 text-midnight flex items-center justify-center text-[10px] font-extrabold shadow-hard italic">
                       02
                     </span>
                     INPUT_CLAIM_VAL
@@ -374,15 +374,15 @@ export default function EstimatorPage() {
                       value={claimAmount}
                       onChange={(e) => setClaimAmount(e.target.value)}
                       placeholder="ENTER_QUANTUM..."
-                      className="w-full bg-void border-2 border-white/10 rounded pl-14 pr-6 py-5 text-sm text-white placeholder:text-text-tertiary focus:outline-none focus:border-blue/60 transition-all font-display font-bold tracking-widest italic shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]"
+                      className="w-full bg-void border-2 border-white/10 rounded-sm pl-14 pr-6 py-5 text-sm text-white placeholder:text-text-tertiary focus:outline-none focus:border-gold/60 transition-all font-display font-bold tracking-widest italic shadow-hard"
                     />
                   </div>
                 </div>
 
                 {/* Step 3: Court Level */}
                 <div className="space-y-6">
-                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-red-light">
-                    <span className="w-8 h-8 rounded bg-red text-white flex items-center justify-center text-[10px] font-extrabold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] italic">
+                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-gold/60">
+                    <span className="w-8 h-8 rounded-sm bg-gold/60 text-midnight flex items-center justify-center text-[10px] font-extrabold shadow-hard italic">
                       03
                     </span>
                     COURT_TIER_NODE
@@ -396,10 +396,10 @@ export default function EstimatorPage() {
                         onClick={() => setCourtLevel(cl.id)}
                       >
                         <Scale
-                          className={`w-5 h-5 mb-2 ${courtLevel === cl.id ? 'text-red' : 'text-text-tertiary'}`}
+                          className={`w-5 h-5 mb-2 ${courtLevel === cl.id ? 'text-gold' : 'text-text-tertiary'}`}
                         />
                         <h4
-                          className={`text-xs font-display font-semibold ${courtLevel === cl.id ? 'text-red' : 'text-white'}`}
+                          className={`text-xs font-display font-bold uppercase tracking-widest italic ${courtLevel === cl.id ? 'text-gold' : 'text-white'}`}
                         >
                           {cl.label}
                         </h4>
@@ -410,8 +410,8 @@ export default function EstimatorPage() {
 
                 {/* Step 4: City Tier */}
                 <div className="space-y-6">
-                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-blue">
-                    <span className="w-8 h-8 rounded bg-blue text-white flex items-center justify-center text-[10px] font-extrabold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] italic">
+                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-gold/40">
+                    <span className="w-8 h-8 rounded-sm bg-gold/40 text-midnight flex items-center justify-center text-[10px] font-extrabold shadow-hard italic">
                       04
                     </span>
                     LOCATION_INDEX
@@ -425,7 +425,7 @@ export default function EstimatorPage() {
                         onClick={() => setCityTier(ct.id)}
                       >
                         <h4
-                          className={`text-xs font-display font-semibold ${cityTier === ct.id ? 'text-blue' : 'text-white'}`}
+                          className={`text-xs font-display font-bold uppercase tracking-widest italic ${cityTier === ct.id ? 'text-gold' : 'text-white'}`}
                         >
                           {ct.label}
                         </h4>
@@ -436,8 +436,8 @@ export default function EstimatorPage() {
 
                 {/* Step 5: Complexity */}
                 <div className="space-y-6">
-                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-red-light">
-                    <span className="w-8 h-8 rounded bg-red text-white flex items-center justify-center text-[10px] font-extrabold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] italic">
+                  <label className="flex items-center gap-4 text-[10px] uppercase font-extrabold tracking-[0.5em] text-gold/20">
+                    <span className="w-8 h-8 rounded-sm bg-gold/20 text-midnight flex items-center justify-center text-[10px] font-extrabold shadow-hard italic">
                       05
                     </span>
                     COMPLEXITY_FACTOR
@@ -451,7 +451,7 @@ export default function EstimatorPage() {
                         onClick={() => setComplexity(cl.id)}
                       >
                         <h4
-                          className={`text-xs uppercase font-extrabold tracking-widest italic mb-2 ${complexity === cl.id ? 'text-red' : 'text-white'}`}
+                          className={`text-xs uppercase font-extrabold tracking-widest italic mb-2 ${complexity === cl.id ? 'text-gold' : 'text-white'}`}
                         >
                           {cl.label}
                         </h4>
@@ -468,112 +468,122 @@ export default function EstimatorPage() {
 
           {/* Right: Results Panel */}
           <div className="lg:sticky lg:top-24 lg:self-start">
-            {!estimate ? (
-              <div className="p-16 rounded bg-void border-2 border-white/5 text-center space-y-8 shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] relative overflow-hidden group">
-                <div className="absolute inset-0 bg-red/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="w-20 h-20 rounded bg-void border-2 border-white/10 flex items-center justify-center mx-auto shadow-inner relative z-10">
-                  <Calculator className="w-10 h-10 text-white/20 group-hover:text-red transition-colors" />
-                </div>
-                <div className="space-y-4 relative z-10">
-                  <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tighter italic">
-                    INITIALIZE_ENGINE
-                  </h3>
-                  <p className="text-xs text-text-tertiary font-body uppercase tracking-[0.2em] italic max-w-[240px] mx-auto opacity-60">
-                    DEFINE OPERATIONAL PARAMETERS ON THE LEFT TO GENERATE FISCAL PROJECTIONS.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                {/* Total Estimate */}
-                <div className="p-10 rounded bg-red text-white shadow-[12px_12px_0px_0px_rgba(159,18,57,0.5)] border-2 border-red-light/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-void/10 blur-3xl rounded-full" />
-                  <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] opacity-80 mb-2 relative z-10">
-                    AGGREGATE_ESTIMATE_MAX
-                  </p>
-                  <p className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tighter italic relative z-10 leading-none">
-                    {formatCurrency(estimate.totalMin)}{' '}
-                    <span className="text-red-dark text-2xl">..</span>{' '}
-                    {formatCurrency(estimate.totalMax)}
-                  </p>
-                  <div className="mt-6 pt-6 border-t border-white/10 relative z-10 flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold tracking-widest uppercase opacity-80 italic">
-                      {estimate.caseData.label}
-                    </span>
-                    <span className="text-[9px] font-mono tracking-widest opacity-60">
-                      PROJECTION_VER_3.1
-                    </span>
+            <AnimatePresence mode="wait">
+              {!estimate ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="p-16 rounded-sm bg-void border-2 border-white/5 text-center space-y-8 shadow-hard relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gold/5 blur-3xl rounded-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="w-20 h-20 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center mx-auto shadow-inner relative z-10">
+                    <Calculator className="w-10 h-10 text-white/20 group-hover:text-gold transition-colors" />
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3 px-3 py-2 bg-void border-2 border-white/5 rounded shadow-sm relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1 h-full bg-blue animate-pulse" />
-                  <Scale className="w-4 h-4 text-blue opacity-80" />
-                  <p className="text-[9px] text-text-tertiary font-extrabold uppercase tracking-widest italic opacity-80">
-                    BASIS: {estimate.statutoryBasis}
-                  </p>
-                </div>
-
-                <ResultCard
-                  icon={Scale}
-                  label="STATUTORY_COURT_FEES"
-                  value={formatCurrency(estimate.courtFee)}
-                  sublabel={
-                    estimate.caseData.id === 'consumer'
-                      ? 'CPA 2019 SLAB_PROTOCOL'
-                      : estimate.caseData.id === 'civil' || estimate.caseData.id === 'property'
-                        ? estimate.courtFee >= 300000
-                          ? 'AD_VALOREM_LIMIT_APPLIED'
-                          : 'AD_VALOREM_%_INDEX'
-                        : 'NOMINAL_FILING_FEE'
-                  }
-                  color="red"
-                />
-                <ResultCard
-                  icon={IndianRupee}
-                  label="STAMP_AND_ADMIN_EXPENSE"
-                  value={formatCurrency(estimate.stampDuty + estimate.miscExpenses)}
-                  sublabel="NOTARY_AFFIDAVIT_LOGS"
-                  color="blue"
-                />
-
-                {estimate.lawyerMax > 0 && (
-                  <ResultCard
-                    icon={TrendingUp}
-                    label="COUNSELOR_MANDATE_EST"
-                    value={`${formatCurrency(estimate.lawyerMin)} - ${formatCurrency(estimate.lawyerMax)}`}
-                    sublabel="EXPERIENCE_AND_REPUTATION_VARIANCE"
-                    color="red"
-                  />
-                )}
-
-                <ResultCard
-                  icon={Clock}
-                  label="TEMPORAL_RESOLUTION_WINDOW"
-                  value={formatTimeline(estimate.timeMin, estimate.timeMax)}
-                  sublabel="FILING_TO_FINAL_DECREE"
-                  color="blue"
-                />
-
-                {/* Disclaimer */}
-                <div className="p-6 rounded bg-void border-2 border-red shadow-[8px_8px_0px_0px_rgba(225,29,72,0.1)]">
-                  <div className="flex items-start gap-4">
-                    <AlertTriangle className="w-5 h-5 text-red flex-shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-red font-extrabold uppercase tracking-widest leading-relaxed italic">
-                      ⚠ CRITICAL_NOTICE: THESE ARE ANALYTICAL PROJECTIONS BASED ON GENERAL REVENUE
-                      DATA. ACTUAL FISCAL VARIANCE MAY OCCUR BY JURISDICTION AND COUNSELOR CHOICE.
+                  <div className="space-y-4 relative z-10">
+                    <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tighter italic">
+                      INITIALIZE_ENGINE
+                    </h3>
+                    <p className="text-xs text-text-tertiary font-body uppercase tracking-[0.2em] italic max-w-[240px] mx-auto opacity-60">
+                      DEFINE OPERATIONAL PARAMETERS ON THE LEFT TO GENERATE FISCAL PROJECTIONS.
                     </p>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  {/* Total Estimate */}
+                  <div className="p-10 rounded-sm bg-gold text-midnight shadow-hard border-2 border-white/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-void/10 blur-3xl rounded-sm" />
+                    <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] opacity-80 mb-2 relative z-10">
+                      AGGREGATE_ESTIMATE_MAX
+                    </p>
+                    <p className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tighter italic relative z-10 leading-none">
+                      {formatCurrency(estimate.totalMin)}{' '}
+                      <span className="text-midnight/40 text-2xl">..</span>{' '}
+                      {formatCurrency(estimate.totalMax)}
+                    </p>
+                    <div className="mt-6 pt-6 border-t border-midnight/10 relative z-10 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold tracking-widest uppercase opacity-80 italic">
+                        {estimate.caseData.label}
+                      </span>
+                      <span className="text-[9px] font-mono tracking-widest opacity-60 uppercase">
+                        PROJECTION_VER_4.2
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 px-3 py-2 bg-void border-2 border-white/5 rounded-sm shadow-inner relative overflow-hidden">
+                    <div className="absolute left-0 top-0 w-1 h-full bg-gold animate-pulse" />
+                    <Scale className="w-4 h-4 text-gold opacity-80" />
+                    <p className="text-[9px] text-text-tertiary font-extrabold uppercase tracking-widest italic opacity-80">
+                      BASIS: {estimate.statutoryBasis}
+                    </p>
+                  </div>
+
+                  <ResultCard
+                    icon={Scale}
+                    label="STATUTORY_COURT_FEES"
+                    value={formatCurrency(estimate.courtFee)}
+                    sublabel={
+                      estimate.caseData.id === 'consumer'
+                        ? 'CPA 2019 SLAB_PROTOCOL'
+                        : estimate.caseData.id === 'civil' || estimate.caseData.id === 'property'
+                          ? estimate.courtFee >= 300000
+                            ? 'AD_VALOREM_LIMIT_APPLIED'
+                            : 'AD_VALOREM_%_INDEX'
+                          : 'NOMINAL_FILING_FEE'
+                    }
+                    color="gold"
+                  />
+                  <ResultCard
+                    icon={IndianRupee}
+                    label="STAMP_AND_ADMIN_EXPENSE"
+                    value={formatCurrency(estimate.stampDuty + estimate.miscExpenses)}
+                    sublabel="NOTARY_AFFIDAVIT_LOGS"
+                    color="gold"
+                  />
+
+                  {estimate.lawyerMax > 0 && (
+                    <ResultCard
+                      icon={TrendingUp}
+                      label="COUNSELOR_MANDATE_EST"
+                      value={`${formatCurrency(estimate.lawyerMin)} - ${formatCurrency(estimate.lawyerMax)}`}
+                      sublabel="EXPERIENCE_AND_REPUTATION_VARIANCE"
+                      color="gold"
+                    />
+                  )}
+
+                  <ResultCard
+                    icon={Clock}
+                    label="TEMPORAL_RESOLUTION_WINDOW"
+                    value={formatTimeline(estimate.timeMin, estimate.timeMax)}
+                    sublabel="FILING_TO_FINAL_DECREE"
+                    color="gold"
+                  />
+
+                  {/* Disclaimer */}
+                  <div className="p-6 rounded-sm bg-void border-2 border-gold shadow-hard">
+                    <div className="flex items-start gap-4">
+                      <AlertTriangle className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-gold font-extrabold uppercase tracking-widest leading-relaxed italic">
+                        ⚠ FISCAL_NOTICE: THESE ARE ANALYTICAL PROJECTIONS BASED ON GENERAL REVENUE
+                        DATA. ACTUAL FISCAL VARIANCE MAY OCCUR BY JURISDICTION AND COUNSELOR CHOICE.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

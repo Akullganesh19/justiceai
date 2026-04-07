@@ -1,49 +1,46 @@
-/* @tailwind base */
-/* @tailwind components */
-/* @tailwind utilities */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+
 @layer base {
   :root {
     color-scheme: dark;
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Fallbacks for older browsers */
-    --accent: #e2e2e2;
-    --destructive-foreground: #fbfbfb;
-
-    /* OKLCH values */
-    @supports (color: oklch(0% 0 0)) {
-      --accent: oklch(0.89 0 0);
-      --destructive-foreground: oklch(0.985 0 0);
-      --input: oklch(0.229 0 0);
-      --ring: #cc0033;
-      --muted-foreground: oklch(0.7 0.05 10); /* Red-tinted grey */
-    }
+    /* Professional Midnight Palette */
+    --background: #020617;
+    --foreground: #f8fafc;
+    --card: #0f172a;
+    --card-foreground: #f8fafc;
+    --popover: #020617;
+    --popover-foreground: #f8fafc;
+    --primary: #d4af37;
+    --primary-foreground: #020617;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #d4af37;
+    --accent-foreground: #f8fafc;
+    --destructive: #991b1b;
+    --destructive-foreground: #f8fafc;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #d4af37;
   }
 
   .dark {
-    --background: #202020;
-    --accent: #3b3b3b;
-    --destructive-foreground: #fbfbfb;
-
-    @supports (color: oklch(0% 0 0)) {
-      --background: oklch(0.125 0 0);
-      --accent: oklch(0.229 0 0);
-      --destructive-foreground: oklch(0.985 0 0);
-      --input: oklch(0.18 0.02 260); /* Deep Charcoal-Navy toned */
-      --ring: #4f46e5; /* Royal Purple colored focus ring */
-      --muted-foreground: oklch(0.6 0.05 260); /* Slightly more purple in dark mode */
-    }
+    --background: #020617;
+    --accent: #1e293b;
+    --destructive-foreground: #f8fafc;
   }
 
   body {
-    @apply font-body bg-void text-text-primary antialiased;
+    @apply font-body bg-midnight text-text-primary antialiased;
     background-image: none;
-    background-color: #0a0b0d !important;
+    background-color: #020617 !important;
     min-height: 100vh;
     margin: 0;
   }
@@ -58,7 +55,7 @@
   h4,
   h5,
   h6 {
-    @apply font-display tracking-tight text-[#9abfd4];
+    @apply font-display tracking-tight text-white;
   }
 
   p {
@@ -83,32 +80,35 @@
     @apply backdrop-blur-xl bg-void/80 border border-white/10;
   }
 
-  /* Authority UI Accents */
+  /* Professional UI Accents */
   .red-gradient {
-    background: linear-gradient(135deg, #0e72a8 0%, #881337 100%);
+    background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .gold-gradient {
+    background: linear-gradient(135deg, #d4af37 0%, #c5a059 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
   .blue-gradient {
-    background: linear-gradient(135deg, #1b2936 0%, #1e3a8a 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
-  .text-[#9abfd4]-gradient {
+  .text-silver-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
   }
-  .text-cyan-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  }
   .text-gold-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #0e72a8 0%, #b8860b 100%);
+    background-image: linear-gradient(135deg, #d4af37 0%, #c5a059 100%);
   }
 }
 
@@ -122,7 +122,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full hover:bg-red-500/20 transition-colors;
+  @apply bg-white/5 rounded-full hover:bg-gold/20 transition-colors;
 }
 
 /* Markdown Styles */
@@ -135,7 +135,7 @@
 }
 
 .prose strong {
-  @apply text-red-500 font-bold;
+  @apply text-gold font-bold;
 }
 
 .prose code {
@@ -147,21 +147,21 @@
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-red-500/10 rounded-full;
+  @apply bg-red/10 rounded-full;
 }
 
-/* Pulse Red Animation */
-@keyframes pulseRed {
+/* Pulse Gold Animation */
+@keyframes pulseGold {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.2);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 16px rgba(225, 29, 72, 0);
+    box-shadow: 0 0 0 16px rgba(212, 175, 55, 0);
   }
 }
-.pulse-red {
-  animation: pulseRed 2.5s ease-in-out infinite;
+.pulse-gold {
+  animation: pulseGold 2.5s ease-in-out infinite;
 }
 
 /* Floating Animation for Hero */

@@ -27,10 +27,10 @@ import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
 
 const STEPS = [
-  { id: 1, label: 'PERSONAL_ID', icon: User },
-  { id: 2, label: 'VERIFICATION', icon: ShieldCheck },
-  { id: 3, label: 'EXPERIENCE_LOG', icon: Award },
-  { id: 4, label: 'NETWORK_SYNC', icon: Globe },
+  { id: 1, label: 'Identity', icon: User },
+  { id: 2, label: 'Verification', icon: ShieldCheck },
+  { id: 3, label: 'Experience', icon: Award },
+  { id: 4, label: 'Connectivity', icon: Globe },
 ];
 
 const SPECIALIZATIONS = [
@@ -108,21 +108,21 @@ export default function LawyerOnboardingPage() {
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 w-full space-y-12 pb-24">
         {/* Header */}
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-void border-2 border-red/40 text-red text-[10px] uppercase font-extrabold tracking-[0.4em] italic rounded-sm shadow-hard-red/10">
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-widest rounded-sm shadow-hard italic">
             <Terminal className="w-4 h-4" />
-            <span>RECRUITMENT_PROTOCOL_ACTIVE</span>
+            <span>REGISTRATION_PROTOCOL_STATUS: ACTIVE</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-white uppercase tracking-tighter italic">
-            BUREAU <span className="text-red">ENROLLMENT</span>
+          <h1 className="text-5xl md:text-7xl font-display font-bold text-white uppercase tracking-tight">
+            Lawyer <span className="text-gold">Registration</span>
           </h1>
-          <p className="text-xs text-text-tertiary leading-relaxed max-w-xl mx-auto font-body uppercase tracking-[0.2em] italic opacity-60">
-            AUTHENTICATE PROFESSIONAL CREDENTIALS. JOIN THE AUTHORITY NETWORK. SECURE DIRECTIVE-GATED LEGAL ASSIGNMENTS.
+          <p className="text-sm text-text-tertiary leading-relaxed max-w-xl mx-auto font-body opacity-80 decoration-gold/30">
+            Verify your professional credentials to join our trusted network and access high-tier legal opportunities.
           </p>
         </div>
 
         {!isSuccess ? (
           <div className="bg-void border-2 border-white/5 shadow-hard relative overflow-hidden">
-             {/* Tactical Grid Background Overlay */}
+             {/* Statutory Grid Background Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
             
             {/* Progress Bar */}
@@ -130,10 +130,10 @@ export default function LawyerOnboardingPage() {
               {STEPS.map((step) => (
                 <div key={step.id} className="flex flex-col items-center gap-4 relative z-10">
                   <div
-                    className={`w-14 h-14 rounded-sm flex items-center justify-center transition-all duration-500 border-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] ${
+                    className={`w-14 h-14 rounded-sm flex items-center justify-center transition-all duration-500 border-2 shadow-hard ${
                       currentStep >= step.id
-                        ? 'bg-red border-red-light/40 text-white'
-                        : 'bg-void border-white/10 text-text-tertiary'
+                        ? 'bg-gold border-gold-light/40 text-midnight'
+                        : 'bg-void border-white/10 text-text-tertiary shadow-inner'
                     }`}
                   >
                     {currentStep > step.id ? (
@@ -150,9 +150,9 @@ export default function LawyerOnboardingPage() {
                 </div>
               ))}
               {/* Connector Lines */}
-              <div className="absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-void/5 -z-0 hidden md:block">
+              <div className="absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-white/5 -z-0 hidden md:block">
                 <motion.div
-                  className="h-full bg-red shadow-[0_0_10px_rgba(225,29,72,0.5)]"
+                  className="h-full bg-gold shadow-hard"
                   animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
                 />
               </div>
@@ -169,19 +169,19 @@ export default function LawyerOnboardingPage() {
                   >
                     <div className="flex flex-col md:flex-row gap-10 items-center border-b-2 border-white/5 pb-12">
                       <div className="relative group">
-                        <div className="w-32 h-32 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center text-text-tertiary overflow-hidden group-hover:border-red/40 transition-all shadow-hard relative">
+                        <div className="w-32 h-32 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center text-text-tertiary overflow-hidden group-hover:border-gold/40 transition-all shadow-hard relative">
                           <Camera className="w-10 h-10 opacity-20" />
-                          <div className="absolute inset-0 bg-red/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute inset-0 bg-gold/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-red rounded-sm flex items-center justify-center text-white cursor-pointer hover:bg-red-dark transition-all border-2 border-red-light/20 shadow-hard-red">
+                        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-sm flex items-center justify-center text-midnight cursor-pointer hover:bg-gold-dark transition-all border-2 border-gold-light/20 shadow-hard">
                           <Plus className="w-5 h-5" />
                         </div>
                       </div>
                       <div className="flex-1 space-y-6 w-full">
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="space-y-3">
-                            <label className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-text-tertiary italic">
-                              IDENT_NAME_PROTOCOL
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+                              Full Name
                             </label>
                             <input
                               type="text"
@@ -193,11 +193,11 @@ export default function LawyerOnboardingPage() {
                             />
                           </div>
                           <div className="space-y-3">
-                            <label className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-text-tertiary italic">
-                              SECURE_COMMS_LINK
+                            <label className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+                              Email Address
                             </label>
                             <div className="relative">
-                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                               <input
                                 type="email"
                                 placeholder="CLIENT_STREAM@AUTHORITY.IN"
@@ -213,11 +213,11 @@ export default function LawyerOnboardingPage() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <label className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-text-tertiary italic">
-                          VOICE_CHANNEL_ID
+                        <label className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+                          Phone Number
                         </label>
                         <div className="relative">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                           <input
                             type="tel"
                             placeholder="+91_MOBILE_STREAM"
@@ -229,11 +229,11 @@ export default function LawyerOnboardingPage() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-text-tertiary italic">
-                          GEOGRAPHIC_SECTOR
+                        <label className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+                          City Hub
                         </label>
                         <div className="relative">
-                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                           <input
                             type="text"
                             placeholder="NEW_DELHI_HUB"
@@ -255,14 +255,14 @@ export default function LawyerOnboardingPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-10"
                   >
-                    <div className="p-6 bg-void border-2 border-red/20 rounded shadow-hard-red flex items-start gap-5 italic relative overflow-hidden">
+                    <div className="p-6 bg-void border-2 border-gold/20 rounded-sm shadow-hard flex items-start gap-5 relative overflow-hidden italic">
                       <div className="absolute top-0 right-0 p-2 opacity-10">
-                        <ShieldCheck className="w-12 h-12 text-red" />
+                        <ShieldCheck className="w-12 h-12 text-gold" />
                       </div>
                       <AlertCircle className="w-6 h-6 text-red shrink-0 mt-1" />
                       <div className="space-y-2">
-                         <p className="text-[12px] text-red font-extrabold uppercase tracking-widest">
-                           // DATA_VERIFICATION_ADVISORY
+                         <p className="text-[12px] text-gold font-bold uppercase tracking-widest">
+                           // DATA_VERIFICATION_NOTICE
                          </p>
                          <p className="text-[10px] text-red-light/60 leading-relaxed font-mono uppercase tracking-wider">
                            CREDENTIALS MATCHED AGAINST BAR COUNCIL OF INDIA REGISTRIES. MOCK ENROLLMENT NUMBERS (E.G. D/422/1986) AUTO-BYPASS FOR DEMO STREAM.
@@ -271,8 +271,8 @@ export default function LawyerOnboardingPage() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <label className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-text-tertiary italic">
-                          BCI_REGISTRATION_ID
+                        <label className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+                          BCI Registration Number
                         </label>
                         <input
                           type="text"
@@ -378,10 +378,10 @@ export default function LawyerOnboardingPage() {
                             key={spec}
                             type="button"
                             onClick={() => toggleSpecialization(spec)}
-                            className={`px-4 py-2 rounded-sm text-[9px] font-extrabold uppercase tracking-widest transition-all border-2 italic ${
+                            className={`px-4 py-2 rounded-sm text-[9px] font-extrabold uppercase tracking-widest transition-all border-2 italic shadow-hard ${
                               formData.specializations.includes(spec)
-                                ? 'bg-red text-white border-red-light/40 shadow-hard-red/40'
-                                : 'bg-void border-white/5 text-text-tertiary hover:border-red/40 opacity-60'
+                                ? 'bg-gold text-midnight border-gold/40 shadow-hard'
+                                : 'bg-void border-white/5 text-text-tertiary hover:border-gold/40 opacity-60'
                             }`}
                           >
                             {spec.replace(' ', '_')}
@@ -395,10 +395,10 @@ export default function LawyerOnboardingPage() {
                         RETAINER_STREAM_VALUATION
                       </label>
                       <div className="relative">
-                        <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
-                        <input
-                          type="text"
-                          placeholder="INR_STREAM_ESTIMATE"
+                          <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
+                          <input
+                            type="text"
+                            placeholder="Expected Fee Range"
                           value={formData.feeRange}
                           onChange={(e) => updateFormData('feeRange', e.target.value)}
                           className="input-field-onboarding pl-11"
@@ -422,7 +422,7 @@ export default function LawyerOnboardingPage() {
                           LINKEDIN_STRATUM_ID
                         </label>
                         <div className="relative">
-                          <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
+                          <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                           <input
                             type="url"
                             placeholder="LINKEDIN_PROF_URL"
@@ -437,7 +437,7 @@ export default function LawyerOnboardingPage() {
                           X_STREAM_HANDLE
                         </label>
                         <div className="relative">
-                          <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red" />
+                          <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                           <input
                             type="text"
                             placeholder="@HANDLE_ID"
@@ -486,16 +486,16 @@ export default function LawyerOnboardingPage() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="bg-void border-2 border-white/10 hover:border-red/40 text-white px-10 py-4 rounded-sm font-extrabold text-[10px] uppercase tracking-[0.4em] transition-all flex items-center gap-3 active:translate-y-[1px] italic"
+                    className="bg-void border-2 border-white/10 hover:border-gold/40 text-white px-10 py-4 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all shadow-hard flex items-center gap-3 active:translate-y-[1px] italic"
                   >
-                    CONTINUE_SYNC <ArrowRight className="w-4 h-4 text-red" />
+                    Continue <ArrowRight className="w-4 h-4 text-gold" />
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="bg-red hover:bg-red-dark text-white px-12 py-5 rounded-sm font-extrabold text-[11px] uppercase tracking-[0.5em] transition-all shadow-hard-red flex items-center gap-4 active:shadow-none active:translate-y-[2px] italic"
+                    className="bg-gold hover:bg-gold-dark text-midnight px-12 py-5 rounded-sm border-2 border-gold/40 font-extrabold text-xs uppercase tracking-widest transition-all shadow-hard flex items-center gap-4 active:translate-y-[2px] italic"
                   >
-                    SUBMIT_TO_AUTHORITY <CheckCircle2 className="w-6 h-6" />
+                    Complete Registration <CheckCircle2 className="w-6 h-6" />
                   </button>
                 )}
               </div>
@@ -508,23 +508,22 @@ export default function LawyerOnboardingPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-12"
           >
-            <div className="bg-void border-2 border-red/40 p-16 text-center space-y-10 shadow-hard-red relative overflow-hidden">
-               {/* Tactical Grid Background Overlay */}
+            <div className="bg-void border-2 border-gold/40 p-16 text-center space-y-10 shadow-hard relative overflow-hidden">
+               {/* Statutory Grid Background Overlay */}
                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
               
-              <div className="w-24 h-24 bg-red/10 border-2 border-red/40 rounded-sm mx-auto flex items-center justify-center relative">
-                <CheckCircle2 className="w-12 h-12 text-red" />
+              <div className="w-24 h-24 bg-void border-2 border-gold/40 rounded-sm mx-auto flex items-center justify-center relative shadow-hard">
+                <CheckCircle2 className="w-12 h-12 text-gold" />
                 <motion.div 
-                  className="absolute inset-0 border-2 border-red rounded-sm"
+                  className="absolute inset-0 border-2 border-gold rounded-sm"
                   animate={{ scale: [1, 1.3, 1], opacity: [1, 0, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
               </div>
               <div className="space-y-4">
-                <h2 className="text-5xl font-display font-bold text-white uppercase tracking-tighter italic">REGISTRATION_COMPLETE</h2>
-                <p className="text-xs text-text-tertiary font-mono uppercase tracking-[0.3em] max-w-md mx-auto italic opacity-60">
-                  // INITIALIZING_BUREAU_HANDSHAKE... 
-                  CREDENTIALS ENQUEUED FOR BCI_DATABASE SYNC [TARGET: 24H].
+                <h2 className="text-5xl font-display font-bold text-white uppercase tracking-tight">Registration Complete</h2>
+                <p className="text-sm text-text-tertiary font-body max-w-sm mx-auto opacity-80">
+                  Your credentials have been submitted for verification. We will notify you once your profile is live in the directory.
                 </p>
               </div>
 
@@ -534,7 +533,7 @@ export default function LawyerOnboardingPage() {
                    <ShieldCheck className="w-10 h-10 text-white" />
                 </div>
                 <div className="flex items-center gap-8">
-                  <div className="w-24 h-24 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center text-5xl font-display text-red font-bold italic shadow-hard">
+                  <div className="w-24 h-24 rounded-sm bg-void border-2 border-gold/40 flex items-center justify-center text-5xl font-display text-gold font-extrabold shadow-hard italic">
                     {formData.name.split(' ').pop()[0].toUpperCase() || 'A'}
                   </div>
                   <div className="space-y-2">
@@ -542,15 +541,15 @@ export default function LawyerOnboardingPage() {
                       <h3 className="text-2xl font-display font-bold text-white uppercase italic tracking-tight">
                         {formData.name || 'ADV_RAJESH_KUMAR'}
                       </h3>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-void border border-red/40 text-red text-[8px] rounded-sm uppercase font-extrabold tracking-[0.2em] italic">
-                        SEC_PENDING
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-midnight border border-gold/40 text-gold text-[8px] rounded-sm uppercase font-bold tracking-wider">
+                        Verification Pending
                       </div>
                     </div>
-                    <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-mono italic opacity-60">
-                      {formData.court.toUpperCase()} // {formData.city.toUpperCase()}_SECTOR
+                    <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-mono opacity-60">
+                      {formData.court.toUpperCase()} // {formData.city.toUpperCase()} HUB
                     </p>
-                    <p className="text-[10px] text-red-light/60 mt-1 font-mono uppercase tracking-[0.2em]">
-                      REG_ID: {formData.regNo.toUpperCase() || 'NULL_PTR'}
+                    <p className="text-[10px] text-gold/60 mt-1 font-mono uppercase tracking-wider">
+                      BCI ID: {formData.regNo.toUpperCase() || 'PENDING'}
                     </p>
                   </div>
                 </div>
@@ -570,27 +569,27 @@ export default function LawyerOnboardingPage() {
               <div className="pt-8">
                 <button
                   onClick={() => (window.location.href = '/lawyers')}
-                  className="text-red font-extrabold uppercase tracking-[0.5em] text-[10px] italic hover:text-white transition-all underline decoration-2 underline-offset-8"
+                  className="text-gold font-bold uppercase tracking-widest text-[10px] hover:text-white transition-all underline decoration-2 underline-offset-8"
                 >
-                  // RETURN_TO_REGISTRY_DIRECTORY
+                  Return to Lawyer Directory
                 </button>
               </div>
             </div>
 
-            <div className="bg-void border-2 border-blue/20 p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-hard-blue italic">
+            <div className="bg-void border-2 border-gold/20 p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-hard italic">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-blue/10 border-2 border-blue/40 rounded-sm flex items-center justify-center shadow-hard-blue/20">
-                  <Linkedin className="w-8 h-8 text-blue" />
+                <div className="w-16 h-16 bg-void border-2 border-gold/40 rounded-sm flex items-center justify-center shadow-hard">
+                  <Linkedin className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-extrabold text-white uppercase tracking-widest italic">STRATUM_BADGE_SYNC</p>
-                  <p className="text-[10px] text-text-tertiary uppercase tracking-widest opacity-60 max-w-md font-mono">
-                    SHARE_TO_COLLECT "FOUNDING_ADVOCATE" STRATUM_SIGNATURE ON AUTHORITY_CORE.
+                  <p className="text-sm font-extrabold text-white uppercase tracking-widest">Profile Badge Sync</p>
+                  <p className="text-[10px] text-text-tertiary uppercase tracking-wider opacity-60 max-w-md">
+                    Share your achievement as a "Founding Advocate" on your professional networks.
                   </p>
                 </div>
               </div>
-              <button className="bg-blue hover:bg-blue-dark text-white px-8 py-3 rounded-sm font-extrabold text-[10px] uppercase tracking-[0.3em] italic shadow-hard-blue active:shadow-none active:translate-y-[2px] transition-all">
-                INIT_SHARE
+              <button className="bg-gold hover:bg-gold-dark text-midnight px-8 py-3 rounded-sm border-2 border-gold/40 font-extrabold text-[10px] uppercase tracking-widest shadow-hard active:translate-y-[2px] transition-all">
+                Share Now
               </button>
             </div>
           </motion.div>
@@ -602,24 +601,25 @@ export default function LawyerOnboardingPage() {
       <style>{`
         .input-field-onboarding {
           width: 100%;
-          background: #000000;
+          background: #020617;
           border: 2px solid rgba(255, 255, 255, 0.05);
           border-radius: 2px;
-          padding: 1.25rem 1.5rem;
-          font-size: 0.75rem;
+          padding: 1rem 1.75rem;
+          font-size: 0.875rem;
           color: white;
           outline: none;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s ease;
           font-family: 'IBM Plex Mono', monospace;
+          text-transform: uppercase;
           letter-spacing: 0.1em;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
         .input-field-onboarding:focus {
-          border-color: rgba(225, 29, 72, 0.6);
-          box-shadow: 8px 8px 0px 0px rgba(159, 18, 57, 0.1);
+          border-color: #d4af37;
+          background: rgba(212, 175, 55, 0.02);
         }
         .input-field-onboarding::placeholder {
           color: rgba(255, 255, 255, 0.1);
-          font-style: italic;
         }
       `}</style>
     </div>

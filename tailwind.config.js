@@ -7,50 +7,41 @@ export default {
   theme: {
     extend: {
       colors: {
-        red: {
-          DEFAULT: '#0e72a8', // Cerulean
-          light: '#9abfd4', // Ice Blue
-          dark: '#103b5a', // Rich Ocean
-          glow: '#0e72a8', 
+        midnight: '#020617',
+        gold: {
+          DEFAULT: '#d4af37',
+          light: '#f3e8ff',
+          dark: '#c5a059',
         },
-        blue: {
-          DEFAULT: '#0e72a8', // Cerulean
-          light: '#9abfd4', // Ice Blue
-          dark: '#103b5a', // Rich Ocean
-          indigo: '#1b2936', 
-        },
-        ink: '#111a22', // Slightly lighter than void
-        void: '#0a0b0d', // Abyss Black
-        raised: '#1b2936', // Deep Slate Blue
-        float: '#17222d', 
-        surface: '#121f29', 
-        platinum: '#9abfd4', // Ice Blue
+        'navy-slate': '#111827',
+        silver: '#e2e8f0',
+        void: '#020617', // Mantaining backward compatibility for bg-void
+        raised: '#111827',
         text: {
-          primary: '#9abfd4', // Ice Blue
-          secondary: '#0e72a8', // Cerulean
-          tertiary: '#103b5a', // Rich Ocean
+          primary: '#e2e8f0',
+          secondary: '#d4af37',
+          tertiary: '#94a3b8',
         },
-        accent: {
-          success: '#0e72a8', 
-          error: '#ef4444', 
-          warning: '#103b5a', 
-          info: '#0e72a8', 
+        red: {
+          DEFAULT: '#ef4444', // Restoring red to functional error color
+          light: '#fee2e2',
+          dark: '#991b1b',
         }
       },
       fontFamily: {
-        display: ['Playfair Display', 'serif'],
-        body: ['DM Sans', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
         mono: ['IBM Plex Mono', 'monospace'],
       },
       boxShadow: {
-        'hard': '8px 8px 0px 0px rgba(0,0,0,0.5)',
-        'hard-lg': '12px 12px 0px 0px rgba(0,0,0,0.5)',
-        'hard-red': '8px 8px 0px 0px rgba(225, 29, 72, 0.4)',
-        'hard-blue': '8px 8px 0px 0px rgba(37, 99, 235, 0.4)',
+        'premium': '0 20px 50px rgba(8, 112, 184, 0.1)',
+        'luxe': '0 10px 30px rgba(212, 175, 55, 0.05)',
+        'hard': '0 4px 6px -1px rgba(0, 0, 0, 0.1)', // Softening the fallback
       },
       animation: {
         'fade-up': 'fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'fade-in': 'fadeIn 0.4s ease-out forwards',
+        'analyze': 'analyze 3s linear infinite',
       },
       keyframes: {
         fadeUp: {
@@ -60,7 +51,12 @@ export default {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
-        }
+        },
+        analyze: {
+          '0%': { transform: 'translateY(0)', opacity: '0' },
+          '50%': { opacity: '0.5' },
+          '100%': { transform: 'translateY(100vh)', opacity: '0' },
+        },
       },
     },
   },

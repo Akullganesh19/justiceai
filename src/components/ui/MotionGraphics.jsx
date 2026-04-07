@@ -33,7 +33,7 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
         this.vy = (Math.random() - 0.5) * 0.5;
         this.radius = Math.random() * 2 + 0.5;
         this.opacity = Math.random() * 0.5 + 0.1;
-        this.hue = Math.random() > 0.5 ? 345 : 220; // Tactical Red/Blue protocol
+        this.hue = Math.random() > 0.5 ? 345 : 220; // STATUTORY_PROTOCOL_COLOR_SPACE
       }
 
       update() {

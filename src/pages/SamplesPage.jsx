@@ -34,10 +34,10 @@ const SAMPLES = [
   },
   {
     id: 'property',
-    title: 'PROPERTY_SECTOR_SYNC',
-    description: 'ENCROACHMENT_TRAJECTORY_ALERT. ANCESTRAL_LAND_STRIKE.',
+    title: 'PROPERTY_CATEGORY_SYNC',
+    description: 'ENCROACHMENT_TRAJECTORY_ALERT. ANCESTRAL_LAND_DISPUTE.',
     icon: LandPlot,
-    color: 'text-white',
+    color: 'text-gold',
     initialMessage:
       'I have ancestral agricultural land in Pune. My neighbor has started a construction project that encroaches about 5 feet into my clearly marked boundary. I have the official land survey records from 1995, but he is ignoring my requests to stop. How do I file an injunction?',
   },
@@ -55,16 +55,16 @@ export default function SamplesPage() {
       <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-16">
-        <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-void border-2 border-red/40 text-red text-[10px] uppercase font-extrabold tracking-[0.4em] italic rounded shadow-hard-red/10">
+        <div className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.4em] italic rounded-sm shadow-hard">
             <Terminal className="w-4 h-4" />
-            <span>DEPLOYMENT_VECTORS_ALPHA</span>
+            <span>CASE_ANALYSIS_MODELS</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-white uppercase tracking-tighter italic">
-            TACTICAL <span className="text-red">DOSSIERS</span>
+          <h1 className="text-5xl md:text-8xl font-display font-bold text-white uppercase tracking-tighter italic leading-none">
+            STATUTORY <span className="text-gold">CASE_BRIEFS</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.2em] italic opacity-60">
-            TEST AUTHORITY_CORE INSTANTLY WITH COMMON LEGAL VECTORS. SELECT A DOSSIER TO INITIALIZE SIMULATION.
+            PREVIEW LEGAL ANALYSIS MODELS FOR COMMON SCENARIOS. SELECT A CASE BRIEF TO INITIALIZE.
           </p>
         </div>
 
@@ -77,17 +77,17 @@ export default function SamplesPage() {
               transition={{ delay: i * 0.1 }}
               className="group relative h-full"
             >
-              <div className="h-full p-10 rounded bg-void border-2 border-white/5 hover:border-red/40 transition-all duration-500 overflow-hidden flex flex-col shadow-hard hover:shadow-hard-red/20 active:translate-y-[2px]">
+              <div className="h-full p-10 rounded-sm bg-void border-2 border-white/5 hover:border-gold/40 transition-all duration-500 overflow-hidden flex flex-col shadow-hard hover:shadow-hard-gold/20 active:translate-y-[2px]">
                 {/* Background Decor */}
-                <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded bg-red/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-sm bg-gold/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                <div className="w-16 h-16 rounded bg-void border-2 border-white/10 flex items-center justify-center mb-10 group-hover:border-red/40 group-hover:scale-110 transition-all shadow-hard relative">
-                   {/* SCAN BAR ANIMATION */}
-                   <div className="absolute inset-0 bg-red/10 w-full h-1 group-hover:animate-scan z-0" />
-                  <sample.icon className={`w-8 h-8 ${sample.color} relative z-10`} />
+                <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center mb-10 group-hover:border-gold/40 group-hover:scale-110 transition-all shadow-hard relative">
+                   {/* ANALYZE BAR ANIMATION */}
+                   <div className="absolute inset-0 bg-gold/10 w-full h-1 group-hover:animate-analyze z-0" />
+                  <sample.icon className={`w-8 h-8 ${sample.color === 'text-red' ? 'text-gold' : sample.color === 'text-red-light' ? 'text-gold-light' : sample.color} relative z-10`} />
                 </div>
 
-                <h3 className="text-xl font-display font-bold text-white mb-4 group-hover:text-red transition-colors uppercase tracking-tight italic">
+                <h3 className="text-xl font-display font-bold text-white mb-4 group-hover:text-gold transition-colors uppercase tracking-tight italic leading-tight">
                   {sample.title}
                 </h3>
                 <p className="text-[10px] text-text-tertiary leading-relaxed uppercase tracking-widest italic opacity-60 mb-10 flex-1">
@@ -96,9 +96,9 @@ export default function SamplesPage() {
 
                 <button
                   onClick={() => handleLaunch(sample)}
-                  className="w-full flex items-center justify-between gap-4 bg-void border-2 border-white/10 group-hover:border-red group-hover:bg-red group-hover:text-white text-text-tertiary px-6 py-5 rounded font-extrabold text-[10px] uppercase tracking-[0.3em] italic transition-all group-hover:shadow-hard-red active:translate-y-[2px]"
+                  className="w-full flex items-center justify-between gap-4 bg-void border-2 border-white/10 group-hover:border-gold group-hover:bg-gold group-hover:text-midnight text-text-tertiary px-6 py-5 rounded-sm font-extrabold text-[10px] uppercase tracking-[0.3em] italic transition-all group-hover:shadow-hard active:translate-y-[2px]"
                 >
-                  <span>INIT_VECTOR</span>
+                  <span>START_BRIEF</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -106,16 +106,16 @@ export default function SamplesPage() {
           ))}
         </div>
 
-        <div className="mt-12 p-16 rounded bg-void border-2 border-white/5 text-center space-y-8 shadow-hard relative overflow-hidden group hover:border-red/20 transition-all">
+        <div className="mt-12 p-16 rounded-sm bg-void border-2 border-white/5 text-center space-y-10 shadow-hard relative overflow-hidden group hover:border-gold/20 transition-all">
            {/* Background Decor */}
            <div className="absolute bottom-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
               <ShieldAlert className="w-48 h-48 text-white" />
            </div>
            
            <div className="relative z-10 space-y-4">
-              <h2 className="text-4xl font-display font-bold text-white uppercase italic tracking-tighter">UNIQUE_STRATUM_REQUIRED?</h2>
+              <h2 className="text-4xl font-display font-bold text-white uppercase italic tracking-tighter">UNIQUE_CATEGORY_REQUIRED?</h2>
               <p className="text-xs text-text-tertiary uppercase tracking-[0.2em] max-w-xl mx-auto italic opacity-60">
-                DIRECTIVE_OVERRIDE_ACTIVE. INITIALIZE A CUSTOM ANALYTICAL FLOW FOR NON-STANDARD LEGAL VECTORS.
+                CUSTOM_MODEL_ENABLED. INITIALIZE A CUSTOM ANALYTICAL FLOW FOR NON-STANDARD LEGAL SCENARIOS.
               </p>
            </div>
            
@@ -124,9 +124,9 @@ export default function SamplesPage() {
                 href="/chat"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-4 bg-red border-2 border-red-light/40 text-white px-14 py-6 rounded font-extrabold text-[11px] uppercase tracking-[0.4em] transition-all shadow-hard-red italic hover:bg-black hover:text-red hover:shadow-hard active:shadow-none active:translate-y-[2px]"
+                className="inline-flex items-center gap-4 bg-gold border-2 border-gold-light/40 text-midnight px-14 py-6 rounded-sm font-extrabold text-[11px] uppercase tracking-[0.4em] transition-all shadow-hard-gold italic hover:bg-black hover:text-gold hover:shadow-hard active:shadow-none active:translate-y-[2px]"
               >
-                <span>COMMENCE_SYNC</span>
+                <span>START_ANALYSIS</span>
                 <Play className="w-4 h-4 fill-current" />
               </motion.a>
            </div>

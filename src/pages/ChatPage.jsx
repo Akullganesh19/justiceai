@@ -9,7 +9,7 @@ import { CaseHistorySidebar } from '../components/chat/CaseHistorySidebar';
 import { sendMessage } from '../lib/claudeApi';
 import { parseAIResponse } from '../lib/parseAnalysis';
 import { generateSummary } from '../lib/generateSummary';
-import { Milestone, Sword, ShieldCheck, MapPin } from 'lucide-react';
+import { Milestone, Sword, ShieldCheck, MapPin, AlertCircle } from 'lucide-react';
 import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay';
 
 export default function ChatPage() {
@@ -31,7 +31,7 @@ export default function ChatPage() {
       id: '1',
       role: 'assistant',
       content:
-        'Initialization Complete. I am your **JusticeAI Legal Co-pilot**. Describe your legal situation in detail. Our RAG-Engine will build a tactical defense strategy for you.',
+        'SYSTEM_INITIALIZED. I am your JUSTICE_AI_STATUTORY_ANALYST. Please describe the procedural parameters of your case. Our engine will formulate a validated statutory strategy.',
       timestamp: new Date(),
     },
   ]);
@@ -51,8 +51,6 @@ export default function ChatPage() {
   // Calculate Progress
   const progress = analysis ? 100 : Math.min(Math.floor((messages.length - 1) * 25), 80);
 
-  // (History is now loaded synchronously via lazy initialization)
-
   // 2. Handle Samples from Router State
   useEffect(() => {
     if (location.state?.sampleCase) {
@@ -63,7 +61,7 @@ export default function ChatPage() {
         {
           id: '1',
           role: 'assistant',
-          content: `Launching **${location.state.caseType}** Demo. I am ready to analyze this situation.`,
+          content: `Initializing **${location.state.caseType}** analysis. I am reviewing the provided scenario.`,
           timestamp: new Date(),
         },
         {
@@ -94,12 +92,12 @@ export default function ChatPage() {
       return;
     }
 
-    // Only if a case is active and has messages (not immediately on a fresh load)
+    // Only if a case is active and has messages
     if (messages.length > 1) {
       const sysMsg = {
         id: Date.now().toString(),
         role: 'system',
-        content: `Settings Updated: ${mode.toUpperCase()} Mode • ${judgePersonality} Judge • ${selectedJurisdiction} Jurisdiction`,
+        content: `Configuration Updated: ${mode === 'copilot' ? 'Assistance' : 'Moot Court'} Mode • ${judgePersonality} Stance • ${selectedJurisdiction} Jurisdiction`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, sysMsg]);
@@ -144,7 +142,7 @@ export default function ChatPage() {
       {
         id: '1',
         role: 'assistant',
-        content: 'System Reset. I am ready for your next case. How can I help you today?',
+        content: 'System reset. I am ready to assist with your next consultation. How may I help you?',
         timestamp: new Date(),
       },
     ]);
@@ -159,9 +157,7 @@ export default function ChatPage() {
   };
 
   const handleFileUpload = (file) => {
-    console.log('File received for scanning:', file.name);
     setIsScanning(true);
-    // Simulation: the overlay will call onComplete after 3.5s
   };
 
   const handleScanComplete = () => {
@@ -170,13 +166,13 @@ export default function ChatPage() {
       id: Date.now().toString(),
       role: 'system',
       content:
-        '📎 **Document Analyzed:** Legal evidence matrix has been updated. I have extracted key clauses and am merging them into your strategy.',
+        '📎 **Document Processed:** Information from your uploaded document has been integrated into the case intelligence folder.',
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, sysMsg]);
 
     // Auto-trigger analysis update
-    handleSend('Please analyze the document I just uploaded and update the strategy.');
+    handleSend('Analyze the recently integrated document and update the strategy accordingly.');
   };
 
   // Helper for sample trigger
@@ -266,14 +262,12 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-void overflow-hidden">
+    <div className="h-screen flex flex-col bg-void overflow-hidden font-mono text-slate-200">
       <Header onNewCase={handleNewCase} />
 
       <main className="flex-1 flex pt-16 h-[calc(100vh-64px)] relative">
-        {/* Document Scanning Simulation Overlay */}
         <DocumentScanningOverlay isOpen={isScanning} onComplete={handleScanComplete} />
 
-        {/* Left: Case History Sidebar */}
         <CaseHistorySidebar
           history={history}
           currentCaseId={activeCaseId}
@@ -284,74 +278,67 @@ export default function ChatPage() {
           onDelete={deleteCase}
         />
 
-        {/* Center: Main Workflow Controls */}
         <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
-          {/* Left: Chat Panel Side */}
+          {/* Chat Side */}
           <div className="flex-1 flex flex-col border-r border-white/5 order-2 md:order-1 h-full min-w-0">
-            {/* Mode & Personality Controls */}
-            <div className="p-3 border-b border-white/5 bg-raised/30 flex flex-col gap-3">
-              {/* Hard Legal Disclaimer */}
-              {/* Hard Legal Disclaimer */}
-              <div className="w-full bg-red/10 border-2 border-red/20 p-2 rounded shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]">
-                <p className="text-[10px] text-white font-extrabold uppercase tracking-widest text-center">
-                  ⚠️ <span className="text-red">OPERATIONAL OVERVIEW:</span> INFORMATION AS-IS. NO
-                  ADVOCATE-CLIENT PRIVILEGE IS IMPLIED.
+            <div className="p-4 border-b border-white/5 bg-midnight-slate/50 flex flex-col gap-4">
+              <div className="w-full bg-void border-2 border-gold/40 p-3 rounded-sm shadow-luxe flex items-center justify-center gap-3 italic">
+                <AlertCircle className="w-4 h-4 text-gold" />
+                <p className="text-[10px] text-gold font-extrabold uppercase tracking-[0.3em] text-center">
+                  INSTITUTIONAL_NOTICE: CONSULTATIONS_ARE_INFORMATIONAL. NO_ADVOCATE_CLIENT_PRIVILEGE.
                 </p>
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <div className="flex bg-void p-1 rounded border-2 border-white/5 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]">
+                <div className="flex bg-void p-1 rounded-sm border-2 border-white/5 shadow-hard">
                   <button
                     onClick={() => setMode('copilot')}
-                    className={`flex items-center gap-2 px-5 py-2 rounded text-[10px] font-extrabold tracking-[0.2em] uppercase transition-all ${mode === 'copilot' ? 'bg-red text-white shadow-[2px_2px_0px_0px_rgba(159,18,57,1)]' : 'text-text-tertiary hover:text-white'}`}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-sm text-[10px] font-extrabold tracking-[0.2em] uppercase transition-all italic ${mode === 'copilot' ? 'bg-gold text-midnight shadow-luxe' : 'text-text-tertiary hover:text-white'}`}
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Directive</span>
+                    <span>ASSISTANCE</span>
                   </button>
                   <div className="relative group">
                     <button
                       onClick={() => setMode('simulator')}
-                      className={`flex items-center gap-2 px-5 py-2 rounded text-[10px] font-extrabold tracking-[0.2em] uppercase transition-all ${mode === 'simulator' ? 'bg-blue text-white shadow-[2px_2px_0px_0px_rgba(37,99,235,1)]' : 'text-text-tertiary hover:text-white'}`}
+                      className={`flex items-center gap-2 px-6 py-2 rounded-sm text-[10px] font-extrabold tracking-[0.2em] uppercase transition-all italic ${mode === 'simulator' ? 'bg-blue-600 text-white shadow-luxe' : 'text-text-tertiary hover:text-white'}`}
                     >
                       <Sword className="w-3.5 h-3.5" />
-                      <span>Simulator</span>
+                      <span>SIMULATION</span>
                     </button>
-                    <div className="absolute top-full left-0 mt-3 w-56 p-4 bg-void border-2 border-white/10 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-50">
-                      <p className="text-[9px] text-text-tertiary uppercase tracking-[0.2em] leading-relaxed font-extrabold italic">
-                        Moot Simulation Active. Legal reality may diverge.
-                      </p>
-                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Milestone className="w-4 h-4 text-red opacity-50" />
-                  <select
-                    value={judgePersonality}
-                    onChange={(e) => setJudgePersonality(e.target.value)}
-                    className="bg-void border-2 border-white/10 rounded px-4 py-2 text-[10px] font-extrabold text-white uppercase tracking-[0.2em] focus:outline-none focus:border-red/50 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] appearance-none cursor-pointer"
-                  >
-                    <option value="Strict">Strict Judge</option>
-                    <option value="Neutral">Neutral Judge</option>
-                    <option value="Lenient">Lenient Judge</option>
-                  </select>
-                </div>
+                <div className="flex items-center gap-6">
+                   <div className="hidden lg:flex items-center gap-3">
+                    <Milestone className="w-3.5 h-3.5 text-gold opacity-50" />
+                    <select
+                      value={judgePersonality}
+                      onChange={(e) => setJudgePersonality(e.target.value)}
+                      className="bg-void border-2 border-white/5 rounded-sm px-4 py-2 text-[10px] font-extrabold text-gold uppercase tracking-widest focus:outline-none focus:border-gold/50 shadow-luxe appearance-none cursor-pointer italic"
+                    >
+                      <option value="Strict">STRICT_BENCH</option>
+                      <option value="Neutral">NEUTRAL_BENCH</option>
+                      <option value="Lenient">LENIENT_BENCH</option>
+                    </select>
+                  </div>
 
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-blue opacity-50" />
-                  <select
-                    value={selectedJurisdiction}
-                    onChange={(e) => setSelectedJurisdiction(e.target.value)}
-                    className="bg-void border-2 border-white/10 rounded px-4 py-2 text-[10px] font-extrabold text-white uppercase tracking-[0.2em] focus:outline-none focus:border-blue/50 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] appearance-none cursor-pointer"
-                  >
-                    <option value="National">National Domain</option>
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Karnataka">Karnataka</option>
-                    <option value="Tamil Nadu">Tamil Nadu</option>
-                    <option value="West Bengal">West Bengal</option>
-                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                  </select>
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-3.5 h-3.5 text-blue-400 opacity-50" />
+                    <select
+                      value={selectedJurisdiction}
+                      onChange={(e) => setSelectedJurisdiction(e.target.value)}
+                      className="bg-void border-2 border-white/5 rounded-sm px-4 py-2 text-[10px] font-extrabold text-white uppercase tracking-widest focus:outline-none focus:border-gold/50 shadow-luxe appearance-none cursor-pointer italic"
+                    >
+                      <option value="National">NATIONAL</option>
+                      <option value="Maharashtra">MAHARASHTRA</option>
+                      <option value="Delhi">DELHI</option>
+                      <option value="Karnataka">KARNATAKA</option>
+                      <option value="Tamil Nadu">TAMIL_NADU</option>
+                      <option value="West Bengal">WEST_BENGAL</option>
+                      <option value="Uttar Pradesh">UTTAR_PRADESH</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -360,8 +347,8 @@ export default function ChatPage() {
             <ChatInput onSend={handleSend} onUpload={handleFileUpload} isLoading={isLoading} />
           </div>
 
-          {/* Right: Analysis Side */}
-          <div className="w-full md:w-[420px] lg:w-[480px] bg-void overflow-hidden order-1 md:order-2 h-full border-b md:border-b-0 border-white/5 shadow-[-8px_0px_30px_0px_rgba(0,0,0,0.5)]">
+          {/* Analysis Side */}
+          <div className="w-full md:w-[420px] lg:w-[480px] bg-midnight overflow-hidden order-1 md:order-2 h-full border-b md:border-b-0 border-white/5 shadow-premium">
             <AnalysisPanel
               analysis={analysis}
               selectedJurisdiction={selectedJurisdiction}

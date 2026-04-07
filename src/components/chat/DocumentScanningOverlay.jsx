@@ -12,14 +12,14 @@ import {
 } from 'lucide-react';
 
 const SCAN_STEPS = [
-  'Initializing Multi-Modal Vision Model...',
-  'Running OCR on Document Layers...',
-  'Extracting Party Names & Court Details...',
-  'Mapping Context to BNS / BNSS 2023 Guidelines...',
-  'Identifying Cause of Action & Limitation Periods...',
-  'Building Evidence Strength Matrix...',
-  'Correlating with Supreme Court Precedents...',
-  'Verification Successful. Initializing Legal Strategy...',
+  'INITIALIZING_MULTI_MODAL_STATUTORY_ENGINE...',
+  'EXECUTING_OCR_ON_PROCEDURAL_LAYERS...',
+  'EXTRACTING_PARTY_IDENTITIES_&_COURT_DETAILS...',
+  'MAPPING_CONTEXT_TO_BNS_2023_GUIDELINES...',
+  'IDENTIFYING_CAUSE_OF_ACTION_WINDOW...',
+  'BUILDING_EVIDENTIARY_STRENGTH_MATRIX...',
+  'CORRELATING_SUPREME_COURT_PRECEDENTS...',
+  'VERIFICATION_SUCCESSFUL. INITIALIZING_CASE_MANDATE...',
 ];
 
 export default function DocumentScanningOverlay({ isOpen, onComplete }) {
@@ -69,9 +69,9 @@ export default function DocumentScanningOverlay({ isOpen, onComplete }) {
         <div className="absolute inset-0 bg-void/90 backdrop-blur-xl" />
 
         {/* Floating Scan Content */}
-        <div className="relative w-full max-w-xl aspect-square md:aspect-video rounded-[32px] border border-white/5 bg-raised overflow-hidden shadow-2xl flex flex-col items-center justify-center p-12 space-y-8">
+        <div className="relative w-full max-w-xl aspect-square md:aspect-video rounded-sm border-2 border-white/5 bg-void overflow-hidden shadow-hard flex flex-col items-center justify-center p-12 space-y-8">
           <div
-            className="absolute top-0 left-0 w-full h-[2px] bg-purple-gradient shadow-[0_0_20px_rgba(204,0,51,0.5)] z-20"
+            className="absolute top-0 left-0 w-full h-[2px] bg-gold shadow-[0_0_20px_rgba(212,175,55,0.5)] z-20"
             style={{ top: `${progress}%` }}
           />
 
@@ -80,32 +80,32 @@ export default function DocumentScanningOverlay({ isOpen, onComplete }) {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-              className="w-32 h-32 rounded-full border-2 border-dashed border-purple/20"
+              className="w-32 h-32 rounded-sm border-2 border-dashed border-gold/20"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 bg-purple/10 rounded-full flex items-center justify-center border border-purple/30 shadow-xl shadow-purple/20">
-                <Cpu className="w-10 h-10 text-purple animate-pulse" />
+              <div className="w-20 h-20 bg-gold/10 rounded-sm flex items-center justify-center border-2 border-gold/30 shadow-hard shadow-gold/20">
+                <Cpu className="w-10 h-10 text-gold animate-pulse" />
               </div>
             </div>
           </div>
 
-          <div className="text-center space-y-4 w-full">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple/10 text-purple text-[9px] uppercase font-bold tracking-[0.2em] rounded-full border border-purple/20">
+          <div className="text-center space-y-6 w-full">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gold/10 text-gold text-[9px] uppercase font-black tracking-[0.3em] rounded-sm border-2 border-gold/20 shadow-hard italic">
               <Brain className="w-3.5 h-3.5" />
-              <span>AI Intelligence Unit</span>
+              <span>STATUTORY_INTELLIGENCE_UNIT</span>
             </div>
 
-            <h2 className="text-3xl font-display text-white">
-              Deep Scanning <span className="text-purple-gradient">Case Law</span>
+            <h2 className="text-4xl font-display text-white uppercase italic tracking-tighter">
+              DEEP_ANALYSIS: <span className="text-gold">CASE_PROCURAL</span>
             </h2>
 
-            <div className="space-y-1">
-              <div className="flex justify-between items-end text-[10px] uppercase font-bold tracking-[0.2em]">
-                <span className="text-text-tertiary">Document Extraction</span>
-                <span className="text-purple">{progress}%</span>
+            <div className="space-y-4">
+              <div className="flex justify-between items-end text-[10px] uppercase font-extrabold tracking-[0.4em] italic">
+                <span className="text-text-tertiary">PROCEDURAL_EXTRACTION</span>
+                <span className="text-gold">{progress}%</span>
               </div>
-              <div className="h-1 bg-void rounded-full overflow-hidden border border-white/5">
-                <motion.div className="h-full bg-purple" style={{ width: `${progress}%` }} />
+              <div className="h-2 bg-void rounded-sm overflow-hidden border-2 border-white/5 shadow-inner">
+                <motion.div className="h-full bg-gold" style={{ width: `${progress}%` }} />
               </div>
             </div>
 
@@ -117,7 +117,7 @@ export default function DocumentScanningOverlay({ isOpen, onComplete }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-xs text-text-secondary font-body italic"
+                  className="text-[10px] text-text-secondary font-mono font-bold italic uppercase tracking-widest"
                 >
                   {SCAN_STEPS[currentStep]}
                 </motion.p>
@@ -126,11 +126,11 @@ export default function DocumentScanningOverlay({ isOpen, onComplete }) {
           </div>
 
           {/* Floating Floating Scan Details */}
-          <div className="absolute top-12 left-12 opacity-20 pointer-events-none hidden md:block">
-            <Database className="w-24 h-24 text-purple" />
+          <div className="absolute top-12 left-12 opacity-5 pointer-events-none hidden md:block">
+            <Database className="w-24 h-24 text-gold" />
           </div>
-          <div className="absolute bottom-12 right-12 opacity-20 pointer-events-none hidden md:block">
-            <Search className="w-24 h-24 text-purple" />
+          <div className="absolute bottom-12 right-12 opacity-5 pointer-events-none hidden md:block">
+            <Search className="w-24 h-24 text-gold" />
           </div>
         </div>
       </motion.div>

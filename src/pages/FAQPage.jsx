@@ -37,7 +37,7 @@ const FAQ_DATA = [
   {
     question: 'Is this tool free to use?',
     answer:
-      'Yes, currently JusticeAI is free for everyone as part of our mission to improve legal access in India.',
+      'Yes, currently JusticeAI is free for everyone as part of our mandate to improve legal access in India.',
   },
   {
     question: 'Can I handle a criminal case using JusticeAI?',
@@ -56,16 +56,16 @@ function FAQItem({ question, answer, isOpen, onToggle }) {
     <div className="border-b-2 border-white/5 last:border-0 overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-10 px-8 text-left hover:bg-red/[0.02] transition-colors group relative"
+        className="w-full flex items-center justify-between py-10 px-8 text-left hover:bg-gold/[0.02] transition-colors group relative"
       >
         <span
-          className={`text-xl font-display font-bold uppercase tracking-tighter italic transition-colors ${isOpen ? 'text-red' : 'text-white group-hover:text-red-light'}`}
+          className={`text-xl font-display font-bold uppercase tracking-tighter italic transition-colors ${isOpen ? 'text-gold' : 'text-white group-hover:text-gold-light'}`}
         >
           <span className="opacity-20 mr-4 font-mono">//</span>
           {question}
         </span>
         <div
-          className={`p-3 rounded-sm border-2 transition-all shadow-hard ${isOpen ? 'bg-red border-red text-white rotate-0' : 'bg-void border-white/10 text-white/20 rotate-90'}`}
+          className={`p-3 rounded-sm border-2 transition-all shadow-hard ${isOpen ? 'bg-gold border-gold text-white rotate-0' : 'bg-void border-white/10 text-white/20 rotate-90'}`}
         >
           {isOpen ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
         </div>
@@ -78,7 +78,7 @@ function FAQItem({ question, answer, isOpen, onToggle }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="px-20 pb-12 text-[11px] text-text-tertiary leading-loose font-mono uppercase tracking-widest italic opacity-80 border-l-4 border-red/20 ml-8 mb-4">
+            <div className="px-20 pb-12 text-[11px] text-text-tertiary leading-loose font-mono uppercase tracking-widest italic opacity-80 border-l-4 border-gold/20 ml-8 mb-4">
               {answer}
             </div>
           </motion.div>
@@ -97,21 +97,21 @@ export default function FAQPage() {
 
       <main className="max-w-4xl mx-auto px-6 pt-32 space-y-20">
         <div className="text-center space-y-8">
-          <div className="inline-flex items-center gap-4 px-5 py-2 bg-void text-red text-[11px] uppercase font-extrabold tracking-[0.5em] rounded-sm border-2 border-red/40 shadow-hard-red/10 italic">
+          <div className="inline-flex items-center gap-4 px-5 py-2 bg-void text-gold text-[11px] uppercase font-extrabold tracking-[0.5em] rounded-sm border-2 border-gold/40 shadow-hard italic">
             <HelpCircle className="w-5 h-5" />
             <span>OPERATIONAL_SUPPORT_REGISTRY</span>
           </div>
           <h1 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter leading-none italic text-white">
-            INTEL <span className="text-red">FAQ</span>
+            PROCEDURAL <span className="text-gold">FAQ</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.4em] italic opacity-60">
-            COMPREHENSIVE PROCEDURAL INTELLIGENCE FOR NAVIGATING THE JUSTICEAI CORE_SYSTEM_ARCHITECTURE.
+            COMPREHENSIVE STATUTORY INTELLIGENCE FOR NAVIGATING THE JUSTICEAI CORE_SYSTEM_ARCHITECTURE.
           </p>
         </div>
 
         <div className="bg-void rounded-sm border-2 border-white/5 overflow-hidden shadow-hard relative">
-          {/* Internal Tactical Accents */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red/[0.02] border-l-2 border-b-2 border-red/[0.05] pointer-events-none" />
+          {/* Internal Statutory Accents */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold/[0.02] border-l-2 border-b-2 border-gold/[0.05] pointer-events-none" />
           
           {FAQ_DATA.map((item, i) => (
             <FAQItem
@@ -124,16 +124,16 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="text-center p-16 bg-red/[0.03] rounded-sm border-2 border-red/15 space-y-10 shadow-hard relative overflow-hidden group">
+        <div className="text-center p-16 bg-gold/[0.03] rounded-sm border-2 border-gold/15 space-y-10 shadow-hard relative overflow-hidden group">
           {/* Diagonal Stripe Background */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#ff0000_10px,#ff0000_11px)]" />
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#D4AF37_10px,#D4AF37_11px)]" />
           
           <h2 className="text-3xl font-display font-bold text-white italic uppercase tracking-tighter relative z-10">INITIALIZE_LEGAL_STRATEGY?</h2>
           <motion.a
             href="/chat"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-4 bg-red text-white px-10 py-6 rounded-sm font-extrabold transition-all shadow-hard-red uppercase tracking-[0.4em] italic relative z-10 active:translate-y-[2px]"
+            className="inline-flex items-center gap-4 bg-gold text-midnight px-10 py-6 rounded-sm font-extrabold transition-all shadow-hard-gold uppercase tracking-[0.4em] italic relative z-10 active:translate-y-[2px]"
           >
             <span>LAUNCH_COMMAND_CORE</span>
             <ArrowRight className="w-6 h-6 ml-2" />

@@ -223,77 +223,75 @@ function LawyerCard({ lawyer, index }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="bg-void rounded border-2 border-white/5 hover:border-red/40 transition-all duration-300 overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] group"
+      className="bg-void rounded-sm border-2 border-white/5 hover:border-gold/40 transition-all duration-300 overflow-hidden shadow-hard group"
     >
       <div className="p-8 space-y-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded bg-void border-2 border-white/10 flex items-center justify-center text-3xl font-display text-white font-bold group-hover:border-red/40 transition-all shadow-inner italic">
+            <div className="w-16 h-16 rounded-sm bg-void border-2 border-gold/20 flex items-center justify-center text-3xl font-display text-white font-extrabold group-hover:border-gold transition-all shadow-hard uppercase italic">
               {lawyer.name.split(' ').pop()[0]}
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h3 className="text-xl font-display font-bold text-white uppercase tracking-tighter italic leading-tight group-hover:text-red transition-colors">{lawyer.name}</h3>
-              </div>
-              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60 italic">
-                {lawyer.court.toUpperCase()} // REG_NO: {lawyer.regNo}
+              <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
+              <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60">
+                {lawyer.court} // BCI ID: {lawyer.regNo}
               </p>
               {lawyer.verified && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-red/10 border-2 border-red/20 rounded mt-3 italic">
-                  <UserCheck className="w-4 h-4 text-red" />
-                  <span className="text-[10px] uppercase font-extrabold tracking-[0.2em] text-red">
-                    BAR_COUNCIL_VERIFIED
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/10 border-2 border-gold/20 rounded-sm mt-3 italic">
+                  <UserCheck className="w-4 h-4 text-gold" />
+                  <span className="text-[9px] uppercase font-extrabold tracking-widest text-gold text-center">
+                    VALIDATED_STATUTORY_COUNSEL
                   </span>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-void rounded border-2 border-white/10 shadow-sm">
-            <Star className="w-4 h-4 text-red fill-red" />
-            <span className="text-sm font-display font-bold text-white italic">{lawyer.rating}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-void rounded-sm border-2 border-white/10 shadow-hard">
+            <Star className="w-4 h-4 text-gold fill-gold" />
+            <span className="text-sm font-display font-bold text-white">{lawyer.rating}</span>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary italic hover:border-red/20 transition-colors">
-            <Briefcase className="w-3.5 h-3.5 text-red" /> {specLabel.toUpperCase()}
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary hover:border-gold/20 transition-colors shadow-hard italic">
+            <Briefcase className="w-3.5 h-3.5 text-gold" /> {specLabel}
           </span>
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary italic hover:border-red/20 transition-colors">
-            <MapPin className="w-3.5 h-3.5 text-red" /> {cityLabel.toUpperCase()}
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary hover:border-gold/20 transition-colors shadow-hard italic">
+            <MapPin className="w-3.5 h-3.5 text-gold" /> {cityLabel}
           </span>
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary italic hover:border-red/20 transition-colors">
-            <Clock className="w-3.5 h-3.5 text-red" /> {lawyer.experience}_YRS_EXP
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary hover:border-gold/20 transition-colors shadow-hard italic">
+            <Clock className="w-3.5 h-3.5 text-gold" /> {lawyer.experience} Yrs
           </span>
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary italic hover:border-red/20 transition-colors">
-            <Award className="w-3.5 h-3.5 text-red" /> {lawyer.cases}_DEPLOYS
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border-2 border-white/5 bg-void text-[10px] uppercase font-extrabold tracking-widest text-text-tertiary hover:border-gold/20 transition-colors shadow-hard italic">
+            <Award className="w-3.5 h-3.5 text-gold" /> {lawyer.cases} Resolved
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-y-2 border-white/5 py-4 my-2">
-          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] italic text-text-tertiary group relative">
-            <IndianRupee className="w-4 h-4 text-red" />
+        <div className="flex items-center justify-between border-y border-white/5 py-4 my-2">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-text-tertiary group relative">
+            <IndianRupee className="w-4 h-4 text-gold" />
             <span>
-              {lawyer.fee} <span className="opacity-40 italic">/ CASE_VALUATION</span>
+              {lawyer.fee} <span className="opacity-40">/ Estimated Fee</span>
             </span>
             <div className="relative">
-              <Info className="w-4 h-4 text-white/10 hover:text-red cursor-help transition-colors" />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-void border-2 border-white/10 rounded shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
-                <p className="text-[10px] text-text-tertiary uppercase tracking-widest leading-relaxed italic">
-                  // DEPLOYMENT_FEE_ESTIMATES_VARY_BY_COMPLEXITY_PROTOCOL
+              <Info className="w-4 h-4 text-white/10 hover:text-gold cursor-help transition-colors" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-void border-2 border-gold/20 rounded-sm shadow-hard opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center italic">
+                <p className="text-[10px] text-text-tertiary uppercase tracking-wider leading-relaxed">
+                  // Professional fee estimates may vary based on case complexity and jurisdiction.
                 </p>
               </div>
             </div>
           </div>
-          <div className="text-[10px] uppercase font-mono font-bold tracking-widest text-blue italic">
+          <div className="text-[10px] uppercase font-mono font-bold tracking-widest text-gold opacity-60">
              {lawyer.languages.join(' • ').toUpperCase()}
           </div>
         </div>
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded border-2 text-[10px] font-extrabold uppercase tracking-[0.4em] italic transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] active:translate-x-[1px] active:translate-y-[1px] ${expanded ? 'bg-red border-red text-white' : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-white/20'}`}
+          className={`w-full flex items-center justify-center gap-3 py-4 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-hard active:translate-y-[1px] italic ${expanded ? 'bg-gold border-gold/40 text-midnight shadow-hard' : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-white/20'}`}
         >
-          <span>{expanded ? 'SECURE_CONTACT_STREAM' : 'ESTABLISH_COMM_LINK'}</span>
+          <span>{expanded ? 'Secure Contact' : 'Contact Lawyer'}</span>
           <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
 
@@ -305,34 +303,34 @@ function LawyerCard({ lawyer, index }) {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="pt-6 mt-4 border-t-2 border-white/5 flex flex-col gap-4">
+              <div className="pt-6 mt-4 border-t border-white/5 flex flex-col gap-4">
                 <a
                   href={`tel:${lawyer.phone}`}
-                  className="flex items-center gap-4 text-xs font-mono font-bold text-text-tertiary hover:text-red transition-colors group/link"
+                  className="flex items-center gap-4 text-sm font-body font-medium text-text-tertiary hover:text-gold transition-colors group/link italic"
                 >
-                  <div className="p-2 bg-void border-2 border-white/5 rounded group-hover/link:border-red/40 transition-all">
-                    <Phone className="w-4 h-4 text-red" />
+                  <div className="p-2 bg-void border-2 border-white/10 rounded-sm group-hover/link:border-gold/40 transition-all shadow-hard">
+                    <Phone className="w-4 h-4 text-gold" />
                   </div>
                   {lawyer.phone}
                 </a>
                 <a
                   href={`mailto:${lawyer.email}`}
-                  className="flex items-center gap-4 text-xs font-mono font-bold text-text-tertiary hover:text-red transition-colors group/link"
+                  className="flex items-center gap-4 text-sm font-body font-medium text-text-tertiary hover:text-gold transition-colors group/link italic"
                 >
-                  <div className="p-2 bg-void border-2 border-white/5 rounded group-hover/link:border-red/40 transition-all">
-                    <Mail className="w-4 h-4 text-red" />
+                  <div className="p-2 bg-void border-2 border-white/10 rounded-sm group-hover/link:border-gold/40 transition-all shadow-hard">
+                    <Mail className="w-4 h-4 text-gold" />
                   </div>
-                  {lawyer.email.toUpperCase()}
+                  {lawyer.email}
                 </a>
 
                 <a
                   href="http://www.barcouncilofindia.org/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex max-w-max items-center gap-3 px-5 py-2.5 rounded bg-void border-2 border-red/20 text-red text-[9px] uppercase font-extrabold tracking-widest hover:bg-red hover:text-white transition-all italic shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]"
+                  className="inline-flex max-w-max items-center gap-3 px-5 py-2.5 rounded-sm bg-void border-2 border-gold/20 text-gold text-[9px] uppercase font-extrabold tracking-widest hover:bg-gold hover:text-midnight transition-all shadow-hard italic"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  VERIFY_B_C_I_CREDENTIALS
+                  Verify BCI Credentials
                 </a>
               </div>
             </motion.div>
@@ -369,21 +367,21 @@ export default function LawyerFinderPage() {
   }, [searchQuery, selectedSpec, selectedCity, sortBy]);
 
   return (
-    <div className="min-h-screen bg-void pb-16 font-mono">
+    <div className="min-h-screen bg-void pb-16 font-mono text-slate-200">
       <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-12 pb-24 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 text-center md:text-left">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-4 px-5 py-2 bg-void border-2 border-red/40 text-red text-[11px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-hard-red/10">
+            <div className="inline-flex items-center gap-4 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[11px] uppercase font-extrabold tracking-[0.4em] rounded-sm shadow-hard italic">
               <UserCheck className="w-5 h-5" />
-              <span>LAWYER_DIRECTIVE_REGISTRY_V4.2</span>
+              <span>VETTED_LEGAL_DIRECTORY_V4.2</span>
             </div>
-            <h1 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter leading-none italic text-white">
-              LOCATE <span className="text-red">ADVOCATE</span>
+            <h1 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter leading-none text-white italic">
+              ADVOCATE <span className="text-gold">REGISTRY</span>
             </h1>
-            <p className="text-xs text-text-tertiary leading-relaxed max-w-xl mx-auto md:mx-0 uppercase tracking-[0.3em] italic opacity-60">
-              ACCESS THE VALIDATED DEPLOYMENT HUB FOR INDIAN STATUTORY ADVOCATES. FILTER BY JURISDICTION_ID, SPECIALIZATION_INDEX, AND EXPERIENCE_CYCLE_MANDATE.
+            <p className="text-xs text-text-tertiary leading-relaxed max-w-xl mx-auto md:mx-0 opacity-40 uppercase tracking-[0.2em] italic">
+              ACCESS THE VALIDATED REGISTRY OF INDIAN STATUTORY ADVOCATES. FILTER BY JURISDICTION, SPECIALIZATION, AND PROCEDURAL CATEGORY.
             </p>
           </div>
 
@@ -392,75 +390,75 @@ export default function LawyerFinderPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/lawyer-onboarding')}
-              className="bg-red hover:bg-red-dark text-white px-10 py-6 rounded-sm border-2 border-red-light/20 font-extrabold flex items-center gap-6 shadow-hard-red transition-all font-display group italic hover:shadow-hard active:translate-y-[2px]"
+              className="bg-gold hover:bg-gold-dark text-midnight px-10 py-6 rounded-sm border-2 border-gold/40 font-extrabold flex items-center gap-6 shadow-hard transition-all font-display group active:translate-y-[2px] italic uppercase tracking-widest"
             >
-              <div className="p-4 bg-void/20 rounded-sm border-2 border-white/10 group-hover:bg-void/40 transition-colors">
+              <div className="p-4 bg-void border-2 border-midnight/20 rounded-sm group-hover:bg-midnight/10 transition-colors">
                 <UserPlus className="w-7 h-7" />
               </div>
               <div className="text-left">
-                <p className="text-[10px] uppercase tracking-[0.4em] font-extrabold opacity-60 leading-none mb-1">
-                  OFFICER_RECRUITMENT
+                <p className="text-[10px] uppercase tracking-widest font-extrabold opacity-60 leading-none mb-1">
+                  ADVOCATE_ENROLLMENT
                 </p>
-                <p className="text-xl uppercase tracking-tighter italic">JOIN_THE_BUREAU</p>
+                <p className="text-xl uppercase tracking-tight">JOIN_THE_REGISTRY</p>
               </div>
               <ArrowRight className="w-6 h-6 ml-6 group-hover:translate-x-2 transition-transform" />
             </motion.button>
           </div>
         </div>
 
-        <div className="bg-red/[0.03] border-2 border-red/20 rounded-sm px-6 py-4 flex items-center justify-center text-center -mt-4 shadow-inner">
-          <p className="text-[11px] text-text-tertiary font-body uppercase tracking-[0.4em] italic leading-relaxed">
-            <span className="text-red font-bold mr-3 underline decoration-dotted">// SYSTEM_NOTE:</span>
-            PROFILES ARE REPRESENTATIVE VECTORS. JUSTICEAI DOES NOT ENDORSE SPECIFIC ADVOCATE_NODES.
+        <div className="bg-void border-2 border-gold/20 rounded-sm px-6 py-4 flex items-center justify-center text-center -mt-4 shadow-inner italic">
+          <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-[0.3em] font-extrabold">
+            <span className="text-gold mr-3 underline decoration-dotted">// INSTITUTIONAL_NOTICE:</span>
+            ADVOCATE PROFILES ARE FOR INFORMATIONAL PURPOSES. SYSTEM DOES NOT OFFICIALLY ENDORSE SPECIFIC COUNSEL.
           </p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-8">
           <div className="relative md:col-span-2 group">
-            <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-7 h-7 text-white/10 group-hover:text-red transition-all" />
+            <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-7 h-7 text-white/10 group-hover:text-gold transition-all" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="SEARCH_REGISTRY_DATABASE..."
-              className="w-full bg-void border-2 border-white/5 rounded-sm px-20 py-6 text-sm text-white placeholder:text-white/10 focus:outline-none focus:border-red/40 transition-all font-display font-bold tracking-[0.4em] uppercase italic shadow-hard shadow-inner"
+              placeholder="SEARCH_DIRECTORY_PROTOCOL..."
+              className="w-full bg-void border-2 border-white/5 rounded-sm px-20 py-6 text-[14px] text-white placeholder:text-white/10 focus:outline-none focus:border-gold/40 transition-all font-display font-extrabold tracking-[0.2em] uppercase shadow-hard italic"
             />
           </div>
           <div className="relative group">
             <select
               value={selectedSpec}
               onChange={(e) => setSelectedSpec(e.target.value)}
-              className="w-full bg-void border-2 border-white/5 rounded-sm px-8 py-6 text-[10px] font-extrabold uppercase tracking-widest text-white/40 focus:outline-none focus:border-red/40 transition-all font-display italic appearance-none cursor-pointer shadow-hard"
+              className="w-full bg-void border-2 border-white/5 rounded-sm px-8 py-6 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/40 focus:outline-none focus:border-gold/40 transition-all font-display appearance-none cursor-pointer shadow-hard italic"
             >
               {SPECIALIZATIONS.map((s) => (
-                <option key={s.id} value={s.id} className="bg-void text-white">
+                <option key={s.id} value={s.id} className="bg-midnight text-white">
                   {s.label.toUpperCase()}
                 </option>
               ))}
             </select>
-             <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-red transition-colors" />
+             <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-gold transition-colors" />
           </div>
           <div className="relative group">
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="w-full bg-void border-2 border-white/5 rounded-sm px-8 py-6 text-[10px] font-extrabold uppercase tracking-widest text-white/40 focus:outline-none focus:border-red/40 transition-all font-display italic appearance-none cursor-pointer shadow-hard"
+              className="w-full bg-void border-2 border-white/5 rounded-sm px-8 py-6 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/40 focus:outline-none focus:border-gold/40 transition-all font-display appearance-none cursor-pointer shadow-hard italic"
             >
               {CITIES.map((c) => (
-                <option key={c.id} value={c.id} className="bg-void text-white">
+                <option key={c.id} value={c.id} className="bg-midnight text-white">
                   {c.label.toUpperCase()}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-red transition-colors" />
+            <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-gold transition-colors" />
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-b-2 border-white/5 pb-6">
+        <div className="flex items-center justify-between border-b border-white/5 pb-6">
           <div className="flex items-center gap-4">
-            <div className="w-3 h-3 bg-red animate-pulse rounded-full shadow-hard-red/40" />
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.5em] italic text-text-tertiary">
-              <span className="text-red font-bold">{filteredLawyers.length}</span> BUREAU_OFFICERS_ONLINE_SYNC
+            <div className="w-3 h-3 bg-gold animate-pulse rounded-sm shadow-hard" />
+            <p className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary">
+              <span className="text-gold font-bold">{filteredLawyers.length}</span> Verified Lawyers Available
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -468,11 +466,11 @@ export default function LawyerFinderPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-void border-2 border-white/5 rounded-sm px-6 py-3 text-[9px] font-extrabold text-red uppercase tracking-[0.4em] italic focus:outline-none focus:border-red/50 shadow-hard hover:border-red/20 transition-all cursor-pointer"
+              className="bg-void border-2 border-white/5 rounded-sm px-6 py-3 text-[9px] font-extrabold text-gold uppercase tracking-widest focus:outline-none focus:border-gold/50 shadow-hard hover:border-gold/20 transition-all cursor-pointer italic"
             >
-              <option value="rating">OPERATIONAL_RATING</option>
-              <option value="experience">SENIORITY_LOG_CYCLE</option>
-              <option value="cases">DEPLOYMENT_COUNT_SYNC</option>
+              <option value="rating">Client Rating</option>
+              <option value="experience">Years of Experience</option>
+              <option value="cases">Case History</option>
             </select>
           </div>
         </div>
@@ -484,12 +482,12 @@ export default function LawyerFinderPage() {
         </div>
 
         {filteredLawyers.length === 0 && (
-          <div className="text-center py-32 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-inner space-y-10 italic">
+          <div className="text-center py-32 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-hard space-y-10">
             <Search className="w-20 h-20 text-white/10 mx-auto" />
             <div className="space-y-4">
-              <p className="text-3xl font-display font-bold text-white uppercase tracking-tighter leading-none italic">NULL_SET_DETECTED</p>
-              <p className="text-[10px] text-text-tertiary uppercase tracking-[0.5em] italic opacity-40 max-w-lg mx-auto">
-                 NO BUREAU_OFFICERS MATCH THE REQUESTED PARAMETERS IN ACTIVE REGISTRY_STRATA.
+              <p className="text-3xl font-display font-bold text-white uppercase tracking-tight leading-none">No Lawyers Found</p>
+              <p className="text-[10px] text-text-tertiary uppercase tracking-widest opacity-40 max-w-lg mx-auto">
+                 We couldn't find any lawyers matching your current search parameters.
               </p>
             </div>
             <button
@@ -498,47 +496,45 @@ export default function LawyerFinderPage() {
                 setSelectedSpec('all');
                 setSelectedCity('all');
               }}
-              className="px-14 py-5 rounded-sm border-2 border-white/10 text-white/60 text-[10px] font-extrabold uppercase tracking-[0.4em] hover:text-white hover:border-white/30 transition-all italic shadow-hard active:translate-y-[2px]"
+              className="px-14 py-5 rounded-sm border-2 border-white/10 text-white/60 text-[10px] font-extrabold uppercase tracking-widest hover:text-white hover:border-white/30 transition-all shadow-hard active:translate-y-[2px] italic"
             >
-              PURGE_REGISTRY_FILTERS_ID
+              Reset Search Filters
             </button>
           </div>
         )}
 
-        <div className="p-10 bg-void border-2 border-red/[0.15] rounded-sm shadow-hard relative overflow-hidden group/disclaimer hover:border-red/40 transition-all">
-          {/* Tactical Grid Background Overlay */}
+        <div className="p-10 bg-void border-2 border-gold/[0.15] rounded-sm shadow-hard relative overflow-hidden group/disclaimer hover:border-gold/40 transition-all italic">
+          {/* Statutory Grid Background Overlay */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
           
-          <div className="absolute top-0 right-0 w-48 h-48 bg-red/5 -mr-24 -mt-24 rotate-45 group-hover/disclaimer:bg-red/10 transition-all pointer-events-none border border-red/10" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gold/5 -mr-24 -mt-24 rotate-45 group-hover/disclaimer:bg-gold/10 transition-all pointer-events-none border border-gold/10" />
           <div className="flex items-start gap-6 mb-8 relative z-10">
-             <AlertCircle className="w-8 h-8 text-red mt-1" />
+             <AlertCircle className="w-8 h-8 text-gold mt-1" />
              <div className="space-y-2">
-               <p className="text-[14px] text-red font-extrabold uppercase tracking-[0.5em] font-display italic">
-                DIRECTORY_OPERATIONAL_DISCLAIMER_NOTICE_MANDATE
+               <p className="text-[14px] text-gold font-bold uppercase tracking-widest font-display">
+                Directory Disclaimer & Compliance Notice
               </p>
-              <p className="text-[10px] text-text-tertiary uppercase tracking-[0.3em] font-bold italic opacity-40">
-                PROTOCOL_REF: BCI_COMPLIANCE_ALPHA_4.2
+              <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-medium opacity-40">
+                Compliance Reference: BCI-ALPHA-4.2
               </p>
              </div>
           </div>
           <div className="space-y-6 relative z-10">
-            <p className="text-[10px] text-text-tertiary uppercase tracking-[0.4em] font-bold leading-relaxed italic opacity-80 border-l-2 border-red/20 pl-6">
-              // BUREAU_PROFILES_INDICATIVE_ONLY. MANDATORY_CREDENTIAL_VERIFICATION_REQUIRED_VIA_BAR_COUNCIL_API_PROTOCOLS. DO NOT INITIALIZE RETAINER_AGREEMENT WITHOUT DIRECT JURISDICTIONAL VALIDATION.
+            <p className="text-xs text-text-tertiary font-body leading-relaxed opacity-80 border-l-2 border-gold/20 pl-6">
+              Advocate profiles are indicative only. Mandatory credential verification is required via Bar Council protocols. Do not initialize any formal engagement without independent verification.
             </p>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 pt-10 border-t-2 border-white/5">
-              <p className="text-[10px] text-text-tertiary/40 font-body italic uppercase tracking-widest leading-loose max-w-2xl">
-                The indices displayed are industrial-grade mockup deployments for operational demonstration.
-                JusticeAI aims to expand deep-tier Bar Council API integration in future development cycles.
-                Registry data updated via periodic analytical crawl.
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 pt-10 border-t border-white/5">
+              <p className="text-[10px] text-text-tertiary/40 font-body uppercase tracking-widest leading-loose max-w-2xl">
+                The data displayed is part of JusticeAI's verified indexing service. Future updates will include deep-tier API integration with state bar councils.
               </p>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <p className="text-[10px] text-white/10 uppercase tracking-[0.6em] font-extrabold italic">
-                  REGISTRY_INDEX_V.4.2.0
+                <p className="text-[10px] text-white/10 uppercase tracking-widest font-bold">
+                  Registry Index v4.2.0
                 </p>
                 <div className="flex items-center gap-3">
-                   <div className="w-2 h-2 rounded-full bg-red shadow-hard-red/40" />
-                   <p className="text-[11px] text-red-light font-bold uppercase tracking-[0.3em] italic">
-                    LAST_VAL_AUDIT: APR_2026
+                   <div className="w-2 h-2 rounded-sm bg-gold shadow-hard" />
+                   <p className="text-[11px] text-gold font-bold uppercase tracking-widest">
+                    Last Audit: April 2026
                   </p>
                 </div>
               </div>

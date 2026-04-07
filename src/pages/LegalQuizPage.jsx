@@ -7,7 +7,7 @@ import {
   ArrowRight,
   RotateCcw,
   Trophy,
-  Target,
+  Goal,
   BookOpen,
   Zap,
   Timer,
@@ -211,13 +211,13 @@ function DailyFact() {
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-void border-2 border-white/5 rounded p-5 flex items-start gap-5 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]"
+      className="bg-void border-2 border-white/5 rounded-sm p-5 flex items-start gap-5 shadow-hard"
     >
-      <div className="w-12 h-12 rounded bg-void border-2 border-red/20 flex items-center justify-center shrink-0 shadow-inner">
-        <Lightbulb className="w-6 h-6 text-red animate-pulse" />
+      <div className="w-12 h-12 rounded-sm bg-void border-2 border-gold/20 flex items-center justify-center shrink-0 shadow-inner">
+        <Lightbulb className="w-6 h-6 text-gold animate-pulse" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-red mb-1 italic opacity-60">
+        <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-gold mb-1 italic opacity-60">
           STATUTORY_FACT_STREAM
         </p>
         <p className="text-sm text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic">
@@ -239,7 +239,7 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
       case 'Medium':
         return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
       case 'Hard':
-        return 'text-red bg-red/10 border-red/20';
+        return 'text-gold bg-gold/10 border-gold/20';
       default:
         return 'text-white bg-void/10 border-white/20';
     }
@@ -255,7 +255,7 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
     >
       <div className="space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-red px-3 py-1 bg-red/10 rounded border-2 border-red/20 italic">
+          <span className="text-[10px] uppercase font-extrabold tracking-[0.3em] text-gold px-3 py-1 bg-gold/10 rounded border-2 border-gold/20 italic">
             {question.category}
           </span>
           <span
@@ -265,7 +265,7 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
           </span>
           <div className="flex-1" />
           <span className="text-[10px] text-white/20 uppercase font-extrabold tracking-[0.4em] italic leading-none">
-            QUERY_NODE_{index + 1} / {total}
+            QUESTION_{index + 1} / {total}
           </span>
         </div>
         <h3 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight uppercase tracking-tighter italic">
@@ -285,13 +285,13 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
               bgClass = 'bg-blue/10';
               textClass = 'text-blue';
             } else if (i === selectedAnswer && i !== question.correct) {
-              borderClass = 'border-red/50';
-              bgClass = 'bg-red/10';
-              textClass = 'text-red font-bold';
+              borderClass = 'border-gold/50';
+              bgClass = 'bg-gold/10';
+              textClass = 'text-gold font-bold';
             }
           } else if (i === selectedAnswer) {
-            borderClass = 'border-red-light/40';
-            bgClass = 'bg-red/5';
+            borderClass = 'border-gold-light/40';
+            bgClass = 'bg-gold/5';
             textClass = 'text-white font-bold';
           }
 
@@ -300,16 +300,16 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
               key={i}
               onClick={() => !showResult && onSelect(i)}
               disabled={showResult}
-              className={`w-full text-left p-5 rounded border-2 transition-all duration-300 flex items-center gap-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] group ${borderClass} ${bgClass}`}
+              className={`w-full text-left p-5 rounded-sm border-2 transition-all duration-300 flex items-center gap-5 shadow-hard group ${borderClass} ${bgClass}`}
             >
               <span
-                className={`w-10 h-10 rounded border-2 flex items-center justify-center text-sm font-display font-extrabold flex-shrink-0 transition-all ${
+                className={`w-10 h-10 rounded-sm border-2 flex items-center justify-center text-sm font-display font-extrabold flex-shrink-0 transition-all ${
                   showResult && i === question.correct
-                    ? 'border-blue bg-blue text-white shadow-[4px_4px_0px_0px_rgba(37,99,235,0.3)]'
+                    ? 'border-blue bg-blue text-white shadow-hard'
                     : showResult && i === selectedAnswer && i !== question.correct
-                      ? 'border-red bg-red text-white shadow-[4px_4px_0px_0px_rgba(225,29,72,0.3)]'
+                      ? 'border-gold bg-gold text-midnight shadow-hard'
                       : i === selectedAnswer
-                        ? 'border-red bg-red text-white shadow-[4px_4px_0px_0px_rgba(225,29,72,0.3)] animate-pulse'
+                        ? 'border-gold bg-gold text-midnight shadow-hard animate-pulse'
                         : 'border-white/10 text-white/20 group-hover:border-white/30 group-hover:text-white/40'
                 }`}
               >
@@ -335,10 +335,10 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-6 rounded border-2 border-blue/20 bg-blue/5 space-y-5 shadow-inner"
+          className="p-6 rounded-sm border-2 border-blue/20 bg-void space-y-5 shadow-hard"
         >
           <div className="flex items-start gap-5">
-            <div className="w-10 h-10 rounded bg-blue/10 border border-blue/30 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-sm bg-void border-2 border-blue/30 flex items-center justify-center shrink-0">
               <BookOpen className="w-5 h-5 text-blue" />
             </div>
             <div className="flex-1 min-w-0">
@@ -422,12 +422,12 @@ export default function LegalQuizPage() {
   const getGrade = () => {
     if (percentage === 100)
       return {
-        label: 'SENIOR_ADVOCATE_V1.0',
-        color: 'text-red shadow-hard-red/10',
+        label: 'SENIOR_COUNSEL_LEVEL',
+        color: 'text-gold shadow-luxe',
         msg: 'EXCEPTIONAL_MASTERY_OF_INDIAN_JURISPRUDENCE!',
       };
     if (percentage >= 75)
-      return { label: 'ADVOCATE_NODE', color: 'text-blue', msg: 'SOLID_LEGAL_FOUNDATION_AUTHENTICATED.' };
+      return { label: 'ADVOCATE_LEVEL', color: 'text-blue', msg: 'SOLID_LEGAL_FOUNDATION_VERIFIED.' };
     if (percentage >= 50)
       return {
         label: 'LAW_PROBATIONER',
@@ -435,9 +435,9 @@ export default function LegalQuizPage() {
         msg: 'ACCEPTABLE_PROGRESS. CONTINUE_LEGAL_SYNC.',
       };
     return {
-      label: 'CIVILIAN_STRATUM',
-      color: 'text-red/60',
-      msg: 'INSUFFICIENT_DATA. INITIALIZE_RIGHTS_RE-SYNC.',
+      label: 'FOUNDATIONAL_LEVEL',
+      color: 'text-gold/60',
+      msg: 'INSUFFICIENT_DATA. RESTART_ASSESSMENT_TO_VERIFY.',
     };
   };
 
@@ -448,15 +448,15 @@ export default function LegalQuizPage() {
       <main className="max-w-4xl mx-auto px-6 pt-32 space-y-12 pb-24 w-full">
         {/* Header */}
         <div className="text-center space-y-8">
-          <div className="inline-flex items-center gap-4 px-5 py-2 bg-void border-2 border-red/40 text-red text-[11px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-hard-red/10">
+          <div className="inline-flex items-center gap-4 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[11px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe">
             <Brain className="w-5 h-5" />
-            <span>JURIDICAL_APTITUDE_MATRIX_V4.0</span>
+            <span>LEGAL_APTITUDE_FRAMEWORK_V4.0</span>
           </div>
           <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic text-white">
-            SYNC <span className="text-red">JURISPRUDENCE</span>
+            LEGAL <span className="text-gold">MASTERY</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
-            MODERNIZED FOR 2024 MANDATES. ASSESSING DEPLOYMENT READINESS FOR BNS, BNSS, AND BSA PROTOCOLS WITH VERIFIED INDICES.
+            MODERNIZED FOR 2024 STANDARDS. ASSESSING READINESS FOR BNS, BNSS, AND BSA PROCEDURES WITH VERIFIED INDICES.
           </p>
         </div>
 
@@ -465,10 +465,10 @@ export default function LegalQuizPage() {
 
         {!quizComplete ? (
           <>
-            <div className="grid md:grid-cols-2 gap-8 bg-void p-8 rounded border-2 border-white/5 shadow-hard">
+            <div className="grid md:grid-cols-2 gap-8 bg-void p-8 rounded-sm border-2 border-white/5 shadow-hard">
               <div className="space-y-4">
                 <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-white/20 italic">
-                  // SELECT_PROTOCOLS
+                  // SELECT_CATEGORIES_STRATA
                 </label>
                 <div className="flex flex-wrap gap-3">
                   {CATEGORIES.slice(0, 4).map((cat) => (
@@ -478,7 +478,7 @@ export default function LegalQuizPage() {
                         setSelectedCategory(cat);
                         setCurrentIndex(0);
                       }}
-                      className={`px-4 py-2 rounded-sm border-2 text-[9px] font-extrabold uppercase tracking-widest transition-all italic ${selectedCategory === cat ? 'bg-red border-red-light/40 text-white shadow-hard-red/40' : 'bg-void border-white/5 text-white/40 hover:text-white hover:border-white/20'}`}
+                      className={`px-4 py-2 rounded-sm border-2 text-[9px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard ${selectedCategory === cat ? 'bg-gold border-gold-light/40 text-midnight shadow-hard' : 'bg-void border-white/5 text-white/40 hover:text-white hover:border-white/20'}`}
                     >
                       {cat.replace(' ', '_')}
                     </button>
@@ -487,7 +487,7 @@ export default function LegalQuizPage() {
               </div>
               <div className="space-y-4">
                 <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-white/20 italic">
-                  // INTENSITY_LEVEL
+                  // DIFFICULTY_PROTOCOL
                 </label>
                 <div className="flex gap-3">
                   {DIFFICULTIES.map((diff) => (
@@ -497,7 +497,7 @@ export default function LegalQuizPage() {
                         setSelectedDifficulty(diff);
                         setCurrentIndex(0);
                       }}
-                      className={`px-4 py-2 rounded-sm border-2 text-[9px] font-extrabold uppercase tracking-widest transition-all italic ${selectedDifficulty === diff ? 'bg-red border-red-light/40 text-white shadow-hard-red/40' : 'bg-void border-white/5 text-white/40 hover:text-white hover:border-white/20'}`}
+                      className={`px-4 py-2 rounded-sm border-2 text-[9px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard ${selectedDifficulty === diff ? 'bg-gold border-gold-light/40 text-midnight' : 'bg-void border-white/5 text-white/40 hover:text-white hover:border-white/20'}`}
                     >
                       {diff.toUpperCase()}
                     </button>
@@ -509,14 +509,14 @@ export default function LegalQuizPage() {
             {/* Progress */}
             <div className="space-y-5">
               <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.5em] italic">
-                <span className="text-white/20">DEPLOYMENT_PROGRESS_SYNC</span>
-                <span className="text-red">
-                  NODE_{currentIndex + 1} / {filteredQuestions.length || 0}
+                <span className="text-white/20">PROGRESS_TRACKER_SYNC</span>
+                <span className="text-gold">
+                  QUESTION_{currentIndex + 1} / {filteredQuestions.length || 0}
                 </span>
               </div>
               <div className="h-[4px] bg-void/5 rounded-sm overflow-hidden shadow-inner border border-white/5">
                 <motion.div
-                  className="h-full bg-red shadow-[0_0_20px_rgba(225,29,72,0.6)]"
+                  className="h-full bg-gold shadow-[0_0_20px_rgba(212,175,55,0.6)]"
                   animate={{
                     width: `${((currentIndex + 1) / (filteredQuestions.length || 1)) * 100}%`,
                   }}
@@ -526,11 +526,11 @@ export default function LegalQuizPage() {
 
             {/* Question Card */}
             {filteredQuestions.length > 0 ? (
-              <div className="bg-void rounded border-2 border-white/5 p-12 md:p-16 shadow-hard relative overflow-hidden group">
-                 {/* Tactical Grid Background Overlay */}
+              <div className="bg-void rounded-sm border-2 border-white/5 p-12 md:p-16 shadow-hard relative overflow-hidden group">
+               {/* Institutional Grid Pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
                 
-                <div className="absolute top-0 right-0 w-48 h-48 bg-red/5 -mr-24 -mt-24 rotate-45 group-hover:bg-red/10 transition-all pointer-events-none border border-red/10" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gold/5 -mr-24 -mt-24 rotate-45 group-hover:bg-gold/10 transition-all pointer-events-none border border-gold/10" />
                 <AnimatePresence mode="wait">
                   <QuizCard
                     key={currentQuestion.id}
@@ -545,7 +545,7 @@ export default function LegalQuizPage() {
 
                 <div className="mt-16 flex flex-col sm:flex-row items-center justify-between gap-8 pt-12 border-t-2 border-white/5 relative z-10">
                   <div className="text-[10px] text-white/20 font-extrabold uppercase tracking-[0.5em] italic">
-                    NODES_ATTEMPTED_COUNT:{' '}
+                    QUESTIONS_ATTEMPTED:{' '}
                     <span className="text-white">
                       {attemptedCount} / {filteredQuestions.length}
                     </span>
@@ -554,9 +554,9 @@ export default function LegalQuizPage() {
                     <button
                       onClick={() => setShowResult(true)}
                       disabled={selectedAnswer === undefined}
-                      className="flex items-center gap-4 bg-red hover:bg-red-dark disabled:opacity-10 disabled:cursor-not-allowed text-white px-12 py-5 rounded-sm border-2 border-red-light/20 font-extrabold uppercase tracking-[0.3em] transition-all active:translate-y-[2px] shadow-hard-red italic"
+                      className="flex items-center gap-4 bg-gold hover:bg-gold-dark disabled:opacity-10 disabled:cursor-not-allowed text-midnight px-12 py-5 rounded-sm border-2 border-gold-light/20 font-extrabold uppercase tracking-[0.3em] transition-all active:translate-y-[2px] shadow-luxe italic"
                     >
-                      <Target className="w-5 h-5 shadow-hard-red" /> VERIFY_INDEX
+                      <Goal className="w-5 h-5 shadow-luxe" /> VERIFY_RESPONSE
                     </button>
                   ) : (
                     <button
@@ -572,8 +572,8 @@ export default function LegalQuizPage() {
                     >
                       <span className="tracking-[0.4em]">
                         {currentIndex < filteredQuestions.length - 1
-                          ? 'NEXT_DEVOLUTION'
-                          : 'GENERATE_FINAL_GRADE'}
+                          ? 'NEXT_QUESTION'
+                          : 'COMPLETE_ASSESSMENT'}
                       </span>
                       <ArrowRight className="w-5 h-5" />
                     </button>
@@ -581,7 +581,7 @@ export default function LegalQuizPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-32 bg-void rounded border-2 border-dashed border-white/10 shadow-inner space-y-8 italic">
+              <div className="text-center py-32 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-hard space-y-8 italic">
                 <p className="text-lg font-display font-bold text-white/20 uppercase tracking-[0.8em]">
                   NULL_SET_DETECTED
                 </p>
@@ -607,18 +607,18 @@ export default function LegalQuizPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-16"
           >
-            <div className="bg-void rounded border-2 border-white/10 p-16 text-center space-y-12 relative overflow-hidden shadow-hard">
-               {/* Tactical Grid Background Overlay */}
+            <div className="bg-void rounded-sm border-2 border-white/10 p-16 text-center space-y-12 relative overflow-hidden shadow-hard">
+               {/* Institutional Grid Pattern */}
                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
               
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-red shadow-[0_0_30px_rgba(225,29,72,0.5)]" />
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-gold shadow-[0_0_30px_rgba(212,175,55,0.5)]" />
 
               <div className="relative">
-                <div className="w-32 h-32 rounded bg-void border-4 border-red flex items-center justify-center mx-auto shadow-hard-red animate-pulse">
-                  <Trophy className="w-16 h-16 text-red" />
+                <div className="w-32 h-32 rounded-sm bg-void border-4 border-gold flex items-center justify-center mx-auto shadow-hard animate-pulse">
+                  <Trophy className="w-16 h-16 text-gold" />
                 </div>
                 <motion.div 
-                  className="absolute inset-0 border-4 border-red rounded-full opacity-0 pointer-events-none"
+                  className="absolute inset-0 border-4 border-gold rounded-sm opacity-0 pointer-events-none"
                   animate={{ scale: [1, 1.4], opacity: [0.3, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
@@ -626,7 +626,7 @@ export default function LegalQuizPage() {
 
               <div className="space-y-6 relative z-10">
                 <p className="text-[11px] uppercase font-extrabold tracking-[0.6em] text-white/20 italic">
-                  // FINAL_AUTHORITY_RATING_PROTOCOL
+                  // FINAL_LEGAL_APTITUDE_RATING
                 </p>
                 <h2
                   className={`text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter italic ${getGrade().color}`}
@@ -638,14 +638,14 @@ export default function LegalQuizPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto pt-8">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto pt-8">
                 {[
-                  { val: score, label: 'VERIFIED_HITS', color: 'text-white' },
-                  { val: filteredQuestions.length - score, label: 'INDEX_MISMATCH', color: 'text-red' },
+                  { val: score, label: 'VERIFIED_RESPONSES', color: 'text-white' },
+                  { val: filteredQuestions.length - score, label: 'INCORRECT_RESPONSES', color: 'text-gold' },
                   { val: `${percentage}%`, label: 'PRECISION_INDEX', color: 'text-blue' },
-                  { val: 'RAPID', label: 'RESPONSE_TYPE', color: 'text-red animate-pulse', icon: Zap }
+                  { val: 'FAST', label: 'RESPONSE_TYPE', color: 'text-gold animate-pulse', icon: Zap }
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-void p-8 rounded border-2 border-white/5 shadow-hard flex flex-col items-center justify-center space-y-2">
+                  <div key={idx} className="bg-void p-8 rounded-sm border-2 border-white/5 shadow-hard flex flex-col items-center justify-center space-y-2">
                     {stat.icon ? <stat.icon className={`w-8 h-8 ${stat.color}`} /> : <p className={`text-4xl font-display font-bold italic ${stat.color}`}>{stat.val}</p>}
                     <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">
                       {stat.label}
@@ -659,21 +659,21 @@ export default function LegalQuizPage() {
                   onClick={shareResults}
                   className="flex items-center justify-center gap-4 bg-void border-2 border-white/10 hover:border-white text-white px-12 py-5 rounded-sm font-extrabold uppercase tracking-[0.4em] transition-all w-full sm:w-auto italic shadow-hard active:translate-y-[2px]"
                 >
-                  <Share2 className="w-5 h-5 text-blue" /> {shared ? 'HASH_SENT' : 'DISTRIBUTE_MANIFEST'}
+                  <Share2 className="w-5 h-5 text-blue" /> {shared ? 'RESULTS_COPIED' : 'SHARE_RESULTS'}
                 </button>
                 <button
                   onClick={handleRestart}
-                  className="flex items-center justify-center gap-4 bg-red hover:bg-red-dark text-white px-12 py-5 rounded-sm border-2 border-red-light/20 font-extrabold uppercase tracking-[0.4em] transition-all w-full sm:w-auto italic shadow-hard-red active:translate-y-[4px]"
+                  className="flex items-center justify-center gap-4 bg-gold hover:bg-gold-dark text-midnight px-12 py-5 rounded-sm border-2 border-gold-light/20 font-extrabold uppercase tracking-[0.4em] transition-all w-full sm:w-auto italic shadow-luxe active:translate-y-[4px]"
                 >
-                  <RotateCcw className="w-5 h-5" /> INITIALIZE_REBOOT
+                  <RotateCcw className="w-5 h-5" /> RESTART_ASSESSMENT
                 </button>
               </div>
             </div>
 
             {/* Detailed Review */}
             <div className="space-y-10">
-              <div className="flex items-center gap-4 border-l-4 border-red pl-6">
-                <FileText className="w-6 h-6 text-red" />
+              <div className="flex items-center gap-4 border-l-4 border-gold pl-6">
+                <FileText className="w-6 h-6 text-gold" />
                 <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tighter italic">
                   STATUTORY_ANNOTATIONS_INDEX_LOG
                 </h3>
@@ -685,11 +685,11 @@ export default function LegalQuizPage() {
                   return (
                     <div
                       key={q.id}
-                      className={`p-10 rounded border-2 transition-all shadow-hard group ${isCorrect ? 'bg-void border-blue/20 hover:border-blue/40' : 'bg-void border-red/20 hover:border-red/40'}`}
+                      className={`p-10 rounded-sm border-2 transition-all shadow-hard group ${isCorrect ? 'bg-void border-blue/20 hover:border-blue/40' : 'bg-void border-gold/20 hover:border-gold/40'}`}
                     >
                       <div className="flex items-start gap-8">
                         <div
-                          className={`w-12 h-12 rounded-sm border-2 flex items-center justify-center shrink-0 font-display font-extrabold italic shadow-hard ${isCorrect ? 'bg-blue border-blue-light/30 text-white' : 'bg-red border-red-light/30 text-white'}`}
+                          className={`w-12 h-12 rounded-sm border-2 flex items-center justify-center shrink-0 font-display font-extrabold italic shadow-hard ${isCorrect ? 'bg-blue border-blue-light/30 text-white' : 'bg-gold border-gold-light/30 text-midnight'}`}
                         >
                           {String(i + 1).padStart(2, '0')}
                         </div>
@@ -700,7 +700,7 @@ export default function LegalQuizPage() {
                           <div className="flex flex-wrap gap-x-12 gap-y-3 border-t-2 border-white/5 pt-5">
                             <div className="space-y-1">
                                <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">USER_INPUT_PROTOCOL</p>
-                               <p className={`text-xs uppercase font-extrabold italic tracking-wider ${isCorrect ? 'text-blue' : 'text-red'}`}>
+                               <p className={`text-xs uppercase font-extrabold italic tracking-wider ${isCorrect ? 'text-blue' : 'text-gold'}`}>
                                  {q.options[userAnswer] || 'TERMINATED_NO_INPUT'}
                                </p>
                             </div>
@@ -712,7 +712,7 @@ export default function LegalQuizPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 pt-2 pb-1">
-                             <div className="w-4 h-[2px] bg-red/20" />
+                             <div className="w-4 h-[2px] bg-gold/20" />
                              <p className="text-[9px] text-white/20 font-mono italic uppercase tracking-[0.3em]">
                                // VERIFICATION_SOURCE_NODE: {q.source}
                              </p>

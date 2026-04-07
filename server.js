@@ -1,11 +1,16 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+import hpp from 'hpp';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
+import winston from 'winston';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -17,16 +22,29 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Initialize Winston logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ]
+});
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
 const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'nomic-embed-text';
 const CHAT_MODEL = process.env.CHAT_MODEL || 'gemma3:4b';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB default
-const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW) || 60000; // 1 minute
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX) || 30; // 30 requests per window
 const BHASHINI_API_KEY = process.env.BHASHINI_API_KEY;
 const BHASHINI_USER_ID = process.env.BHASHINI_USER_ID;
 const BHASHINI_PIPELINE_ID = process.env.BHASHINI_PIPELINE_ID || '64392f96daac500b55c543cd';
@@ -37,52 +55,152 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/chat/completions';
 
-// Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
+// Security: Validate required environment variables
+const requiredEnvVars = ['PORT', 'NODE_ENV', 'OLLAMA_BASE_URL', 'EMBEDDING_MODEL', 'CHAT_MODEL'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingEnvVars.length > 0) {
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+}
+
+logger.info('Environment validation passed', { nodeEnv: NODE_ENV, port: PORT });
+
+// ===== SECURITY MIDDLEWARE =====
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://*.googleapis.com", "https://*.gstatic.com"],
+      connectSrc: ["'self'", "http://localhost:11434", "http://localhost:3001", "https://*.bhashini.gov.in", "https://*.googleapis.com", "https://api.deepseek.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'", "blob:"],
+      frameSrc: ["'none'"],
+      workerSrc: ["'self'", "blob:"]
+    }
+  },
+  hsts: NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeUnsubmitted: true,
+    preload: true
+  } : false,
+  // Allow React DevTools in development
+  sourceMaps: NODE_ENV === 'development'
 }));
+
+// CORS with better security
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : '*'),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Compression
+app.use(compression({
+  level: 6,
+  threshold: 1024 // Only compress responses > 1KB
+}));
+
+// Body parsing with limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging middleware
+// Prevent parameter pollution
+app.use(hpp());
+
+// Custom XSS protection middleware
+const xssMiddleware = (req, res, next) => {
+  const escapeHtml = (str) => {
+    if (!str) return str;
+    return str
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#039;');
+  };
+
+  const sanitize = (obj) => {
+    if (typeof obj === 'string') return escapeHtml(obj);
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
+      const sanitized = {};
+      for (const key in obj) {
+        sanitized[key] = sanitize(obj[key]);
+      }
+      return sanitized;
+    }
+    return obj;
+  };
+
+  // Sanitize body and query (req.params is read-only in Express 5)
+  if (req.body) req.body = sanitize(req.body);
+  if (req.query) {
+    // For query params, we need to handle them differently
+    Object.keys(req.query).forEach(key => {
+      req.query[key] = sanitize(req.query[key]);
+    });
+  }
+
+  next();
+};
+
+app.use(xssMiddleware);
+
+// ===== RATE LIMITING =====
+
+// General API rate limiting (generous for development, stricter for production)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: NODE_ENV === 'production' ? 200 : 1000, // 200 for prod, 1000 for dev
+  message: {
+    error: 'Too many requests',
+    message: 'Please try again later',
+    retryAfter: 900
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => NODE_ENV === 'test'
+});
+
+// Rate limiting for chat endpoints (balanced to prevent abuse while allowing active use)
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: NODE_ENV === 'production' ? 100 : 500, // 100 for prod (~7/min), 500 for dev
+  message: {
+    error: 'Too many chat requests',
+    message: 'Please wait before sending more messages',
+    retryAfter: 900
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => NODE_ENV === 'test'
+});
+
+// Apply rate limiting
+app.use('/api', apiLimiter);
+app.use('/api/chat', chatLimiter);
+
+// Request logging middleware with Winston
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+    const level = res.statusCode >= 400 ? 'warn' : 'info';
+    logger.log(level, `${req.method} ${req.path}`, {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip
+    });
   });
   next();
 });
-
-// Simple rate limiter
-const rateLimitStore = new Map();
-const rateLimiter = (req, res, next) => {
-  const key = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  
-  if (!rateLimitStore.has(key)) {
-    rateLimitStore.set(key, []);
-  }
-  
-  const requests = rateLimitStore.get(key).filter(time => time > windowStart);
-  
-  if (requests.length >= RATE_LIMIT_MAX) {
-    return res.status(429).json({ 
-      error: 'Too many requests', 
-      message: 'Please wait before making more requests',
-      retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000) 
-    });
-  }
-  
-  requests.push(now);
-  rateLimitStore.set(key, requests);
-  next();
-};
-
-// Apply rate limiting to API routes
-app.use('/api', rateLimiter);
 
 const DOCUMENTS_DIR = path.join(__dirname, 'public', 'documents');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -363,6 +481,35 @@ app.get('/api/stats', (req, res) => {
     totalSources: sources.length,
     sources: sources,
     memoryUsage: process.memoryUsage()
+  });
+});
+
+// Voice Configuration Endpoint (tells client which STT methods are available)
+app.get('/api/voice/config', (req, res) => {
+  // Check if Bhashini credentials are properly configured (not empty or placeholder values)
+  const isPlaceholder = (value) => {
+    if (!value || typeof value !== 'string') return true;
+    const trimmed = value.trim().toLowerCase();
+    return (
+      trimmed === '' ||
+      trimmed === 'your_bhashini_api_key_here' ||
+      trimmed === 'your_bhashini_user_id_here' ||
+      trimmed.startsWith('your_') ||
+      trimmed === 'placeholder'
+    );
+  };
+
+  const bhashiniConfigured = !isPlaceholder(BHASHINI_API_KEY) && !isPlaceholder(BHASHINI_USER_ID);
+  
+  // Only return pipelineId when Bhashini is actually configured (avoid info leak)
+  const bhashiniResponse = { available: bhashiniConfigured };
+  if (bhashiniConfigured) {
+    bhashiniResponse.pipelineId = BHASHINI_PIPELINE_ID;
+  }
+  
+  res.json({
+    bhashini: bhashiniResponse
+    // Web Speech API availability is checked client-side
   });
 });
 

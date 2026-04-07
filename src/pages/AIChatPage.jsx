@@ -126,33 +126,33 @@ How may I assist you with your legal matters today?`,
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0b0d] flex flex-col font-sans text-slate-200">
+    <div className="min-h-screen bg-void flex flex-col font-mono text-slate-200">
       
-      {/* Deep Ocean Header */}
-      <header className="w-full px-8 py-5 border-b border-[#1b2936] bg-[#0a0b0d]/80 backdrop-blur-md sticky top-0 flex items-center justify-between z-10 shadow-sm">
-        <div className="flex items-center gap-4">
+      {/* Statutory Header */}
+      <header className="w-full px-8 py-6 border-b border-white/5 bg-void/80 backdrop-blur-md sticky top-0 flex items-center justify-between z-10 shadow-luxe">
+        <div className="flex items-center gap-6">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-full hover:bg-[#1b2936] text-[#9abfd4] hover:text-white transition-colors"
+            className="p-3 rounded-sm hover:bg-white/5 text-text-tertiary hover:text-gold transition-all border border-transparent hover:border-gold/20 shadow-hard"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0e72a8] to-[#103b5a] flex items-center justify-center shadow-[0_0_15px_rgba(14,114,168,0.3)]">
-              <Scale className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded bg-void border-2 border-gold/40 flex items-center justify-center shadow-luxe">
+              <Scale className="w-6 h-6 text-gold" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-[#9abfd4]">JusticeAI</h1>
-              <div className="flex items-center gap-1.5 text-xs text-[#0e72a8] font-medium opacity-90">
-                <Cpu className="w-3 h-3" />
-                <span>Openclaw Subsystem</span>
+              <h1 className="text-xl font-display font-extrabold tracking-widest text-white uppercase italic">JUSTICE_AI</h1>
+              <div className="flex items-center gap-1.5 text-[10px] text-gold font-extrabold uppercase tracking-widest opacity-60">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>STATUTORY_SUBSYSTEM_V4.0</span>
               </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-full bg-[#1b2936] text-[#9abfd4] border border-[#103b5a] shadow-inner text-xs font-semibold flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-[#0e72a8]" /> Secure
+        <div className="flex items-center gap-3">
+          <div className="px-5 py-2 rounded-sm bg-void border-2 border-gold/20 text-gold shadow-luxe text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-2 italic">
+            <ShieldCheck className="w-4 h-4" /> SECURE_HANDSHAKE
           </div>
         </div>
       </header>
@@ -170,7 +170,7 @@ How may I assist you with your legal matters today?`,
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-5 py-4 shadow-sm ${isUser ? 'bg-gradient-to-br from-[#103b5a] to-[#0e72a8] border border-[#1b2936] text-white rounded-br-none' : 'bg-[#121f29] border border-[#103b5a]/50 shadow-[0_4px_20px_rgba(0,0,0,0.5)] text-[#9abfd4] rounded-bl-none'}`}>
+                <div className={`max-w-[85%] md:max-w-[75%] rounded-sm px-5 py-4 border-2 shadow-hard ${isUser ? 'bg-gold text-midnight border-gold-light/20' : 'bg-void border-white/5 text-text-tertiary shadow-inner italic font-mono'}`}>
                   <div className="whitespace-pre-wrap leading-relaxed text-[15px]">
                     {!isUser && message.isTyping ? (
                       <TypewriterEffect 
@@ -184,9 +184,9 @@ How may I assist you with your legal matters today?`,
                   </div>
                   
                   {!isUser && (
-                    <div className="mt-4 flex items-center gap-2 text-[10px] text-[#1e4a6a] font-medium uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3 text-[#0e72a8]" />
-                      Response by Local AI
+                    <div className="mt-4 flex items-center gap-2 text-[9px] text-gold font-extrabold uppercase tracking-[0.3em] opacity-40">
+                      <Sparkles className="w-3 h-3" />
+                      INSTITUTIONAL_RESPONSE_LOCAL
                     </div>
                   )}
                 </div>
@@ -197,10 +197,10 @@ How may I assist you with your legal matters today?`,
         
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-            <div className="bg-[#121f29] border border-[#103b5a]/50 rounded-2xl rounded-bl-none px-5 py-4 shadow-sm flex gap-1.5 items-center">
-               <div className="w-2 h-2 rounded-full bg-[#1e4a6a] animate-bounce" />
-               <div className="w-2 h-2 rounded-full bg-[#0e72a8] animate-bounce" style={{ animationDelay: '150ms' }} />
-               <div className="w-2 h-2 rounded-full bg-[#9abfd4] animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="bg-void border-2 border-white/5 rounded-sm px-5 py-4 shadow-hard flex gap-1.5 items-center">
+               <div className="w-2 h-2 rounded-sm bg-white/10 animate-bounce shadow-hard" />
+               <div className="w-2 h-2 rounded-sm bg-gold/40 animate-bounce shadow-hard" style={{ animationDelay: '150ms' }} />
+               <div className="w-2 h-2 rounded-sm bg-gold animate-bounce shadow-hard" style={{ animationDelay: '300ms' }} />
             </div>
           </motion.div>
         )}
@@ -208,26 +208,26 @@ How may I assist you with your legal matters today?`,
       </main>
 
       {/* Input Area */}
-      <footer className="w-full max-w-4xl mx-auto p-4 md:p-6 bg-[#0a0b0d]/90 backdrop-blur-md sticky bottom-0 border-t border-[#1b2936]">
-        <div className="relative flex items-center bg-[#111a22] rounded-full shadow-lg border border-[#103b5a] transition-all focus-within:shadow-[0_0_20px_rgba(14,114,168,0.2)] focus-within:border-[#0e72a8]">
+      <footer className="w-full max-w-4xl mx-auto p-4 md:p-8 bg-void/90 backdrop-blur-md sticky bottom-0 border-t border-white/5">
+        <div className="relative flex items-center bg-void rounded-sm border-2 border-white/5 shadow-hard transition-all focus-within:shadow-luxe focus-within:border-gold/40">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage(inputValue)}
-            placeholder="Type your legal query here..."
-            className="w-full bg-transparent px-6 py-4 outline-none text-[#9abfd4] placeholder:text-[#103b5a] text-[15px]"
+            placeholder="ENTER_STATUTORY_QUERY_HERE..."
+            className="w-full bg-transparent px-8 py-5 outline-none text-text-primary placeholder:text-white/10 text-[14px] font-mono italic"
           />
           <button 
             onClick={() => sendMessage(inputValue)}
             disabled={!inputValue.trim() || isLoading}
-            className="absolute right-2 p-2.5 rounded-full bg-gradient-to-r from-[#103b5a] to-[#0e72a8] text-white disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-[0_0_15px_rgba(14,114,168,0.6)] hover:brightness-125 transition-all"
+            className="absolute right-3 p-3 rounded-sm bg-gold text-midnight disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gold-light transition-all shadow-hard active:translate-y-[2px]"
           >
             <Send className="w-5 h-5 -ml-0.5" />
           </button>
         </div>
-        <p className="text-center text-[11px] text-[#1e4a6a] mt-3 font-medium tracking-wide">
-          Intelligence runs locally. Information is not formal legal advice.
+        <p className="text-center text-[9px] text-text-tertiary mt-4 font-extrabold uppercase tracking-[0.4em] opacity-30 italic">
+          INTELLIGENCE_RUNS_LOCALLY. TRANSACTION_SECURED. NOT_FORMAL_COUNSEL.
         </p>
       </footer>
 

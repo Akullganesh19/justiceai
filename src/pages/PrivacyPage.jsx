@@ -43,12 +43,12 @@ export default function PrivacyPage() {
           className="space-y-16"
         >
           <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-3 px-4 py-2 bg-void border-2 border-red/40 text-red text-[10px] uppercase font-extrabold tracking-[0.4em] italic rounded shadow-hard-red/10">
-              <ShieldCheck className="w-4 h-4 text-red" />
-              <span>ENCRYPTION_LAYER_V2.1</span>
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.4em] italic rounded-sm shadow-hard">
+              <ShieldCheck className="w-4 h-4 text-gold" />
+              <span>ENCRYPTION_LAYER_V4.2</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-display font-bold text-white uppercase tracking-tighter italic leading-none">
-              SHIELDING <span className="text-red">SOVEREIGNTY</span>
+              SHIELDING <span className="text-gold">SOVEREIGNTY</span>
             </h1>
             <p className="text-xs text-text-tertiary font-body uppercase tracking-[0.2em] max-w-2xl mx-auto italic opacity-60">
               LEGAL INFORMATION IS THE MOST SENSITIVE VECTOR. WE DEPLOY SECURE STRATA TO PROTECT STRATEGY, IDENTITY, AND CITIZEN_RIGHTS.
@@ -62,10 +62,10 @@ export default function PrivacyPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-10 rounded bg-void border-2 border-white/5 flex flex-col md:flex-row gap-8 items-start hover:border-red/20 transition-all group shadow-hard active:translate-y-[2px]"
+                className="p-10 rounded-sm bg-void border-2 border-white/5 flex flex-col md:flex-row gap-8 items-start hover:border-gold/20 transition-all group shadow-hard active:translate-y-[2px]"
               >
-                <div className="w-16 h-16 rounded bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:border-red/40 transition-all shadow-hard-red/10">
-                  <section.icon className="w-8 h-8 text-red" />
+                <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:border-gold/40 transition-all shadow-hard">
+                  <section.icon className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-xl font-display font-extrabold text-white uppercase tracking-tight italic">{section.title}</h3>
@@ -78,8 +78,8 @@ export default function PrivacyPage() {
           </div>
 
           {/* Secure Infrastructure Section */}
-          <div className="p-12 rounded bg-void border-2 border-red/[0.15] relative overflow-hidden shadow-hard-red active:translate-y-[4px] transition-all group">
-             {/* Tactical Grid Background Overlay */}
+          <div className="p-12 rounded-sm bg-void border-2 border-gold/[0.15] relative overflow-hidden shadow-hard active:translate-y-[4px] transition-all group">
+             {/* Statutory Grid Background Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
             
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
             </div>
             <div className="relative z-10 space-y-6">
               <div className="flex items-center gap-4">
-                <Terminal className="w-6 h-6 text-red" />
+                <Terminal className="w-6 h-6 text-gold" />
                 <h3 className="text-2xl font-display font-bold text-white uppercase italic tracking-tighter">TRUST_INFRASTRUCTURE_MODULE</h3>
               </div>
               <p className="text-sm text-text-tertiary leading-relaxed max-w-2xl font-body uppercase tracking-widest italic opacity-80">

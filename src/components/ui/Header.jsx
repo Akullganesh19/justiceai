@@ -26,7 +26,7 @@ const navLinks = [
   { to: '/documents', label: 'Documents', icon: FileText },
   { to: '/rights', label: 'Rights', icon: BookOpen },
   { to: '/estimator', label: 'Estimator', icon: Calculator },
-  { to: '/lawyers', label: 'LOCATE_ADVOCATE', icon: UserCheck },
+  { to: '/lawyers', label: 'Find a Lawyer', icon: UserCheck },
   { to: '/limitation', label: 'Deadlines', icon: Clock },
   { to: '/legal-aid', label: 'Legal Aid', icon: HeartHandshake },
   { to: '/tracker', label: 'Tracker', icon: Milestone },
@@ -45,16 +45,16 @@ export default function Header({ onNewCase }) {
 
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group magnetic-hover">
-            <div className="w-10 h-10 rounded-xl bg-red/10 flex items-center justify-center border-2 border-red/20 group-hover:border-red group-hover:scale-105 transition-all duration-300 neon-glow-red">
-              <Scale className="w-5 h-5 text-red" />
+            <div className="w-10 h-10 rounded-sm bg-gold/10 flex items-center justify-center border-2 border-gold/20 group-hover:border-gold group-hover:scale-105 transition-all duration-300 shadow-luxe">
+              <Scale className="w-5 h-5 text-gold" />
             </div>
-            <span className="font-display text-2xl text-white font-bold tracking-tight group-hover:text-red transition-colors uppercase text-glow-sm">
-              Justice<span className="text-blue">AI</span>
+            <span className="font-display text-2xl text-white font-bold tracking-tighter group-hover:text-gold transition-colors text-glow-sm italic px-2 border-l-2 border-gold/40">
+              JUSTICE<span className="text-gold">AI</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center gap-1 bg-void/80 backdrop-blur-xl border-2 border-white/5 p-1 rounded shadow-hard">
+          <nav className="hidden xl:flex items-center gap-1 bg-void/80 backdrop-blur-xl border-2 border-white/5 p-1 rounded-sm shadow-hard">
             {navLinks.map((link) => (
               <NavLink key={link.to} to={link.to} icon={link.icon}>
                 {link.label}
@@ -66,7 +66,7 @@ export default function Header({ onNewCase }) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowSearch(true)}
-              className="p-3 rounded bg-void border-2 border-white/10 text-text-tertiary hover:text-white hover:border-red/40 transition-all group shadow-sm active:translate-y-[1px]"
+              className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all group shadow-hard active:translate-y-[1px] italic"
               title="SEARCH_REGISTRY [CTRL+K] or [/]"
             >
               <Command className="w-5 h-5 group-hover:rotate-12 transition-transform" />
@@ -74,23 +74,23 @@ export default function Header({ onNewCase }) {
 
             <button
               onClick={onNewCase}
-              className="hidden md:flex items-center gap-3 px-6 py-3 bg-red text-white rounded border-2 border-red-light/20 font-extrabold text-[10px] uppercase tracking-[0.3em] hover:bg-red-dark transition-all active:translate-x-[1px] active:translate-y-[1px] shadow-hard-red font-display italic"
+              className="hidden md:flex items-center gap-3 px-6 py-3 bg-gold text-midnight rounded-sm border-2 border-gold/20 font-extrabold text-[10px] uppercase tracking-widest hover:bg-gold-dark transition-all active:translate-x-[1px] active:translate-y-[1px] shadow-hard font-display italic"
             >
               <Plus className="w-4 h-4" />
-              <span>NEW_CASE_INIT</span>
+              <span>START_NEW_ANALYSIS_DISPATCH</span>
             </button>
 
             <Link
               to="/settings"
-              className="p-3 rounded bg-void border-2 border-white/10 text-text-tertiary hover:text-white hover:border-red/40 transition-all group shadow-sm active:translate-y-[1px]"
-              title="MODEL_SETTINGS"
+              className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all group shadow-hard active:translate-y-[1px]"
+              title="INTELLIGENCE_TERMINAL_CONFIG"
             >
               <Settings2 className="w-5 h-5 group-hover:rotate-45 transition-transform" />
             </Link>
 
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-3 rounded bg-void border-2 border-white/10 text-text-tertiary hover:text-white hover:border-red/40 transition-all"
+              className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all shadow-hard"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -125,9 +125,9 @@ function NavLink({ to, children, icon: Icon }) {
   return (
     <Link
       to={to}
-      className={`relative flex items-center gap-2 text-[9px] font-extrabold uppercase tracking-[0.2em] transition-all px-4 py-2 rounded border-2 italic ${
+      className={`relative flex items-center gap-2 text-[9px] font-extrabold uppercase tracking-[0.2em] transition-all px-4 py-2 rounded-sm border-2 italic ${
         isActive
-          ? 'text-white bg-red border-red-light/40 shadow-hard-red'
+          ? 'text-midnight bg-gold border-gold/40 shadow-hard'
           : 'text-text-tertiary border-transparent hover:text-white hover:border-white/10'
       }`}
     >

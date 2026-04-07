@@ -189,37 +189,37 @@ export default function LegalAidCheckerPage() {
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 w-full space-y-10 pb-16">
         {/* Header */}
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-red/10 text-red-light text-[10px] uppercase font-extrabold tracking-[0.4em] rounded border-2 border-red/20 shadow-[4px_4px_0px_0px_rgba(225,29_72,0.1)] font-display italic">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-gold/10 text-gold text-[10px] uppercase font-extrabold tracking-[0.4em] rounded-sm border-2 border-gold/20 shadow-hard font-display italic">
             <HeartHandshake className="w-4 h-4" />
-            <span>Equal_Access_Gateway_Terminal</span>
+            <span>LEGAL_AID_VERIFICATION_FRAMEWORK_V4.2</span>
           </div>
           <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic">
-            Legal Aid <span className="text-red">Eligibility</span>
+            Legal Aid <span className="text-gold">Eligibility</span>
           </h1>
           <p className="text-lg text-text-tertiary leading-relaxed max-w-2xl mx-auto font-body uppercase tracking-wider italic">
-            Verified under Section 12 of the LSA Act. Mandated state representation protocols for
-            vulnerable nodes. Verify deployment status in 60s.
+            Verified under Section 12 of the LSA Act. Mandated state representation for
+            eligible applicants. Check your eligibility in 60s.
           </p>
         </div>
 
-        <div className="bg-void rounded border-2 border-white/5 p-8 md:p-12 shadow-[16px_16px_0px_0px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red/5 -mr-16 -mt-16 rotate-45 group-hover:bg-red/10 transition-all pointer-events-none" />
+        <div className="bg-void rounded-sm border-2 border-white/5 p-8 md:p-12 shadow-hard relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 -mr-16 -mt-16 rotate-45 group-hover:bg-gold/10 transition-all pointer-events-none" />
           {!showResult ? (
             <div className="space-y-12">
               {/* State Selection */}
-              <div className="p-8 bg-void rounded border-2 border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 shadow-inner">
+              <div className="p-8 bg-void rounded-sm border-2 border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 shadow-inner">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-extrabold text-red uppercase tracking-[0.4em] italic opacity-60">
-                    JURISDICTION_SELECTION
+                  <p className="text-[10px] font-extrabold text-gold uppercase tracking-[0.4em] italic opacity-60">
+                    REGION_SELECTION
                   </p>
                   <p className="text-xs text-text-tertiary uppercase tracking-widest italic opacity-40">
-                    STATUTORY_INCOME_LIMITS_VARY_BY_REGION
+                    STATUTORY_INCOME_LIMITS_VARY_BY_STATE
                   </p>
                 </div>
                 <select
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
-                  className="bg-void border-2 border-white/10 rounded px-6 py-4 text-sm text-white focus:border-red focus:outline-none min-w-[240px] font-display font-bold uppercase tracking-widest italic shadow-sm"
+                  className="bg-void border-2 border-white/10 rounded px-6 py-4 text-sm text-white focus:border-gold focus:outline-none min-w-[240px] font-display font-bold uppercase tracking-widest italic shadow-sm"
                 >
                   {Object.keys(STATE_SLSAs).map((s) => (
                     <option key={s} value={s} className="bg-void text-white">
@@ -234,14 +234,14 @@ export default function LegalAidCheckerPage() {
                 {CRITERIA.map((q) => (
                   <div
                     key={q.id}
-                    className="p-8 rounded border-2 border-white/5 bg-void flex flex-col sm:flex-row items-center justify-between gap-8 hover:border-white/20 transition-all shadow-[8px_8px_0px_0px_rgba(0,0,0,0.3)] group/card"
+                    className="p-8 rounded-sm border-2 border-white/5 bg-void flex flex-col sm:flex-row items-center justify-between gap-8 hover:border-white/20 transition-all shadow-hard group/card"
                   >
                     <div className="space-y-3 flex-1 min-w-0">
                       <div className="flex items-center gap-4">
-                        <span className="text-[10px] font-mono font-bold text-red/40 px-2 py-0.5 border border-red/20 rounded italic">
-                          INDEX_SEC_{q.section}
+                        <span className="text-[10px] font-mono font-bold text-gold/40 px-2 py-0.5 border border-gold/20 rounded-sm italic">
+                          SECTION_{q.section}
                         </span>
-                        <h3 className="text-lg font-display font-bold text-white uppercase tracking-tight italic group-hover/card:text-red transition-colors">
+                        <h3 className="text-lg font-display font-bold text-white uppercase tracking-tight italic group-hover/card:text-gold transition-colors">
                           {q.label}
                         </h3>
                       </div>
@@ -252,13 +252,13 @@ export default function LegalAidCheckerPage() {
                     <div className="flex gap-4 w-full sm:w-auto">
                       <button
                         onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: true }))}
-                        className={`flex-1 sm:flex-none px-8 py-3 rounded border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] ${answers[q.id] === true ? 'bg-blue border-blue text-white shadow-blue/20' : 'bg-void border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
+                        className={`flex-1 sm:flex-none px-8 py-3 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard ${answers[q.id] === true ? 'bg-gold border-gold text-midnight shadow-hard' : 'bg-void border-white/10 text-white/30 hover:text-gold hover:border-gold/30'}`}
                       >
                         AFFIRMATIVE
                       </button>
                       <button
                         onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: false }))}
-                        className={`flex-1 sm:flex-none px-8 py-3 rounded border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] ${answers[q.id] === false ? 'bg-red/20 border-red/40 text-red shadow-red/20' : 'bg-void border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
+                        className={`flex-1 sm:flex-none px-8 py-3 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard ${answers[q.id] === false ? 'bg-void border-white/30 text-white/60 shadow-hard' : 'bg-void border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
                       >
                         NEGATIVE
                       </button>
@@ -270,9 +270,9 @@ export default function LegalAidCheckerPage() {
               <button
                 onClick={() => setShowResult(true)}
                 disabled={Object.keys(answers).length < 3}
-                className="w-full bg-red hover:bg-red-dark text-white py-6 rounded border-2 border-red-light/20 font-extrabold font-display text-xl uppercase tracking-[0.3em] italic shadow-[12px_12px_0px_0px_rgba(159,18,57,0.4)] transition-all active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-10 disabled:cursor-not-allowed"
+                className="w-full bg-gold hover:bg-gold-dark text-midnight py-6 rounded-sm border-2 border-gold-light/20 font-extrabold font-display text-xl uppercase tracking-[0.3em] italic shadow-hard transition-all active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-10 disabled:cursor-not-allowed"
               >
-                VERIFY_NATIONAL_ELIGIBILITY_NODE
+                VERIFY_ELIGIBILITY_STATUS
               </button>
             </div>
           ) : (
@@ -282,15 +282,15 @@ export default function LegalAidCheckerPage() {
               className="space-y-8"
             >
               <div className="text-center space-y-10">
-                <div className="w-24 h-24 bg-void border-4 border-blue rounded flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(37,99,235,0.2)] animate-pulse">
-                  <Scale className="w-12 h-12 text-blue" />
+                <div className="w-24 h-24 bg-void border-4 border-gold rounded-sm flex items-center justify-center mx-auto shadow-hard animate-pulse">
+                  <Scale className="w-12 h-12 text-gold" />
                 </div>
                 <div className="space-y-3">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.5em] text-blue italic">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.5em] text-gold italic">
                     ELIGIBILITY_STATUS: CONFIRMED
                   </p>
                   <h2 className="text-5xl font-display font-bold text-white uppercase tracking-tighter italic">
-                    Eligible for <span className="text-blue">Free Aid</span>
+                    Eligible for <span className="text-gold">Free Aid</span>
                   </h2>
                   <p className="text-sm text-text-tertiary font-body max-w-lg mx-auto uppercase tracking-widest italic opacity-60 leading-relaxed">
                     UNDER MANDATE 12, YOU ARE LEGALLY ENTITLED TO PRO BONO REPRESENTATION AND
@@ -300,34 +300,34 @@ export default function LegalAidCheckerPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto pt-6">
-                  <div className="p-8 bg-void rounded border-2 border-white/5 text-left space-y-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
-                    <div className="flex items-center gap-3 text-blue">
+                  <div className="p-8 bg-void rounded-sm border-2 border-white/5 text-left space-y-6 shadow-hard">
+                    <div className="flex items-center gap-3 text-gold">
                       <Mail className="w-5 h-5" />
                       <span className="text-[10px] uppercase font-extrabold tracking-[0.3em] italic opacity-60">
-                        AUTHORITY_DEPLOYMENT
+                        LOCAL_AUTHORITY_HUB
                       </span>
                     </div>
                     <div>
                       <p className="text-xl font-display font-bold text-white uppercase italic">
                         {STATE_SLSAs[selectedState]?.name}
                       </p>
-                      <p className="text-[10px] text-blue font-mono font-bold uppercase italic mt-1">
+                      <p className="text-[10px] text-gold font-mono font-bold uppercase italic mt-1">
                         HEAR_HELPLINE: {STATE_SLSAs[selectedState]?.phone}
                       </p>
                     </div>
                     <a
                       href={`mailto:${STATE_SLSAs[selectedState]?.email}`}
-                      className="flex items-center justify-center gap-3 w-full py-4 bg-blue text-white rounded border-2 border-blue-light/20 text-[10px] font-extrabold uppercase tracking-widest italic hover:bg-blue-dark transition-all active:translate-x-[1px] active:translate-y-[1px]"
+                      className="flex items-center justify-center gap-3 w-full py-4 bg-gold text-midnight rounded-sm border-2 border-gold-light/20 text-[10px] font-extrabold uppercase tracking-widest italic hover:bg-gold-dark transition-all active:translate-x-[1px] active:translate-y-[1px]"
                     >
                       TRANSMIT_INQUIRY <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
 
-                  <div className="p-8 bg-void rounded border-2 border-white/5 text-left space-y-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
-                    <div className="flex items-center gap-3 text-red">
+                  <div className="p-8 bg-void rounded-sm border-2 border-white/5 text-left space-y-6 shadow-hard">
+                    <div className="flex items-center gap-3 text-gold">
                       <FilePlus className="w-5 h-5" />
                       <span className="text-[10px] uppercase font-extrabold tracking-[0.3em] italic opacity-60">
-                        MANIFEST_GENERATOR
+                        APPLICATION_GENERATOR
                       </span>
                     </div>
                     <p className="text-xs text-text-tertiary font-body uppercase tracking-widest italic leading-relaxed">
@@ -335,9 +335,9 @@ export default function LegalAidCheckerPage() {
                     </p>
                     <button
                       onClick={handleDownload}
-                      className="flex items-center justify-center gap-3 w-full py-4 bg-void text-white border-2 border-white/10 rounded text-[10px] font-extrabold uppercase tracking-widest italic hover:border-white/30 transition-all active:translate-x-[1px] active:translate-y-[1px] shadow-inner"
+                      className="flex items-center justify-center gap-3 w-full py-4 bg-void text-white border-2 border-white/10 rounded-sm text-[10px] font-extrabold uppercase tracking-widest italic hover:border-white/30 transition-all active:translate-x-[1px] active:translate-y-[1px] shadow-inner"
                     >
-                      DOWNLOAD_MANIFEST <Download className="w-4 h-4" />
+                      DOWNLOAD_APPLICATION <Download className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default function LegalAidCheckerPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-3 text-text-tertiary hover:text-white transition-all text-[11px] font-extrabold uppercase tracking-[0.2em] italic group"
                   >
-                    <Globe className="w-5 h-5 text-red" /> ACCESS_GLOBAL_NALSA_PORTAL{' '}
+                    <Globe className="w-5 h-5 text-gold" /> ACCESS_GLOBAL_NALSA_PORTAL{' '}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </a>
                 </div>
@@ -359,22 +359,22 @@ export default function LegalAidCheckerPage() {
 
           <div className="mt-16 pt-12 border-t-2 border-white/5 flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded bg-void border-2 border-red/20 flex items-center justify-center shadow-inner">
-                <Phone className="w-6 h-6 text-red" />
+              <div className="w-14 h-14 rounded-sm bg-void border-2 border-gold/20 flex items-center justify-center shadow-inner">
+                <Phone className="w-6 h-6 text-gold" />
               </div>
               <div className="text-left">
                 <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-white/20 italic">
-                  NATIONAL_BUREAU_UPLINK
+                  NATIONAL_HELPLINE_LINK
                 </p>
                 <p className="text-3xl font-display font-bold text-white italic tracking-tighter">
                   15100
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-void border-2 border-white/5 px-6 py-4 rounded shadow-inner">
-              <AlertCircle className="w-5 h-5 text-red" />
+            <div className="flex items-center gap-4 bg-void border-2 border-white/5 px-6 py-4 rounded-sm shadow-inner">
+              <AlertCircle className="w-5 h-5 text-gold" />
               <p className="text-[10px] text-text-tertiary font-body uppercase tracking-widest italic opacity-40 leading-tight pr-4">
-                DATA_INDICATIVE. FINAL_VERIFICATION_REQUIRED_BY_DLSA_COMMAND.
+                DATA_INDICATIVE. FINAL_VERIFICATION_REQUIRED_BY_DLSA_OFFICE.
               </p>
             </div>
           </div>

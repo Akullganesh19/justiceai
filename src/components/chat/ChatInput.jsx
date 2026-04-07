@@ -53,7 +53,7 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">
-      <div className="absolute inset-0 bg-blue/5 blur-[100px] pointer-events-none opacity-10" />
+      <div className="absolute inset-0 bg-gold/5 blur-[100px] pointer-events-none opacity-5" />
       <form onSubmit={handleSubmit} className="relative group max-w-4xl mx-auto z-10">
         <input
           type="file"
@@ -62,15 +62,15 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
           className="hidden"
           accept=".pdf,.doc,.docx,.txt"
         />
-        <div className="relative flex items-end gap-4 p-3 bg-void border-2 border-white/10 rounded-xl focus-within:border-red/40 transition-all shadow-[12px_12px_0px_0px_rgba(0,0,0,0.8)] focus-within:shadow-[12px_12px_0px_0px_rgba(225,29,72,0.05)]">
+        <div className="relative flex items-end gap-4 p-3 bg-void border-2 border-white/10 rounded-sm focus-within:border-gold/40 transition-all shadow-hard">
           <button
             type="button"
             onClick={handleFileClick}
             disabled={isLoading}
-            className="p-4 text-text-tertiary hover:text-blue transition-all active:scale-90 disabled:opacity-20 hover:bg-blue/5 rounded-lg border-2 border-transparent hover:border-blue/20"
-            title="Attach Evidence Log"
+            className="p-4 text-text-tertiary hover:text-gold transition-all active:scale-95 disabled:opacity-20 hover:bg-gold/5 rounded-sm border-2 border-transparent hover:border-gold/20 shadow-hard"
+            title="Attach Document"
           >
-            <Paperclip className="w-6 h-6" />
+            <Paperclip className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
           <textarea
@@ -79,17 +79,17 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="INPUT LEGAL DESC..."
-            className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-text-tertiary font-display font-bold uppercase tracking-widest italic resize-none py-4 text-[14px] max-h-[200px]"
+            placeholder="Ask a legal question or describe your case..."
+            className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-text-tertiary/40 font-body font-medium italic resize-none py-4 text-[15px] max-h-[200px] uppercase tracking-wide"
           />
 
           <button
             type="submit"
             disabled={!text.trim() || isLoading}
-            className={`p-4 rounded transition-all flex items-center justify-center flex-shrink-0 ${
+            className={`p-4 rounded-sm transition-all flex items-center justify-center flex-shrink-0 border-2 ${
               !text.trim() || isLoading
-                ? 'bg-void/5 text-text-tertiary cursor-not-allowed border-2 border-white/5 shadow-none'
-                : 'bg-red text-white hover:bg-red-dark active:translate-x-[1px] active:translate-y-[1px] shadow-[6px_6px_0px_0px_rgba(159,18,57,1)] border-2 border-red-light/20'
+                ? 'bg-white/5 text-text-tertiary cursor-not-allowed border-white/5'
+                : 'bg-gold text-midnight hover:bg-gold-light active:translate-y-[2px] shadow-hard border-gold-light/20'
             }`}
           >
             {isLoading ? (
@@ -99,13 +99,13 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
             )}
           </button>
         </div>
-        <div className="mt-4 flex items-center justify-between px-2">
-          <p className="text-[9px] text-text-tertiary uppercase tracking-[0.3em] font-extrabold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red animate-pulse" />
-            Core Engine Active
+        <div className="mt-4 flex flex-col md:flex-row items-center justify-between px-4 gap-2">
+          <p className="text-[10px] text-text-tertiary uppercase tracking-[0.4em] font-extrabold flex items-center gap-2 italic">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            STATUTORY_INTELLIGENCE_ACTIVE
           </p>
-          <p className="text-[9px] text-text-tertiary uppercase tracking-[0.3em] font-extrabold">
-            [ENTER] to Commit Sequence
+          <p className="text-[10px] text-text-tertiary/60 uppercase tracking-[0.3em] font-extrabold italic">
+            PRESS_ENTER_FOR_PROCEDURAL_DISPATCH
           </p>
         </div>
       </form>

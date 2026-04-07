@@ -41,26 +41,26 @@ function TermCard({ term, isExpanded, onToggle }) {
   return (
     <motion.div
       layout
-      className="bg-void rounded border-2 border-white/5 overflow-hidden hover:border-red/40 transition-all duration-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] group"
+      className="bg-void rounded-sm border-2 border-white/5 overflow-hidden hover:border-gold/30 transition-all duration-500 shadow-hard group"
     >
-      <button onClick={onToggle} className="w-full text-left p-6 flex items-center gap-5">
-        <div className="w-12 h-12 rounded bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-red/40 transition-all">
-          <span className="text-xl font-display font-bold text-white opacity-40 group-hover:text-red transition-all italic">
+      <button onClick={onToggle} className="w-full text-left p-8 flex items-center gap-6">
+        <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center flex-shrink-0 group-hover:border-gold/40 transition-all shadow-hard">
+          <span className="text-2xl font-display font-bold text-white opacity-20 group-hover:text-gold transition-all group-hover:opacity-100">
             {firstLetter}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-[9px] uppercase tracking-[0.3em] text-red font-extrabold px-3 py-1 bg-red/10 rounded border-2 border-red/20 italic">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-extrabold px-3 py-1 bg-gold/5 rounded-sm border-2 border-gold/20 italic">
               {term.category}
             </span>
           </div>
-          <h3 className="text-lg font-display font-bold text-white uppercase tracking-tighter italic leading-snug">
+          <h3 className="text-xl md:text-2xl font-display font-bold text-white tracking-tighter uppercase italic group-hover:text-gold transition-colors">
             {term.term}
           </h3>
         </div>
         <div
-          className={`p-2 rounded border-2 transition-all flex-shrink-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] ${isExpanded ? 'bg-red border-red text-white' : 'bg-void border-white/10 text-white/20'}`}
+          className={`w-10 h-10 rounded-sm border-2 transition-all flex-shrink-0 flex items-center justify-center shadow-hard ${isExpanded ? 'bg-gold border-gold text-midnight' : 'bg-void border-white/5 text-white/20'}`}
         >
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
@@ -75,25 +75,25 @@ function TermCard({ term, isExpanded, onToggle }) {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-6 space-y-6 border-t-2 border-white/5 pt-6 ml-16">
-              <p className="text-[13px] text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic opacity-80">
+            <div className="px-8 pb-8 space-y-8 border-t border-white/5 pt-8 ml-0 md:ml-20">
+              <p className="text-[14px] text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic opacity-80 border-l-4 border-gold/20 pl-6">
                 {term.definition}
               </p>
 
               {/* Legal Reference */}
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-red italic opacity-60">
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-gold opacity-60 italic">
                   <Scale className="w-4 h-4" />
-                  STATUTORY_REFERENCE_INDEX
+                  Statutory Reference
                 </label>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] px-4 py-2 bg-void text-white rounded border-2 border-white/10 font-mono tracking-tighter shadow-inner italic">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-[10px] px-5 py-2.5 bg-void text-white rounded-sm border-2 border-white/5 font-extrabold uppercase tracking-widest italic shadow-hard">
                     {term.reference}
                   </span>
                   {term.bnsEquivalent && (
-                    <span className="text-[11px] px-4 py-2 bg-red text-white rounded border-2 border-red-light/20 font-mono font-extrabold flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(159,18,57,0.3)] italic">
+                    <span className="text-[10px] px-5 py-2.5 bg-gold text-midnight rounded-sm border-2 border-gold/40 font-extrabold uppercase tracking-widest italic flex items-center gap-2 shadow-hard">
                       <Hash className="w-3 h-3" />
-                      BNS_UPDATE: {term.bnsEquivalent}
+                      BNS_PROVISION: {term.bnsEquivalent}
                     </span>
                   )}
                 </div>
@@ -101,16 +101,16 @@ function TermCard({ term, isExpanded, onToggle }) {
 
               {/* Related Terms */}
               {term.related && term.related.length > 0 && (
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-blue italic opacity-60">
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 text-[10px] uppercase font-extrabold tracking-[0.4em] text-gold opacity-60 italic">
                     <ArrowRight className="w-4 h-4" />
-                    ASSOCIATED_MANDATES
+                    Related Terms
                   </label>
                   <div className="flex flex-wrap gap-3">
                     {term.related.map((r, i) => (
                       <span
                         key={i}
-                        className="text-[11px] px-4 py-2 bg-void text-blue rounded border-2 border-blue/20 font-display font-bold uppercase tracking-widest italic hover:border-blue/50 transition-colors shadow-sm"
+                        className="text-[11px] px-4 py-2 bg-void border-2 border-blue/20 text-gold rounded-sm font-extrabold uppercase tracking-widest italic hover:bg-gold/5 transition-all shadow-sm"
                       >
                         {r}
                       </span>
@@ -162,46 +162,45 @@ export default function GlossaryPage() {
   }, [filteredTerms]);
 
   return (
-    <div className="min-h-screen bg-void pb-32">
+    <div className="min-h-screen bg-void pb-32 font-mono">
       <Header />
 
-      <main className="max-w-5xl mx-auto px-6 pt-32 space-y-12">
+      <main className="max-w-5xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
-        <div className="text-center space-y-6">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-red/10 text-red-light text-[10px] uppercase font-extrabold tracking-[0.4em] rounded border-2 border-red/20 shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)] font-display italic">
-            <BookMarked className="w-4 h-4" />
-            <span>Statutory_Lexicon_Repository</span>
+        <div className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
+            <BookMarked className="w-5 h-5" />
+            <span>LEGAL_LEXICON_FRAMEWORK_V1.0</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none">
-            Legal <span className="text-red italic">Glossary</span>
+          <h1 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tighter leading-none italic text-white text-center">
+            LEGAL <span className="text-gold">LEXICON</span>
           </h1>
-          <p className="text-lg text-text-tertiary leading-relaxed max-w-2xl mx-auto font-body uppercase tracking-wider italic">
-            Searchable repository of {GLOSSARY_TERMS.length}+ essential Indian legal mandates.
-            Decrypting the standard procedural terminology.
+          <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
+            A COMPREHENSIVE REPOSITORY OF {GLOSSARY_TERMS.length}+ ESSENTIAL LEGAL TERMS. PROVIDING CLARITY ON INDIAN STATUTORY PROVISIONS AND PROCEDURAL STANDARDS.
           </p>
         </div>
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto">
           <div className="relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-hover:text-red transition-all" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-hover:text-gold transition-all" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="SEARCH_INDEX_REPOSITORIES..."
-              className="w-full bg-void border-2 border-white/5 rounded px-16 py-5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-red/40 transition-all font-display font-bold tracking-widest uppercase italic shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] shadow-inner"
+              placeholder="Search for a legal term..."
+              className="w-full bg-void border-2 border-white/5 rounded-sm px-16 py-6 text-[13px] font-extrabold uppercase tracking-widest text-white placeholder:text-white/10 focus:outline-none focus:border-gold/30 transition-all shadow-hard italic"
             />
             {searchQuery && (
-              <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] text-red font-extrabold uppercase tracking-[0.2em] italic">
-                {filteredTerms.length} HITS
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] text-gold font-bold uppercase tracking-widest">
+                {filteredTerms.length} Matches
               </span>
             )}
           </div>
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 overflow-x-auto pb-4 no-scrollbar">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
@@ -216,16 +215,16 @@ export default function GlossaryPage() {
                   setActiveCategory(cat.id);
                   setExpandedId(null);
                 }}
-                className={`flex items-center gap-3 px-5 py-2.5 rounded border-2 text-[10px] font-extrabold uppercase tracking-[0.2em] transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] active:translate-x-[1px] active:translate-y-[1px] italic ${
+                className={`flex items-center gap-3 px-6 py-3 rounded-sm border-2 text-[9px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard active:translate-y-[2px] ${
                   isActive
-                    ? 'bg-red border-red text-white shadow-[6px_6px_0px_0px_rgba(159,18,57,0.3)]'
-                    : 'bg-void border-white/10 text-white/40 hover:text-white hover:border-white/30'
+                    ? 'bg-gold border-gold/40 text-midnight'
+                    : 'bg-void border-white/5 text-white/40 hover:text-white hover:border-white/20'
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                <span>{cat.label}</span>
+                <span>{cat.label.replace(' ', '_').toUpperCase()}</span>
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-void/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
+                  className={`text-[8px] px-2 py-0.5 rounded-sm border ${isActive ? 'bg-midnight/20 border-midnight/20 text-midnight' : 'bg-white/5 border-white/5 text-white/20'}`}
                 >
                   {count}
                 </span>
@@ -235,14 +234,14 @@ export default function GlossaryPage() {
         </div>
 
         {/* Alphabet Quick-Jump */}
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-3">
           {Object.keys(letterGroups)
             .sort()
             .map((letter) => (
               <a
                 key={letter}
                 href={`#glossary-${letter}`}
-                className="w-10 h-10 rounded bg-void border-2 border-white/5 hover:border-red/60 hover:text-red flex items-center justify-center text-sm font-display font-bold text-white/20 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 active:translate-y-0"
+                className="w-10 h-10 rounded-sm bg-void border-2 border-white/5 hover:border-gold/40 hover:text-gold flex items-center justify-center text-[10px] font-display font-bold text-white/20 transition-all shadow-hard hover:-translate-y-1"
               >
                 {letter}
               </a>
@@ -250,21 +249,21 @@ export default function GlossaryPage() {
         </div>
 
         {/* Terms List grouped by letter */}
-        <div className="space-y-8">
+        <div className="space-y-12">
           {Object.entries(letterGroups)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([letter, terms]) => (
               <div key={letter} id={`glossary-${letter}`}>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 rounded bg-red text-white border-2 border-red-light/20 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(159,18,57,0.3)]">
-                    <span className="text-lg font-display font-bold italic">{letter}</span>
+                <div className="flex items-center gap-6 mb-8">
+                  <div className="w-12 h-12 rounded-sm bg-gold text-midnight border-2 border-gold/40 flex items-center justify-center shadow-hard">
+                    <span className="text-xl font-display font-extrabold italic">{letter}</span>
                   </div>
-                  <div className="flex-1 h-[2px] bg-void/5 shadow-inner" />
-                  <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] font-extrabold italic">
-                    {terms.length} NODES_INDEXED
+                  <div className="flex-1 h-[1px] bg-white/5" />
+                  <span className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold opacity-30">
+                    {terms.length} Terms
                   </span>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {terms.map((term) => (
                     <TermCard
                       key={term.id}
@@ -278,14 +277,14 @@ export default function GlossaryPage() {
             ))}
 
           {filteredTerms.length === 0 && (
-            <div className="text-center py-24 space-y-8 bg-void rounded border-2 border-dashed border-white/10 shadow-inner">
+            <div className="text-center py-24 space-y-10 bg-void border-2 border-dashed border-white/10 shadow-hard">
               <Search className="w-16 h-16 text-white/10 mx-auto" />
-              <div className="space-y-2">
-                <p className="text-xl font-display font-bold text-white uppercase tracking-tighter italic">
-                  ZERO_RESULTS_FETCHED
+              <div className="space-y-4">
+                <p className="text-3xl font-display font-bold text-white uppercase tracking-tight">
+                  No Results Found
                 </p>
-                <p className="text-xs text-text-tertiary uppercase tracking-[0.4em] italic opacity-60">
-                  THE REQUESTED TERM DOES NOT EXIST IN LOCAL STATUTORY RECORDS.
+                <p className="text-xs text-text-tertiary/40 max-w-lg mx-auto leading-relaxed">
+                  The term you are looking for is not in our current statutory records. Try adjusting your search query or consult our AI.
                 </p>
               </div>
 
@@ -295,9 +294,9 @@ export default function GlossaryPage() {
                     setSearchQuery('');
                     setActiveCategory('all');
                   }}
-                  className="px-8 py-4 rounded border-2 border-white/10 text-white/60 text-[11px] font-extrabold uppercase tracking-widest hover:text-white hover:border-white/30 transition-all italic shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)]"
+                  className="px-10 py-5 rounded-sm border-2 border-white/10 text-text-tertiary text-[11px] font-extrabold uppercase tracking-widest hover:text-white hover:border-white/30 transition-all shadow-hard italic"
                 >
-                  PURGE_FILTERS
+                  CLEAR_FILTERS
                 </button>
                 <button
                   onClick={() =>
@@ -308,10 +307,10 @@ export default function GlossaryPage() {
                       },
                     })
                   }
-                  className="px-8 py-4 rounded bg-red text-white text-[11px] font-extrabold uppercase tracking-widest hover:bg-red-dark transition-all flex items-center gap-3 italic shadow-[6px_6px_0px_0px_rgba(159,18,57,0.4)]"
+                  className="px-10 py-5 rounded-sm bg-gold text-midnight text-[11px] font-extrabold uppercase tracking-widest hover:bg-gold-dark transition-all flex items-center gap-3 shadow-hard italic"
                 >
-                  <BookMarked className="w-4 h-4 shrink-0" />
-                  CONSULT_AI_ORACLE
+                  <BookMarked className="w-5 h-5" />
+                  Ask the AI Consultant
                 </button>
               </div>
             </div>

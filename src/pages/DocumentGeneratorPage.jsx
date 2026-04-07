@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   FileInput,
   Milestone,
+  ArrowLeft,
 } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import Header from '../components/ui/Header';
@@ -33,47 +34,47 @@ import Footer from '../components/ui/Footer';
 const DOCUMENT_TEMPLATES = {
   legal_notice: {
     id: 'legal_notice',
-    name: 'Legal Notice',
-    description: 'Send a formal legal notice before filing a case',
+    name: 'STATUTORY_DEMAND_NOTICE',
+    description: 'Formal notification issued prior to initiating legal proceedings.',
     icon: FileCheck,
     category: 'General',
     fields: [
-      { id: 'sender_name', label: 'Your Name', type: 'text', placeholder: 'Full name' },
+      { id: 'sender_name', label: 'Sender Full Name', type: 'text', placeholder: 'Enter your full legal name' },
       {
         id: 'sender_address',
-        label: 'Your Address',
+        label: 'Sender Address',
         type: 'textarea',
-        placeholder: 'Complete address with pin code',
+        placeholder: 'Complete residential or office address',
       },
       {
         id: 'recipient_name',
         label: 'Recipient Name',
         type: 'text',
-        placeholder: 'Name of person/organization',
+        placeholder: 'Name of individual or organization',
       },
       {
         id: 'recipient_address',
         label: 'Recipient Address',
         type: 'textarea',
-        placeholder: 'Complete address',
+        placeholder: 'Complete service address',
       },
       { id: 'notice_date', label: 'Date of Notice', type: 'date' },
-      { id: 'subject', label: 'Subject', type: 'text', placeholder: 'Brief subject of the notice' },
+      { id: 'subject', label: 'Subject Matter', type: 'text', placeholder: 'Brief subject of the notice' },
       {
         id: 'facts',
-        label: 'Facts of the Case',
+        label: 'Statement of Facts',
         type: 'textarea',
-        placeholder: 'Describe the events in detail',
+        placeholder: 'Detailed chronological account of events',
       },
       {
         id: 'relief',
         label: 'Relief Sought',
         type: 'textarea',
-        placeholder: 'What do you want from the recipient?',
+        placeholder: 'Specify the specific actions or compensation required',
       },
       {
         id: 'timeline',
-        label: 'Timeline for Response',
+        label: 'Compliance Period',
         type: 'text',
         placeholder: 'e.g., 15 days, 30 days',
       },
@@ -84,81 +85,81 @@ const DOCUMENT_TEMPLATES = {
 
   rti_application: {
     id: 'rti_application',
-    name: 'RTI Application',
-    description: 'File an RTI application to get information from government',
+    name: 'RTI_STATUTORY_REQUEST',
+    description: 'Statutory request for information under the RTI Act, 2005.',
     icon: FileText,
-    category: 'RTI',
+    category: 'Statutory',
     fields: [
       { id: 'applicant_name', label: 'Applicant Name', type: 'text' },
-      { id: 'applicant_address', label: 'Address', type: 'textarea' },
+      { id: 'applicant_address', label: 'Applicant Address', type: 'textarea' },
       {
         id: 'public_authority',
-        label: 'Public Authority',
+        label: 'Public Information Officer',
         type: 'text',
-        placeholder: 'e.g., Ministry of Finance',
+        placeholder: 'Designated Public Authority',
       },
-      { id: 'information_requested', label: 'Information Requested', type: 'textarea' },
-      { id: 'bpl', label: 'BPL Cardholder?', type: 'select', options: ['No', 'Yes'] },
+      { id: 'information_requested', label: 'Description of Information', type: 'textarea' },
+      { id: 'bpl', label: 'BPL Status', type: 'select', options: ['No', 'Yes'] },
     ],
     generate: (data) =>
-      `RTI APPLICATION\nUnder Section 6 of the Right to Information Act, 2005\n\nTo,\nThe Public Information Officer,\n${data.public_authority}\n\nSubject: Application for Information under RTI Act, 2005\n\nRespected Sir/Madam,\n\nI, ${data.applicant_name}, resident of ${data.applicant_address}, hereby request you to provide the following information:\n\n${data.information_requested}\n\n${data.bpl === 'Yes' ? 'I am a BPL cardholder and exempted from fee.' : 'Application fee of Rs. 10/- is enclosed.'}\n\nDate: ${new Date().toLocaleDateString()}\nYours faithfully,\n${data.applicant_name}`,
+      `FORM A\nApplication for Information under Section 6(1) of the RTI Act, 2005\n\nTo,\nThe Public Information Officer,\n${data.public_authority}\n\nSubject: Formal Request for Information under RTI Act, 2005\n\nRespected Sir/Madam,\n\nI, ${data.applicant_name}, resident of ${data.applicant_address}, hereby request you to provide the following information:\n\n${data.information_requested}\n\n${data.bpl === 'Yes' ? 'I am a BPL cardholder and exempted from fee submission.' : 'An application fee of Rs. 10/- is enclosed via [Payment Method].'}\n\nDate: ${new Date().toLocaleDateString()}\nYours faithfully,\n${data.applicant_name}`,
   },
 
   consumer_complaint: {
     id: 'consumer_complaint',
-    name: 'Consumer Complaint',
-    description: 'File a complaint under Consumer Protection Act, 2019',
+    name: 'CONSUMER_PETITION',
+    description: 'Formal grievance under the Consumer Protection Act, 2019.',
     icon: Shield,
     category: 'Consumer',
     fields: [
-      { id: 'complainant_name', label: 'Complainant Name', type: 'text' },
-      { id: 'opposite_party_name', label: 'Opposite Party Name', type: 'text' },
-      { id: 'purchase_date', label: 'Date of Purchase', type: 'date' },
-      { id: 'amount_paid', label: 'Amount Paid (₹)', type: 'number' },
-      { id: 'deficiency', label: 'Deficiency / Defect', type: 'textarea' },
-      { id: 'relief_sought', label: 'Relief Sought', type: 'textarea' },
+      { id: 'complainant_name', label: 'Complainant Full Name', type: 'text' },
+      { id: 'opposite_party_name', label: 'Opposite Party (Respondent)', type: 'text' },
+      { id: 'purchase_date', label: 'Transaction Date', type: 'date' },
+      { id: 'amount_paid', label: 'Consideration Paid (₹)', type: 'number' },
+      { id: 'deficiency', label: 'Nature of Deficiency', type: 'textarea' },
+      { id: 'relief_sought', label: 'Redressal Sought', type: 'textarea' },
     ],
     generate: (data) =>
-      `CONSUMER COMPLAINT\n\nBefore the District Consumer Disputes Redressal Commission\n\nIn the matter of:\n${data.complainant_name} vs ${data.opposite_party_name}\n\n1. That the complainant purchased the product/service on ${data.purchase_date} for a sum of ₹${data.amount_paid}.\n2. That the complainant observed the following deficiency:\n${data.deficiency}\n3. That the complainant seeks the following relief:\n${data.relief_sought}\n\nDate: ${new Date().toLocaleDateString()}\nComplainant Signature: ___________`,
+      `CONSUMER COMPLAINT\n\nBefore the District Consumer Disputes Redressal Commission\n\nIn the matter of:\n${data.complainant_name} vs ${data.opposite_party_name}\n\n1. That the complainant purchased the product/service on ${data.purchase_date} for a sum of ₹${data.amount_paid}.\n2. That the complainant observed the following deficiency in service:\n${data.deficiency}\n3. That the complainant seeks the following redressal:\n${data.relief_sought}\n\nDate: ${new Date().toLocaleDateString()}\nComplainant Signature: ___________`,
   },
 
   bns_complaint: {
     id: 'bns_complaint',
-    name: 'BNS Police Complaint',
-    description: 'Draft a criminal complaint (FIR application) under BNS 2023',
+    name: 'BNS_CRIMINAL_COMPLAINT',
+    description: 'Criminal complaint/FIR application under Bharatiya Nyaya Sanhita.',
     icon: Milestone,
     category: 'Criminal',
     fields: [
-      { id: 'complainant_name', label: 'Your Name', type: 'text' },
-      { id: 'police_station', label: 'Police Station Name', type: 'text' },
+      { id: 'complainant_name', label: 'Complainant Full Name', type: 'text' },
+      { id: 'police_station', label: 'Jurisdictional Police Station', type: 'text' },
       { id: 'incident_date', label: 'Date of Incident', type: 'date' },
       {
         id: 'accused_name',
-        label: 'Accused (if known)',
+        label: 'Accused Identity (if known)',
         type: 'text',
-        placeholder: 'Name or "Unknown"',
+        placeholder: 'Name or "Unknown Persons"',
       },
       {
         id: 'incident_details',
-        label: 'Details of Incident',
+        label: 'Incident Narrative',
         type: 'textarea',
-        placeholder: 'Describe what happened in detail',
+        placeholder: 'Detailed account of the criminal offence',
       },
       {
         id: 'offence_type',
-        label: 'Offence Type',
+        label: 'Classification of Offence',
         type: 'select',
         options: [
           'Theft / Snatching',
           'Physical Assault',
           'Fraud / Cheating',
           'Harassment',
-          'Other',
+          'Other Offences',
         ],
       },
     ],
     generate: (data) =>
-      `COMPLAINT UNDER BNSS SECTION 173\n\nTo,\nThe SHO,\nPolice Station: ${data.police_station}\n\nSubject: Formal complaint regarding ${data.offence_type} on ${data.incident_date}.\n\nRespected Sir,\n\nI, ${data.complainant_name}, wish to report a criminal offence committed against me. \n\n1. Incident: The incident occurred on ${data.incident_date} at around [Time].\n2. Accused: ${data.accused_name}.\n3. Description: ${data.incident_details}\n\nI request you to register an FIR under relevant sections of the Bharatiya Nyaya Sanhita (BNS) 2023 and initiate an investigation.\n\nDate: ${new Date().toLocaleDateString()}\nSignature: ___________`,
+      `COMPLAINT UNDER BNSS SECTION 173\n\nTo,\nThe Station House Officer (SHO),\nPolice Station: ${data.police_station}\n\nSubject: Formal complaint regarding ${data.offence_type} occurred on ${data.incident_date}.\n\nRespected Sir,\n\nI, ${data.complainant_name}, hereby report a criminal offence committed against me. \n\n1. Incident Timeline: The incident occurred on ${data.incident_date} at approximately [Time].\n2. Accused Details: ${data.accused_name}.\n3. Factual Narrative: ${data.incident_details}\n\nI request you to register a First Information Report (FIR) under relevant sections of the Bharatiya Nyaya Sanhita (BNS) 2023 and initiate immediate investigative procedures.\n\nDate: ${new Date().toLocaleDateString()}\nSignature: ___________`,
   },
 };
 
@@ -177,49 +178,39 @@ export default function DocumentGeneratorPage() {
     if (!selectedTemplate) return;
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
-    success({ title: 'Document Generated', message: 'Draft created successfully' });
+    success({ title: 'Document Generated', message: 'The draft has been professionally formulated.' });
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedDoc);
-    info({ title: 'Copied!', message: 'Document copied to clipboard' });
+    info({ title: 'Copied', message: 'Document content copied to clipboard.' });
   };
 
   const handleDownload = () => {
     if (!generatedDoc) return;
     
     try {
-      // Initialize PDF document
       const doc = new jsPDF('p', 'mm', 'a4');
-      
-      // Document styling
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(16);
+      doc.setFontSize(11);
       
-      // Auto-wrap text at 180mm width
-      const lines = doc.splitTextToSize(generatedDoc, 180);
-      
-      // Write to PDF with auto-pagination
+      const lines = doc.splitTextToSize(generatedDoc, 170);
       let y = 20;
-      const pageHeight = 280; // A4 height roughly 297mm, leave padding
+      const pageHeight = 280;
       
-      for (let i = 0; i < lines.length; i++) {
+      lines.forEach(line => {
         if (y > pageHeight) {
           doc.addPage();
-          y = 20; // reset to top margin
+          y = 20;
         }
-        
-        doc.setFontSize(11);
-        doc.text(lines[i], 15, y);
-        y += 6; // line height
-      }
+        doc.text(line, 20, y);
+        y += 6;
+      });
       
-      // Trigger download
       doc.save(`${selectedTemplate.id}_draft.pdf`);
-      success({ title: 'PDF Downloaded!', message: 'Document saved securely to your device.' });
+      success({ title: 'PDF Downloaded', message: 'Document saved securely.' });
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      // Fallback to text file if PDF rendering completely fails
       const blob = new Blob([generatedDoc], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -227,50 +218,49 @@ export default function DocumentGeneratorPage() {
       link.download = `${selectedTemplate.id}_draft.txt`;
       link.click();
       URL.revokeObjectURL(url);
-      success({ title: 'Downloaded as TXT!', message: 'Document saved to your device as a text falback.' });
+      success({ title: 'Downloaded as TXT', message: 'System fallback utilized.' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-void pb-8 flex flex-col">
+    <div className="min-h-screen bg-void pb-32 font-mono">
       <Header />
-      <main className="flex-1 max-w-6xl mx-auto px-6 pt-32 w-full space-y-12 pb-24">
+      <main className="max-w-7xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple/10 text-purple-light text-[10px] uppercase font-bold tracking-[0.2em] rounded-full border border-purple/20">
-            <FileText className="w-3.5 h-3.5" />
-            <span>Smart Document Generator</span>
+        <div className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
+            <FileText className="w-5 h-5" />
+            <span>DOCUMENT_STATUTORY_ENGINE_V1.2</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-display font-semibold">
-            Draft with <span className="text-purple-gradient">Precision</span>
+          <h1 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter leading-none italic text-white text-center">
+            INSTITUTIONAL <span className="text-gold">DRAFTING</span>
           </h1>
-          <p className="text-lg text-text-secondary leading-relaxed max-w-2xl mx-auto font-body">
-            Create professional legal notices, RTI applications, and police complaints instantly
-            with validated templates.
+          <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
+            FORMULATE STATUTORY NOTICES, PROCEDURAL APPLICATIONS, AND COMPLAINTS WITH PRECISION USING VALIDATED STATUTORY TEMPLATES.
           </p>
         </div>
 
         {!selectedTemplate ? (
           /* Template Selection */
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {Object.values(DOCUMENT_TEMPLATES).map((template) => (
               <motion.button
                 key={template.id}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -8 }}
                 onClick={() => setSelectedTemplate(template)}
-                className="bg-raised p-6 rounded-[24px] border border-white/5 text-left space-y-4 group transition-all hover:border-purple/30"
+                className="bg-void p-10 rounded-sm border-2 border-white/5 text-left space-y-6 group transition-all hover:border-gold/30 shadow-hard"
               >
-                <div className="w-12 h-12 bg-purple/10 rounded-2xl flex items-center justify-center text-purple group-hover:bg-purple group-hover:text-ink transition-colors">
-                  <template.icon className="w-6 h-6" />
+                <div className="w-14 h-14 bg-void border-2 border-white/5 rounded-sm flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-midnight transition-colors shadow-inner">
+                  <template.icon className="w-7 h-7" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-display text-white">{template.name}</h3>
-                  <p className="text-xs text-text-tertiary mt-1 font-body">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-display font-bold text-white uppercase tracking-widest italic">{template.name}</h3>
+                  <p className="text-sm text-text-tertiary font-body italic opacity-60">
                     {template.description}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <span className="text-[10px] font-bold text-purple uppercase tracking-widest">
+                <div className="pt-4">
+                  <span className="text-[10px] font-extrabold text-gold uppercase tracking-widest bg-gold/5 px-3 py-1 rounded-sm border-2 border-gold/20 italic shadow-hard">
                     {template.category}
                   </span>
                 </div>
@@ -279,49 +269,53 @@ export default function DocumentGeneratorPage() {
           </div>
         ) : (
           /* Form & Preview */
-          <div className="grid lg:grid-cols-2 gap-10">
-            <div className="space-y-8">
+          <div className="grid lg:grid-cols-2 gap-16">
+            <div className="space-y-10">
               <button
                 onClick={() => {
                   setSelectedTemplate(null);
                   setGeneratedDoc('');
                   setFormData({});
                 }}
-                className="flex items-center gap-2 text-text-tertiary hover:text-purple transition-colors text-xs font-bold uppercase tracking-widest"
+                className="flex items-center gap-3 text-text-tertiary hover:text-gold transition-colors text-[10px] font-bold uppercase tracking-widest border-2 border-white/5 px-6 py-3 rounded-sm bg-void shadow-hard"
               >
-                <ChevronDown className="w-4 h-4 rotate-90" /> Change Template
+                <ArrowLeft className="w-4 h-4" /> Return to Templates
               </button>
 
-              <div className="bg-raised rounded-[32px] border border-white/5 p-8 space-y-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 bg-purple/10 rounded-xl flex items-center justify-center text-purple">
-                    <selectedTemplate.icon className="w-5 h-5" />
+              <div className="bg-void rounded-sm border-2 border-white/10 p-10 space-y-10 shadow-hard relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-3xl rounded-sm" />
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-12 h-12 bg-void border-2 border-gold/20 rounded-sm flex items-center justify-center text-gold shadow-luxe">
+                    <selectedTemplate.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-display text-white">
-                    {selectedTemplate.name} Details
-                  </h3>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gold font-bold uppercase tracking-widest opacity-60">Form Input</p>
+                    <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tight">
+                      {selectedTemplate.name}
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="grid gap-6">
+                <div className="grid gap-8 relative z-10">
                   {selectedTemplate.fields.map((field) => (
-                    <div key={field.id} className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
+                    <div key={field.id} className="space-y-3">
+                      <label className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary opacity-40 ml-2">
                         {field.label}
                       </label>
                       {field.type === 'textarea' ? (
                         <textarea
                           placeholder={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          className="w-full bg-ink border border-white/10 rounded-xl p-4 text-sm text-white focus:border-purple outline-none h-32 resize-none"
+                          className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[15px] text-white focus:border-gold outline-none h-40 resize-none transition-all placeholder:text-white/10 italic shadow-inner"
                         />
                       ) : field.type === 'select' ? (
                         <select
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          className="w-full bg-ink border border-white/10 rounded-xl p-4 text-sm text-white focus:border-purple outline-none"
+                          className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[15px] text-white focus:border-gold outline-none transition-all appearance-none cursor-pointer italic shadow-inner"
                         >
-                          <option value="">-- Select Option --</option>
+                          <option value="">Select Option</option>
                           {field.options.map((o) => (
-                            <option key={o} value={o}>
+                            <option key={o} value={o} className="bg-void text-white">
                               {o}
                             </option>
                           ))}
@@ -331,7 +325,7 @@ export default function DocumentGeneratorPage() {
                           type={field.type}
                           placeholder={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                          className="w-full bg-ink border border-white/10 rounded-xl p-4 text-sm text-white focus:border-purple outline-none"
+                          className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[13px] text-white focus:border-gold outline-none transition-all placeholder:text-white/10 font-mono italic shadow-inner"
                         />
                       )}
                     </div>
@@ -340,54 +334,58 @@ export default function DocumentGeneratorPage() {
 
                 <button
                   onClick={handleGenerate}
-                  className="w-full bg-purple hover:bg-purple-light text-ink py-4 rounded-2xl font-bold transition-all shadow-xl shadow-purple/20"
+                  className="w-full bg-gold hover:bg-gold-light text-midnight py-6 rounded-sm border-2 border-gold-light/20 font-extrabold uppercase tracking-widest transition-all shadow-luxe active:translate-y-[2px] italic"
                 >
-                  Draft Document
+                  CONSTRUCT_STATUTORY_DRAFT
                 </button>
               </div>
             </div>
 
             {/* Preview Section */}
-            <div className="space-y-6">
-              <div className="bg-ink rounded-[32px] border border-white/5 p-8 h-full min-h-[600px] flex flex-col">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3">
-                    <Eye className="w-5 h-5 text-purple-light" />
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
-                      Live Draft Preview
+            <div className="space-y-10 h-full">
+              <div className="bg-void rounded-sm border-2 border-white/10 p-10 h-full min-h-[700px] flex flex-col shadow-hard relative overflow-hidden group/preview">
+                <div className="absolute inset-0 bg-gold/[0.02] opacity-50 group-hover/preview:opacity-100 transition-opacity" />
+                <div className="flex items-center justify-between mb-10 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <Eye className="w-5 h-5 text-gold opacity-60" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary opacity-40">
+                      Draft Preview
                     </span>
                   </div>
                   {generatedDoc && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-4">
                       <button
                         onClick={handleCopy}
-                        className="p-2 bg-void/5 rounded-lg hover:bg-void/10 transition-colors"
+                        className="p-3 bg-void border-2 border-white/10 rounded-sm hover:border-gold/40 transition-all shadow-hard"
+                        title="Copy to Clipboard"
                       >
-                        <Copy className="w-4 h-4 text-white" />
+                        <Copy className="w-5 h-5 text-white" />
                       </button>
                       <button
                         onClick={handleDownload}
-                        className="p-2 bg-purple/10 rounded-lg hover:bg-purple/20 transition-colors"
+                        className="p-3 bg-gold border-2 border-gold-light/20 rounded-sm hover:bg-gold-light transition-all shadow-hard"
+                        title="Download PDF"
                       >
-                        <Download className="w-4 h-4 text-purple" />
+                        <Download className="w-5 h-5 text-midnight" />
                       </button>
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 bg-void/50 rounded-2xl p-6 border border-white/5 font-mono text-xs leading-relaxed text-text-secondary overflow-y-auto whitespace-pre-wrap">
+                <div className="flex-1 bg-void rounded-sm p-8 border-2 border-white/5 font-body text-sm leading-relaxed text-text-secondary overflow-y-auto whitespace-pre-wrap relative z-10 italic opacity-90 custom-scrollbar shadow-inner">
                   {generatedDoc ||
-                    "Your draft will appear here after you input the details and click 'Draft Document'."}
+                    "Enter the required details and select 'Formulate Draft' to generate your professional legal document."}
                 </div>
 
                 {generatedDoc && (
-                  <div className="mt-8 flex items-start gap-4 p-4 bg-accent-warning/5 border border-accent-warning/20 rounded-2xl">
-                    <AlertTriangle className="w-5 h-5 text-accent-warning shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-accent-warning/70 font-body">
-                      <strong>LEGAL DISCLAIMER:</strong> This AI-generated draft is for
-                      informational purposes only. It does not constitute legal advice. Please have
-                      this document reviewed by a qualified advocate before formal submission.
-                    </p>
+                  <div className="mt-10 flex items-start gap-5 p-6 bg-gold/5 border-2 border-gold/20 rounded-sm relative z-10 shadow-hard">
+                    <AlertTriangle className="w-6 h-6 text-gold shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-gold uppercase tracking-widest">Legal Advisory</p>
+                      <p className="text-[11px] text-text-tertiary/70 font-body leading-relaxed">
+                        This document is a generated draft based on the information provided. It serves as a tool for formulation and should be reviewed by a legal professional before formal execution.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
