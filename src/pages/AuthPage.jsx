@@ -12,7 +12,7 @@ export default function AuthPage() {
       <div className="fixed top-8 left-8 z-50">
         <button
           onClick={() => navigate('/')}
-          className="group flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-purple/40 hover:bg-white/10 transition-all backdrop-blur-md"
+          className="group flex items-center gap-3 px-4 py-2 rounded-full bg-void/5 border border-white/10 hover:border-purple/40 hover:bg-void/10 transition-all backdrop-blur-md"
         >
           <ArrowLeft className="w-4 h-4 text-purple group-hover:-translate-x-1 transition-transform" />
           <span className="text-[10px] uppercase tracking-widest font-bold text-text-secondary group-hover:text-white transition-colors">

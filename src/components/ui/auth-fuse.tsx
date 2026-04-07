@@ -96,9 +96,9 @@ const buttonVariants = cva(
         default: 'bg-purple text-white hover:bg-purple-light shadow-lg shadow-purple/10',
         destructive: 'bg-accent-error text-white hover:bg-red-600',
         outline:
-          'border border-white/5 bg-raised/50 hover:bg-white/5 hover:border-purple/30 text-text-primary',
+          'border border-white/5 bg-raised/50 hover:bg-void/5 hover:border-purple/30 text-text-primary',
         secondary: 'bg-ink text-white hover:bg-ink/80 border border-white/5',
-        ghost: 'hover:bg-white/5 text-text-secondary hover:text-white',
+        ghost: 'hover:bg-void/5 text-text-secondary hover:text-white',
         link: 'text-purple underline-offset-4 hover:underline',
       },
       size: {
@@ -135,7 +135,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
       <input
         type={type}
         className={cn(
-          'flex h-12 w-full rounded-xl border border-white/5 bg-void px-4 py-3 text-sm text-text-primary shadow-inner transition-all placeholder:text-text-tertiary focus-visible:border-purple/50 focus-visible:bg-white/[0.02] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-12 w-full rounded-xl border border-white/5 bg-void px-4 py-3 text-sm text-text-primary shadow-inner transition-all placeholder:text-text-tertiary focus-visible:border-purple/50 focus-visible:bg-void/[0.02] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
         ref={ref}

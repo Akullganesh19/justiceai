@@ -99,7 +99,7 @@ class ErrorBoundary extends React.Component {
                       <span className="w-1.5 h-1.5 rounded-sm bg-red/40 group-hover/stack:bg-red group-hover/stack:animate-pulse" />
                       VIEW_COMPONENT_STACK
                     </summary>
-                    <pre className="text-[10px] text-text-tertiary/60 font-mono whitespace-pre-wrap break-words mt-4 p-4 border-l-2 border-white/5 bg-white/[0.01] max-h-32 overflow-y-auto custom-scrollbar">
+                    <pre className="text-[10px] text-text-tertiary/60 font-mono whitespace-pre-wrap break-words mt-4 p-4 border-l-2 border-white/5 bg-void/[0.01] max-h-32 overflow-y-auto custom-scrollbar">
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </details>

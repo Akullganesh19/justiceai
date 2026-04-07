@@ -88,7 +88,7 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
             disabled={!text.trim() || isLoading}
             className={`p-4 rounded transition-all flex items-center justify-center flex-shrink-0 ${
               !text.trim() || isLoading
-                ? 'bg-white/5 text-text-tertiary cursor-not-allowed border-2 border-white/5 shadow-none'
+                ? 'bg-void/5 text-text-tertiary cursor-not-allowed border-2 border-white/5 shadow-none'
                 : 'bg-red text-white hover:bg-red-dark active:translate-x-[1px] active:translate-y-[1px] shadow-[6px_6px_0px_0px_rgba(159,18,57,1)] border-2 border-red-light/20'
             }`}
           >

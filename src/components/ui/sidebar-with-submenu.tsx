@@ -30,7 +30,7 @@ const Menu = ({ children, items }: { children: React.ReactNode; items: MenuItem[
   return (
     <div>
       <button
-        className="w-full flex items-center justify-between text-text-secondary p-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
+        className="w-full flex items-center justify-between text-text-secondary p-2 rounded-lg hover:bg-void/5 active:bg-void/10 transition-colors duration-200"
         onClick={() => setIsOpened((v) => !v)}
         {...({ 'aria-expanded': isOpened ? 'true' : 'false' } as const)}
         aria-controls="submenu"
@@ -53,7 +53,7 @@ const Menu = ({ children, items }: { children: React.ReactNode; items: MenuItem[
           <li key={idx}>
             <Link
               to={item.href}
-              className="flex items-center gap-x-3 text-text-tertiary p-2 rounded-lg hover:bg-white/5 hover:text-text-primary active:bg-white/10 transition-colors duration-200"
+              className="flex items-center gap-x-3 text-text-tertiary p-2 rounded-lg hover:bg-void/5 hover:text-text-primary active:bg-void/10 transition-colors duration-200"
             >
               {item.icon ? <div className="text-purple/70">{item.icon}</div> : null}
               {item.name}
@@ -135,7 +135,7 @@ export const Sidebar = () => {
                 <li key={idx}>
                   <Link
                     to={item.href}
-                    className="flex items-center gap-x-3 text-text-secondary p-2 rounded-lg hover:bg-white/5 hover:text-text-primary active:bg-white/10 transition-colors duration-200"
+                    className="flex items-center gap-x-3 text-text-secondary p-2 rounded-lg hover:bg-void/5 hover:text-text-primary active:bg-void/10 transition-colors duration-200"
                   >
                     <div className="text-purple/70">{item.icon}</div>
                     {item.name}
@@ -162,7 +162,7 @@ export const Sidebar = () => {
               <li key={idx}>
                 <Link
                   to={item.href}
-                  className="flex items-center gap-x-3 text-text-secondary p-2 rounded-lg hover:bg-white/5 hover:text-text-primary active:bg-white/10 transition-colors duration-200"
+                  className="flex items-center gap-x-3 text-text-secondary p-2 rounded-lg hover:bg-void/5 hover:text-text-primary active:bg-void/10 transition-colors duration-200"
                 >
                   <div className="text-purple/70">{item.icon}</div>
                   {item.name}
@@ -174,7 +174,7 @@ export const Sidebar = () => {
           {/* User Profile Dropdown */}
           <div className="relative border-t border-white/5 pt-4 mt-2">
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple group">
+              <DropdownMenu.Trigger className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-void/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple group">
                 <div className="flex items-center gap-x-3">
                   <Avatar.Root className="inline-flex items-center justify-center align-middle overflow-hidden w-10 h-10 rounded-full border border-purple/20 bg-void">
                     <Avatar.Image
@@ -216,13 +216,13 @@ export const Sidebar = () => {
                     </span>
                   </div>
 
-                  <DropdownMenu.Item className="flex items-center gap-2 p-2 px-3 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-white/10 hover:text-text-primary focus:bg-white/10 focus:outline-none transition-colors">
+                  <DropdownMenu.Item className="flex items-center gap-2 p-2 px-3 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-void/10 hover:text-text-primary focus:bg-void/10 focus:outline-none transition-colors">
                     <User className="w-4 h-4" />
                     Profile & Billing
                   </DropdownMenu.Item>
 
                   <DropdownMenu.Sub>
-                    <DropdownMenu.SubTrigger className="flex items-center justify-between p-2 px-3 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-white/10 hover:text-text-primary focus:bg-white/10 focus:outline-none transition-colors">
+                    <DropdownMenu.SubTrigger className="flex items-center justify-between p-2 px-3 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-void/10 hover:text-text-primary focus:bg-void/10 focus:outline-none transition-colors">
                       <div className="flex items-center gap-2">
                         <Monitor className="w-4 h-4" />
                         Theme
@@ -234,10 +234,10 @@ export const Sidebar = () => {
                         className="z-50 min-w-[140px] rounded-xl premium-blur border border-white/10 shadow-2xl p-1 animate-in fade-in-80 zoom-in-95"
                         sideOffset={8}
                       >
-                        <DropdownMenu.Item className="flex items-center gap-2 p-2 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-white/10 hover:text-text-primary focus:bg-white/10 focus:outline-none">
+                        <DropdownMenu.Item className="flex items-center gap-2 p-2 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-void/10 hover:text-text-primary focus:bg-void/10 focus:outline-none">
                           <Moon className="w-4 h-4" /> Dark
                         </DropdownMenu.Item>
-                        <DropdownMenu.Item className="flex items-center gap-2 p-2 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-white/10 hover:text-text-primary focus:bg-white/10 focus:outline-none">
+                        <DropdownMenu.Item className="flex items-center gap-2 p-2 text-sm text-text-secondary rounded-md cursor-pointer hover:bg-void/10 hover:text-text-primary focus:bg-void/10 focus:outline-none">
                           <Sun className="w-4 h-4" /> Light
                         </DropdownMenu.Item>
                       </DropdownMenu.SubContent>

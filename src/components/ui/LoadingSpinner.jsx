@@ -32,7 +32,7 @@ export default function LoadingSpinner() {
 
         <div className="space-y-4 flex flex-col items-center">
           {/* Scanning Loading Bar */}
-          <div className="w-64 h-1.5 bg-white/5 border border-white/10 rounded-sm overflow-hidden relative">
+          <div className="w-64 h-1.5 bg-void/5 border border-white/10 rounded-sm overflow-hidden relative">
             <motion.div
               className="absolute inset-y-0 bg-red shadow-[0_0_15px_rgba(225,29,72,0.8)]"
               animate={{ left: ['-20%', '120%'] }}

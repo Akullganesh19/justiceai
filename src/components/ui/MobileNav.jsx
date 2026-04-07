@@ -99,7 +99,7 @@ export default function MobileNav({ isOpen, onClose }) {
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                         isActive
                           ? 'bg-purple/10 text-purple border border-purple/20'
-                          : 'text-text-secondary hover:bg-white/5 hover:text-white border border-transparent'
+                          : 'text-text-secondary hover:bg-void/5 hover:text-white border border-transparent'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -114,7 +114,7 @@ export default function MobileNav({ isOpen, onClose }) {
             {/* Footer */}
             <div className="p-4 border-t border-white/5 space-y-3">
               {/* Keyboard Shortcut Hint */}
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-void/5 border border-white/10">
                 <Command className="w-3.5 h-3.5 text-purple-light" />
                 <span className="text-[10px] text-text-tertiary font-medium uppercase tracking-wider">
                   Cmd+K for quick search

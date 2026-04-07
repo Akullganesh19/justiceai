@@ -94,14 +94,14 @@ export default function Slideshow({
         <button
           onClick={prevSlide}
           aria-label="Previous slide"
-          className="p-4 rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-purple/20 hover:border-purple/30 transition-all pointer-events-auto active:scale-95 group"
+          className="p-4 rounded-full bg-void/5 border border-white/10 text-white/50 hover:text-white hover:bg-purple/20 hover:border-purple/30 transition-all pointer-events-auto active:scale-95 group"
         >
           <ChevronLeft className="w-8 h-8 group-hover:-translate-x-1 transition-transform" />
         </button>
         <button
           onClick={nextSlide}
           aria-label="Next slide"
-          className="p-4 rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-purple/20 hover:border-purple/30 transition-all pointer-events-auto active:scale-95 group"
+          className="p-4 rounded-full bg-void/5 border border-white/10 text-white/50 hover:text-white hover:bg-purple/20 hover:border-purple/30 transition-all pointer-events-auto active:scale-95 group"
         >
           <ChevronRight className="w-8 h-8 group-hover:translate-x-1 transition-transform" />
         </button>
@@ -116,7 +116,7 @@ export default function Slideshow({
               onClick={() => setCurrent(i)}
               className={cn(
                 'h-1 transition-all duration-500 rounded-full cursor-pointer',
-                i === current ? 'w-12 bg-purple' : 'w-4 bg-white/20 hover:bg-white/40',
+                i === current ? 'w-12 bg-purple' : 'w-4 bg-void/20 hover:bg-void/40',
               )}
             />
           ))}

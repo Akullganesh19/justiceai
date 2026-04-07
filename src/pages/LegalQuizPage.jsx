@@ -241,7 +241,7 @@ function QuizCard({ question, selectedAnswer, onSelect, showResult, index, total
       case 'Hard':
         return 'text-red bg-red/10 border-red/20';
       default:
-        return 'text-white bg-white/10 border-white/20';
+        return 'text-white bg-void/10 border-white/20';
     }
   };
 
@@ -514,7 +514,7 @@ export default function LegalQuizPage() {
                   NODE_{currentIndex + 1} / {filteredQuestions.length || 0}
                 </span>
               </div>
-              <div className="h-[4px] bg-white/5 rounded-sm overflow-hidden shadow-inner border border-white/5">
+              <div className="h-[4px] bg-void/5 rounded-sm overflow-hidden shadow-inner border border-white/5">
                 <motion.div
                   className="h-full bg-red shadow-[0_0_20px_rgba(225,29,72,0.6)]"
                   animate={{

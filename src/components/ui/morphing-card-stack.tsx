@@ -127,7 +127,7 @@ export function MorphingCardStack({
                 'rounded-lg p-2.5 transition-all duration-300',
                 layout === mode
                   ? 'bg-red text-white shadow-[2px_2px_0px_0px_rgba(159,18,57,1)]'
-                  : 'text-text-tertiary hover:text-white hover:bg-white/5',
+                  : 'text-text-tertiary hover:text-white hover:bg-void/5',
               )}
               aria-label={`Switch to ${mode} layout`}
             >
@@ -247,7 +247,7 @@ export function MorphingCardStack({
                 'h-1.5 rounded-full transition-all duration-300',
                 index === activeIndex
                   ? 'w-6 bg-red shadow-[0_0_8px_rgba(225,29,72,0.5)]'
-                  : 'w-1.5 bg-white/10 hover:bg-white/20',
+                  : 'w-1.5 bg-void/10 hover:bg-void/20',
               )}
               aria-label={`Go to card ${index + 1}`}
             />

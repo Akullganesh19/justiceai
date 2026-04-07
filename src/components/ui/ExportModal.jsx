@@ -36,7 +36,7 @@ export default function ExportModal({ isOpen, onClose, summary }) {
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/5 rounded-full text-text-tertiary transition-colors"
+                className="p-2 hover:bg-void/5 rounded-full text-text-tertiary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -71,7 +71,7 @@ export default function ExportModal({ isOpen, onClose, summary }) {
                   link.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/5 text-text-primary hover:bg-white/10 border border-white/10 transition-all font-medium active:scale-95"
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-void/5 text-text-primary hover:bg-void/10 border border-white/10 transition-all font-medium active:scale-95"
               >
                 <Download className="w-5 h-5" />
                 <span>Save .txt</span>

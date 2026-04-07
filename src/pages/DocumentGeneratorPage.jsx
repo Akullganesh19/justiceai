@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 import {
   FileText,
   Download,
@@ -185,14 +186,49 @@ export default function DocumentGeneratorPage() {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([generatedDoc], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selectedTemplate.id}_draft.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-    success({ title: 'Downloaded!', message: 'Document saved to your device' });
+    if (!generatedDoc) return;
+    
+    try {
+      // Initialize PDF document
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Document styling
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(16);
+      
+      // Auto-wrap text at 180mm width
+      const lines = doc.splitTextToSize(generatedDoc, 180);
+      
+      // Write to PDF with auto-pagination
+      let y = 20;
+      const pageHeight = 280; // A4 height roughly 297mm, leave padding
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (y > pageHeight) {
+          doc.addPage();
+          y = 20; // reset to top margin
+        }
+        
+        doc.setFontSize(11);
+        doc.text(lines[i], 15, y);
+        y += 6; // line height
+      }
+      
+      // Trigger download
+      doc.save(`${selectedTemplate.id}_draft.pdf`);
+      success({ title: 'PDF Downloaded!', message: 'Document saved securely to your device.' });
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      // Fallback to text file if PDF rendering completely fails
+      const blob = new Blob([generatedDoc], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${selectedTemplate.id}_draft.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+      success({ title: 'Downloaded as TXT!', message: 'Document saved to your device as a text falback.' });
+    }
   };
 
   return (
@@ -325,7 +361,7 @@ export default function DocumentGeneratorPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleCopy}
-                        className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                        className="p-2 bg-void/5 rounded-lg hover:bg-void/10 transition-colors"
                       >
                         <Copy className="w-4 h-4 text-white" />
                       </button>

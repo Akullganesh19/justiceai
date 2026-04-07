@@ -540,7 +540,7 @@ export default function RightsPage() {
                 <Icon className="w-4 h-4" />
                 <span>{cat.label}</span>
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-white/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
+                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-void/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
                 >
                   {count}
                 </span>

@@ -187,7 +187,7 @@ function NewsTicker() {
             TACTICAL_ALERTS
           </span>
         </div>
-        <div className="h-5 w-[2px] bg-white/10 flex-shrink-0" />
+        <div className="h-5 w-[2px] bg-void/10 flex-shrink-0" />
         <AnimatePresence mode="wait">
           <motion.div
             key={currentNews}
@@ -462,7 +462,7 @@ export default function LandingPage() {
 
                 <div className="space-y-6 pt-4">
                   <div className="p-8 rounded-sm bg-void border-2 border-white/5 text-[11px] text-text-tertiary leading-loose font-mono uppercase tracking-[0.2em] italic shadow-inner border-l-4 border-l-red relative">
-                    <div className="absolute top-0 right-0 w-8 h-8 bg-white/[0.02] border-l border-b border-white/5" />
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-void/[0.02] border-l border-b border-white/5" />
                     <span className="text-white font-extrabold block mb-3 uppercase tracking-[0.4em] italic">
                        // SYSTEM_OBSERVATION:
                     </span>

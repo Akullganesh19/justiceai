@@ -640,7 +640,11 @@ app.post('/api/chat', async (req, res) => {
       systemPrompt += `\n\nYour judicial/opponent personality is: ${personality}.`;
     }
     
-    systemPrompt += `\n\nCRITICAL CONVERSATIONAL RULE: KEEP YOUR RESPONSES EXTREMELY BRIEF AND TO THE POINT. DO NOT WRITE LONG DRAMATIC PARAGRAPHS. Just 2-3 short sentences unless you are providing the JSON <analysis> block. Use bullet points if necessary.`;
+    if (mode === 'analyzer') {
+      systemPrompt += `\n\nCRITICAL RULE: You must return your response strictly as a structured JSON object.`;
+    } else {
+      systemPrompt += `\n\nCRITICAL CONVERSATIONAL RULE: Keep your conversational responses clear, articulate, and well-formatted. Do not output raw JSON objects in this mode. Use elegant bullet points and line breaks.`;
+    }
 
     systemPrompt += contextStr;
 

@@ -68,7 +68,7 @@ function ToastItem({ id, type, title, message, duration = 5000, onRemove }) {
         </div>
         <button
           onClick={() => onRemove(id)}
-          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-text-tertiary hover:text-white"
+          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-void/10 transition-colors text-text-tertiary hover:text-white"
         >
           <X className="w-4 h-4" />
         </button>

@@ -43,7 +43,7 @@ function TemplateCard({ template, onSelect, index }) {
           {template.description}
         </p>
 
-        <div className="flex items-center justify-between gap-3 bg-white/5 group-hover:bg-purple text-white group-hover:text-ink px-6 py-4 rounded-2xl font-bold transition-all">
+        <div className="flex items-center justify-between gap-3 bg-void/5 group-hover:bg-purple text-white group-hover:text-ink px-6 py-4 rounded-2xl font-bold transition-all">
           <span className="text-xs uppercase tracking-widest">Generate</span>
           <ChevronRight className="w-4 h-4" />
         </div>
@@ -102,7 +102,7 @@ function FormWizard({ template, onBack, onGenerate }) {
       {/* Progress Bar */}
       <div className="flex gap-2 mb-10">
         {Array.from({ length: totalSteps }).map((_, i) => (
-          <div key={i} className="flex-1 h-1.5 rounded-full overflow-hidden bg-white/5">
+          <div key={i} className="flex-1 h-1.5 rounded-full overflow-hidden bg-void/5">
             <motion.div
               className="h-full purple-gradient"
               initial={{ width: 0 }}

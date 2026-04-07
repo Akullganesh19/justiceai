@@ -271,7 +271,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
             : 'bg-red border-red-light/30 text-white'
         }`}
       >
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-void/10 opacity-0 group-hover:opacity-100 transition-opacity" />
         {isOpen ? (
           <X className="w-9 h-9 relative z-10" />
         ) : (

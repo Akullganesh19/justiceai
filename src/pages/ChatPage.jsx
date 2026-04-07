@@ -15,7 +15,14 @@ import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay'
 export default function ChatPage() {
   const location = useLocation();
   const [activeCaseId, setActiveCaseId] = useState(Date.now().toString());
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(() => {
+    try {
+      const savedHistory = localStorage.getItem('justice_ai_history');
+      return savedHistory ? JSON.parse(savedHistory) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Case State
@@ -44,18 +51,7 @@ export default function ChatPage() {
   // Calculate Progress
   const progress = analysis ? 100 : Math.min(Math.floor((messages.length - 1) * 25), 80);
 
-  // 1. Load History on Mount
-  useEffect(() => {
-    const savedHistory = localStorage.getItem('justice_ai_history');
-    if (savedHistory) {
-      try {
-        const parsed = JSON.parse(savedHistory);
-        setHistory(parsed);
-      } catch (e) {
-        console.error('Failed to load history', e);
-      }
-    }
-  }, []);
+  // (History is now loaded synchronously via lazy initialization)
 
   // 2. Handle Samples from Router State
   useEffect(() => {

@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Terminal,
   Zap,
+  Plus,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -149,7 +150,7 @@ export default function LawyerOnboardingPage() {
                 </div>
               ))}
               {/* Connector Lines */}
-              <div className="absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-white/5 -z-0 hidden md:block">
+              <div className="absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-void/5 -z-0 hidden md:block">
                 <motion.div
                   className="h-full bg-red shadow-[0_0_10px_rgba(225,29,72,0.5)]"
                   animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
@@ -558,7 +559,7 @@ export default function LawyerOnboardingPage() {
                   {formData.specializations.slice(0, 4).map((s) => (
                     <span
                       key={s}
-                      className="px-3 py-1.5 bg-white/5 border border-white/10 text-[9px] uppercase font-extrabold tracking-widest text-text-tertiary italic"
+                      className="px-3 py-1.5 bg-void/5 border border-white/10 text-[9px] uppercase font-extrabold tracking-widest text-text-tertiary italic"
                     >
                       {s.replace(' ', '_')}
                     </span>

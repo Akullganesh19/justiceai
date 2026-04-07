@@ -225,7 +225,7 @@ export default function GlossaryPage() {
                 <Icon className="w-4 h-4" />
                 <span>{cat.label}</span>
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-white/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
+                  className={`text-[9px] px-2 py-0.5 rounded border ${isActive ? 'bg-void/20 border-white/30 text-white' : 'bg-void border-white/5 text-white/20'}`}
                 >
                   {count}
                 </span>
@@ -259,7 +259,7 @@ export default function GlossaryPage() {
                   <div className="w-10 h-10 rounded bg-red text-white border-2 border-red-light/20 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(159,18,57,0.3)]">
                     <span className="text-lg font-display font-bold italic">{letter}</span>
                   </div>
-                  <div className="flex-1 h-[2px] bg-white/5 shadow-inner" />
+                  <div className="flex-1 h-[2px] bg-void/5 shadow-inner" />
                   <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] font-extrabold italic">
                     {terms.length} NODES_INDEXED
                   </span>

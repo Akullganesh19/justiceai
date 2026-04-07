@@ -63,7 +63,7 @@ function StatCard({ icon: Icon, label, value, suffix = '', color = 'text-red' })
       ref={setRef}
       className="p-8 rounded-3xl bg-void border-2 border-white/5 space-y-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:border-red/20 group"
     >
-      <div className="w-12 h-12 rounded-xl bg-white/5 border-2 border-white/10 flex items-center justify-center group-hover:border-red/40 transition-all">
+      <div className="w-12 h-12 rounded-xl bg-void/5 border-2 border-white/10 flex items-center justify-center group-hover:border-red/40 transition-all">
         <Icon className={`w-6 h-6 ${color}`} />
       </div>
       <div>
@@ -97,7 +97,7 @@ function QuickActionCard({ icon: Icon, title, description, path, accent }) {
         </h3>
         <p className="text-xs text-text-tertiary font-body mt-1 leading-relaxed">{description}</p>
       </div>
-      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10 group-hover:bg-red group-hover:border-red transition-all">
+      <div className="w-10 h-10 rounded-full bg-void/5 flex items-center justify-center border-2 border-white/10 group-hover:bg-red group-hover:border-red transition-all">
         <ChevronRight className="w-5 h-5 text-text-tertiary group-hover:text-white" />
       </div>
     </button>
@@ -125,7 +125,7 @@ function RecentCaseCard({ caseData }) {
             {title}
           </p>
           <div className="flex items-center gap-3 mt-3">
-            <span className="text-[9px] text-text-tertiary font-extrabold uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/10">
+            <span className="text-[9px] text-text-tertiary font-extrabold uppercase tracking-widest bg-void/5 px-2 py-0.5 rounded border border-white/10">
               {date}
             </span>
             <span className="text-[9px] text-blue font-extrabold uppercase tracking-widest">
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                       onClick={() => navigate(action.path)}
                       className="group p-4 rounded-xl bg-void border-2 border-white/5 hover:border-red/20 transition-all text-left space-y-2 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(225,29,72,0.1)]"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border-2 border-white/10 group-hover:bg-red/10 group-hover:border-red/40 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-void/5 flex items-center justify-center border-2 border-white/10 group-hover:bg-red/10 group-hover:border-red/40 transition-all">
                         <action.icon className="w-4 h-4 text-text-tertiary group-hover:text-red transition-colors" />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-text-tertiary group-hover:text-white transition-colors">

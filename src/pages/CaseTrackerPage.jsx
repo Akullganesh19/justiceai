@@ -470,7 +470,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
         </button>
         {!isLast && (
           <div
-            className={`w-[2px] flex-1 min-h-[50px] transition-all duration-500 ${completedBefore ? 'bg-accent-success/40 scale-x-110' : 'bg-white/5'}`}
+            className={`w-[2px] flex-1 min-h-[50px] transition-all duration-500 ${completedBefore ? 'bg-accent-success/40 scale-x-110' : 'bg-void/5'}`}
           />
         )}
       </div>
@@ -538,7 +538,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setShowDetails(!showDetails)}
-                    className="p-2 rounded hover:bg-white/5 text-text-tertiary hover:text-red transition-all border-2 border-transparent hover:border-white/10"
+                    className="p-2 rounded hover:bg-void/5 text-text-tertiary hover:text-red transition-all border-2 border-transparent hover:border-white/10"
                   >
                     {showDetails ? (
                       <ChevronUp className="w-4 h-4" />
@@ -548,7 +548,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
                   </button>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="p-2 rounded hover:bg-white/5 text-text-tertiary hover:text-red transition-all border-2 border-transparent hover:border-white/10"
+                    className="p-2 rounded hover:bg-void/5 text-text-tertiary hover:text-red transition-all border-2 border-transparent hover:border-white/10"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
@@ -877,9 +877,9 @@ export default function CaseTrackerPage() {
                             )}
                           </div>
 
-                          <div className="h-1 bg-white/5 rounded-sm overflow-hidden border border-white/5">
+                          <div className="h-1 bg-void/5 rounded-sm overflow-hidden border border-white/5">
                             <motion.div
-                              className={`h-full transition-all duration-500 ${activeCaseId === c.id ? 'bg-red' : 'bg-white/20'}`}
+                              className={`h-full transition-all duration-500 ${activeCaseId === c.id ? 'bg-red' : 'bg-void/20'}`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -923,14 +923,14 @@ export default function CaseTrackerPage() {
               >
                 {/* Case Status Hero Card */}
                 <div className="p-12 rounded bg-red text-white shadow-[16px_16px_0px_0px_rgba(159,18,57,0.4)] border-2 border-red-light/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-void/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10">
                     <div className="space-y-4">
                       <div className="flex items-center gap-4">
                         <span className="text-[11px] uppercase font-extrabold tracking-[0.5em] opacity-80 italic">
                           SESSION_PRIME_OBJECTIVE
                         </span>
-                        <div className="h-[2px] w-16 bg-white/30" />
+                        <div className="h-[2px] w-16 bg-void/30" />
                         <span className="text-[10px] font-mono tracking-widest opacity-60">
                           REF_ID://{activeCase.id.slice(-12)}
                         </span>
@@ -939,7 +939,7 @@ export default function CaseTrackerPage() {
                         {activeCase.name}
                       </h2>
                       <div className="flex items-center gap-4">
-                        <p className="text-[11px] font-extrabold tracking-[0.3em] uppercase opacity-80 italic border-l-4 border-white/30 pl-6 bg-white/5 py-2 pr-6">
+                        <p className="text-[11px] font-extrabold tracking-[0.3em] uppercase opacity-80 italic border-l-4 border-white/30 pl-6 bg-void/5 py-2 pr-6">
                           STATUS:{' '}
                           {progressPercent === 100
                             ? 'OPERATIONAL_DECREE_COMPLETE'
@@ -957,11 +957,11 @@ export default function CaseTrackerPage() {
                       <span className="text-6xl font-display font-bold italic tracking-tighter">
                         {progressPercent}%
                       </span>
-                      <div className="w-48 h-3 bg-white/5 rounded overflow-hidden border-2 border-white/10 shadow-inner">
+                      <div className="w-48 h-3 bg-void/5 rounded overflow-hidden border-2 border-white/10 shadow-inner">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progressPercent}%` }}
-                          className="h-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)]"
+                          className="h-full bg-void shadow-[0_0_20px_rgba(255,255,255,0.8)]"
                         />
                       </div>
                     </div>

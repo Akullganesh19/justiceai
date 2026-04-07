@@ -199,7 +199,8 @@ export default function CommandPalette() {
   // Keyboard shortcut to open
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      // Handle Cmd/Ctrl + K, or the '/' key
+      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
         e.preventDefault();
         setIsOpen((prev) => !prev);
         setQuery('');
@@ -317,7 +318,7 @@ export default function CommandPalette() {
                   placeholder="SEARCH_REGISTRY_DATABASE..."
                   className="flex-1 bg-transparent py-4 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none font-body"
                 />
-                <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] text-text-tertiary font-mono">
+                <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-void/5 border border-white/10 text-[10px] text-text-tertiary font-mono">
                   ESC
                 </kbd>
               </div>
@@ -348,14 +349,14 @@ export default function CommandPalette() {
                             onClick={() => handleSelect(cmd)}
                             onMouseEnter={() => setActiveIndex(currentIndex)}
                             className={`w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors ${
-                              isActive ? 'bg-purple/10' : 'hover:bg-white/[0.03]'
+                              isActive ? 'bg-purple/10' : 'hover:bg-void/[0.03]'
                             }`}
                           >
                             <div
                               className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                 isActive
                                   ? 'bg-purple/20 text-purple'
-                                  : 'bg-white/5 text-text-tertiary'
+                                  : 'bg-void/5 text-text-tertiary'
                               }`}
                             >
                               <Icon className="w-4 h-4" />
@@ -387,13 +388,13 @@ export default function CommandPalette() {
               <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1 text-[10px] text-text-tertiary">
-                    <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono">
+                    <kbd className="px-1.5 py-0.5 rounded bg-void/5 border border-white/10 font-mono">
                       ↑↓
                     </kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1 text-[10px] text-text-tertiary">
-                    <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono">
+                    <kbd className="px-1.5 py-0.5 rounded bg-void/5 border border-white/10 font-mono">
                       ↵
                     </kbd>
                     select

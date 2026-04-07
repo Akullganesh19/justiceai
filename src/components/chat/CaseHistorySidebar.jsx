@@ -82,7 +82,7 @@ export function CaseHistorySidebar({
                       </h4>
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-1 h-1 rounded-full ${currentCaseId === item.id ? 'bg-red animate-pulse' : 'bg-white/10'}`}
+                          className={`w-1 h-1 rounded-full ${currentCaseId === item.id ? 'bg-red animate-pulse' : 'bg-void/10'}`}
                         />
                         <p className="text-[9px] text-text-tertiary font-extrabold tracking-widest opacity-60">
                           {new Date(item.timestamp).toLocaleDateString()} // SESSION_

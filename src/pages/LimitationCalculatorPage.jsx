@@ -458,7 +458,7 @@ export default function LimitationCalculatorPage() {
                                   : 'EXPIRED'}
                               </span>
                             </div>
-                            <div className="h-[2px] bg-white/5 rounded-full overflow-hidden shadow-inner">
+                            <div className="h-[2px] bg-void/5 rounded-full overflow-hidden shadow-inner">
                               <motion.div
                                 className={`h-full shadow-[0_0_15px_rgba(225,29,72,0.5)] ${calculation.urgency === 'critical' ? 'bg-red' : calculation.urgency === 'urgent' ? 'bg-yellow-500' : 'bg-blue'}`}
                                 initial={{ width: 0 }}

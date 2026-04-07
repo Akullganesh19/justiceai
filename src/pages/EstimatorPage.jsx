@@ -491,7 +491,7 @@ export default function EstimatorPage() {
               >
                 {/* Total Estimate */}
                 <div className="p-10 rounded bg-red text-white shadow-[12px_12px_0px_0px_rgba(159,18,57,0.5)] border-2 border-red-light/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-void/10 blur-3xl rounded-full" />
                   <p className="text-[10px] uppercase font-extrabold tracking-[0.4em] opacity-80 mb-2 relative z-10">
                     AGGREGATE_ESTIMATE_MAX
                   </p>

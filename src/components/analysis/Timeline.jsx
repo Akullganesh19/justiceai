@@ -26,7 +26,7 @@ export function Timeline({ timeline }) {
               {/* Vertical Line */}
               {i < timeline.length - 1 && (
                 <div
-                  className={`absolute left-[13px] top-8 w-[2px] h-full ${isCompleted ? 'bg-accent-success/30' : 'bg-white/10'} transition-colors`}
+                  className={`absolute left-[13px] top-8 w-[2px] h-full ${isCompleted ? 'bg-accent-success/30' : 'bg-void/10'} transition-colors`}
                 />
               )}
 
@@ -46,7 +46,7 @@ export function Timeline({ timeline }) {
                   ) : isActive ? (
                     <div className="w-2.5 h-2.5 rounded-full bg-red animate-ping" />
                   ) : (
-                    <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-void/10" />
                   )}
                 </div>
               </div>
@@ -54,7 +54,7 @@ export function Timeline({ timeline }) {
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <span className="text-[9px] font-extrabold text-white/40 uppercase tracking-widest">{`PHASE_0${i + 1}`}</span>
-                  <div className={`h-[1px] flex-1 ${isActive ? 'bg-red/20' : 'bg-white/5'}`} />
+                  <div className={`h-[1px] flex-1 ${isActive ? 'bg-red/20' : 'bg-void/5'}`} />
                   {isActive && (
                     <span className="text-[9px] font-extrabold text-red uppercase tracking-widest animate-pulse">
                       [ PROCESSING ]

@@ -67,7 +67,7 @@ export default function Header({ onNewCase }) {
             <button
               onClick={() => setShowSearch(true)}
               className="p-3 rounded bg-void border-2 border-white/10 text-text-tertiary hover:text-white hover:border-red/40 transition-all group shadow-sm active:translate-y-[1px]"
-              title="SEARCH_REGISTRY [CMD+K]"
+              title="SEARCH_REGISTRY [CTRL+K] or [/]"
             >
               <Command className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             </button>

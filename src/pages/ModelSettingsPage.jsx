@@ -208,7 +208,7 @@ export default function ModelSettingsPage() {
 
           {/* Controls Tier */}
           <div className="space-y-6">
-            <div className="p-8 bg-white/5 border-2 border-white/10 rounded-sm space-y-8 sticky top-32 shadow-[16px_16px_0px_0px_rgba(0,0,0,0.4)]">
+            <div className="p-8 bg-void/5 border-2 border-white/10 rounded-sm space-y-8 sticky top-32 shadow-[16px_16px_0px_0px_rgba(0,0,0,0.4)]">
               <div className="space-y-4">
                 <label className="text-[10px] uppercase font-black tracking-[0.4em] text-text-tertiary block">
                   System_Status
@@ -220,7 +220,7 @@ export default function ModelSettingsPage() {
                 </div>
               </div>
 
-              <div className="h-[1px] bg-white/10" />
+              <div className="h-[1px] bg-void/10" />
 
               <div className="space-y-4">
                 <p className="text-[11px] text-text-secondary leading-relaxed italic">
@@ -262,7 +262,7 @@ function ProviderCard({ id, title, description, icon, active, onClick, status })
       }`}
     >
       <div className="flex items-center gap-5 relative z-10">
-        <div className={`p-3 rounded-sm ${active ? 'bg-red text-white' : 'bg-white/5 text-text-tertiary'}`}>
+        <div className={`p-3 rounded-sm ${active ? 'bg-red text-white' : 'bg-void/5 text-text-tertiary'}`}>
           {icon}
         </div>
         <div className="flex-1">
@@ -299,7 +299,7 @@ function StatusLine({ label, active }) {
     <div className="flex items-center justify-between">
       <span className="text-[11px] text-text-secondary font-bold uppercase tracking-tight">{label}</span>
       <div className="flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-accent-success shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-white/10'}`} />
+        <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-accent-success shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-void/10'}`} />
         <span className={`text-[10px] font-black ${active ? 'text-accent-success' : 'text-white/10'}`}>
           {active ? 'ONLINE' : 'OFFLINE'}
         </span>

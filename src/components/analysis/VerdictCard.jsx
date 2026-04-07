@@ -46,7 +46,7 @@ export function VerdictCard({ verdict, confidence }) {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={`p-8 rounded-xl border-2 ${config.bg} ${config.border} space-y-6 ${config.shadow} active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-default relative overflow-hidden`}
     >
-      <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-3xl rounded-full opacity-10" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-void/5 blur-3xl rounded-full opacity-10" />
 
       <div className="flex items-center justify-between border-b-2 border-white/5 pb-6">
         <div

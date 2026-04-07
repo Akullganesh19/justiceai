@@ -38,7 +38,7 @@ export function ProgressBar({ progress = 0 }) {
         {stages.map((stage, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-sm rotate-45 transition-all duration-500 shadow-[0_0_10px_rgba(0,0,0,0.5)] ${progress >= stage.threshold ? 'bg-red border border-red-light/40 scale-125' : 'bg-white/10 border border-white/5'}`}
+              className={`w-2 h-2 rounded-sm rotate-45 transition-all duration-500 shadow-[0_0_10px_rgba(0,0,0,0.5)] ${progress >= stage.threshold ? 'bg-red border border-red-light/40 scale-125' : 'bg-void/10 border border-white/5'}`}
             />
             <span
               className={`text-[8px] uppercase tracking-[0.2em] font-extrabold transition-colors duration-500 ${progress >= stage.threshold ? 'text-red italic' : 'text-text-tertiary'}`}

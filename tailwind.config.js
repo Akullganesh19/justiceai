@@ -8,33 +8,33 @@ export default {
     extend: {
       colors: {
         red: {
-          DEFAULT: '#E11D48', // Justice Red
-          light: '#FB7185', // Soft Rose
-          dark: '#9F1239', // Deep Crimson
-          glow: '#F43F5E', // Neon Red
+          DEFAULT: '#0e72a8', // Cerulean
+          light: '#9abfd4', // Ice Blue
+          dark: '#103b5a', // Rich Ocean
+          glow: '#0e72a8', 
         },
         blue: {
-          DEFAULT: '#2563EB', // Digital Blue
-          light: '#60A5FA', // Sky Blue
-          dark: '#1E40AF', // Royal Blue
-          indigo: '#4F46E5', // Legal Indigo
+          DEFAULT: '#0e72a8', // Cerulean
+          light: '#9abfd4', // Ice Blue
+          dark: '#103b5a', // Rich Ocean
+          indigo: '#1b2936', 
         },
-        ink: '#0A0A0A', // Pure Midnight
-        void: '#000000', // Pitch Black
-        raised: '#111111', // Elevated Layer
-        float: '#1A1A1A', // Floating Layer
-        surface: '#222222', // Surface Layer
-        platinum: '#F1F5F9', // Pure White/Silver
+        ink: '#111a22', // Slightly lighter than void
+        void: '#0a0b0d', // Abyss Black
+        raised: '#1b2936', // Deep Slate Blue
+        float: '#17222d', 
+        surface: '#121f29', 
+        platinum: '#9abfd4', // Ice Blue
         text: {
-          primary: '#FFFFFF', // Pure White
-          secondary: '#94A3B8', // Slate Grey
-          tertiary: '#64748B', // Muted Blue-Grey
+          primary: '#9abfd4', // Ice Blue
+          secondary: '#0e72a8', // Cerulean
+          tertiary: '#103b5a', // Rich Ocean
         },
         accent: {
-          success: '#10B981', // Emerald
-          error: '#E11D48', // Justice Red
-          warning: '#F59E0B', // Amber
-          info: '#3B82F6', // Blue
+          success: '#0e72a8', 
+          error: '#ef4444', 
+          warning: '#103b5a', 
+          info: '#0e72a8', 
         }
       },
       fontFamily: {
