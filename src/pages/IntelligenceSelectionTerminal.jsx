@@ -68,7 +68,8 @@ export default function IntelligenceSelectionTerminal() {
     setIsTesting(provider);
     try {
       // For now, we'll just simulate a ping to the backend
-      const response = await fetch('http://localhost:3001/api/health');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/health`);
       if (!response.ok) throw new Error('Backend Unreachable');
       
       await new Promise(r => setTimeout(r, 1200));
