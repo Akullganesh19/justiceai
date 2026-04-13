@@ -453,6 +453,19 @@ async function loadAndIndexDocuments() {
 }
 
 // ============ API ROUTES ============
+// Root endpoint
+app.get('/', (req, res) => {
+  res.send(`
+    <body style="font-family: sans-serif; background: #080909; color: #D4AF37; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;">
+      <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">⚖️ JusticeAI API</h1>
+      <p style="color: #666; font-size: 1.2rem; margin-bottom: 2rem;">The legal co-pilot backend is live and operational.</p>
+      <div style="display: flex; gap: 1rem;">
+        <a href="https://justice-ai-ui.onrender.com" style="padding: 0.8rem 1.5rem; background: #D4AF37; color: #000; text-decoration: none; border-radius: 6px; font-weight: bold;">Go to Frontend UI</a>
+        <a href="/api/health" style="padding: 0.8rem 1.5rem; border: 1px solid #D4AF37; color: #D4AF37; text-decoration: none; border-radius: 6px; font-weight: bold;">Check API Health</a>
+      </div>
+    </body>
+  `);
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
