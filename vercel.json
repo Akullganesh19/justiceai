@@ -1,0 +1,13 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "VITE_APP_NAME": "JusticeAI",
+    "VITE_APP_VERSION": "2.0.0"
+  }
+}

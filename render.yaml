@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: justice-ai-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: OLLAMA_BASE_URL
+        value: http://localhost:11434
+      - key: EMBEDDING_MODEL
+        value: nomic-embed-text
+      - key: CHAT_MODEL
+        value: gemma3:4b
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
