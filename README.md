@@ -2,10 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
-[![Status](https://img.shields.io/badge/Status-Live-brightgreen.svg)](https://justice-ai-ui.vercel.app)
+[![Status](https://img.shields.io/badge/Status-Live-brightgreen.svg)](https://justice-ai-ui.onrender.com)
 
 ## 🌐 Live Deployment
-- **Frontend (UI):** [justice-ai-ui.vercel.app](https://justice-ai-ui.vercel.app)
+- **Frontend (UI):** [justice-ai-ui.onrender.com](https://justice-ai-ui.onrender.com)
 - **Backend (API):** [justice-ai-api.onrender.com](https://justice-ai-api.onrender.com)
 
 **JusticeAI** empowers every Indian citizen with an AI-powered legal co-pilot. Understand your rights, build winning strategies, and navigate the legal system with confidence — all powered by local, private AI.
