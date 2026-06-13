@@ -15,13 +15,15 @@ import {
   HeartHandshake,
   Milestone,
   MessageSquare,
-  Settings2
+  Settings2,
+  Cpu
 } from 'lucide-react';
 import MobileNav from './MobileNav.jsx';
 import CommandPalette from './CommandPalette.jsx';
 
 const navLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/agents', label: 'Agents', icon: Cpu },
   { to: '/chat', label: 'AI Chat', icon: MessageSquare },
   { to: '/documents', label: 'Documents', icon: FileText },
   { to: '/rights', label: 'Rights', icon: BookOpen },

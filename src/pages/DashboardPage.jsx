@@ -22,6 +22,7 @@ import {
   HeartHandshake,
   BookMarked,
   AlertCircle,
+  Cpu
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -184,6 +185,13 @@ export default function DashboardPage() {
       title: 'New Case',
       description: 'Start a high-intelligence legal consultation',
       path: '/chat',
+      accent: 'bg-gold/10 border-gold/20 text-gold',
+    },
+    {
+      icon: Cpu,
+      title: 'AI Agents',
+      description: 'Specialized legal intelligence profiles',
+      path: '/agents',
       accent: 'bg-gold/10 border-gold/20 text-gold',
     },
     {

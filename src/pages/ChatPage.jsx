@@ -14,6 +14,7 @@ import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay'
 
 export default function ChatPage() {
   const location = useLocation();
+  const selectedAgent = location.state?.selectedAgent;
   const [activeCaseId, setActiveCaseId] = useState(Date.now().toString());
   const [history, setHistory] = useState(() => {
     try {
@@ -30,8 +31,9 @@ export default function ChatPage() {
     {
       id: '1',
       role: 'assistant',
-      content:
-        'SYSTEM_INITIALIZED. I am your JUSTICE_AI_STATUTORY_ANALYST. Please describe the procedural parameters of your case. Our engine will formulate a validated statutory strategy.',
+      content: selectedAgent
+        ? `SYSTEM_INITIALIZED. Active Instance: **${selectedAgent.name}**. Specialization: **${selectedAgent.specialization}**. How may I assist you with your ${selectedAgent.id} related matter?`
+        : 'SYSTEM_INITIALIZED. I am your JUSTICE_AI_STATUTORY_ANALYST. Please describe the procedural parameters of your case. Our engine will formulate a validated statutory strategy.',
       timestamp: new Date(),
     },
   ]);
@@ -183,6 +185,7 @@ export default function ChatPage() {
         judgePersonality,
         mode,
         jurisdiction: selectedJurisdiction,
+        basePrompt: selectedAgent?.systemPrompt,
       });
       const { chatMessage, analysis: newAnalysis } = parseAIResponse(aiResponseRaw);
       const aiMsg = {
@@ -211,6 +214,7 @@ export default function ChatPage() {
         judgePersonality,
         mode,
         jurisdiction: selectedJurisdiction,
+        basePrompt: selectedAgent?.systemPrompt,
       });
       const { chatMessage, analysis: newAnalysis } = parseAIResponse(aiResponseRaw);
       const aiMsg = {

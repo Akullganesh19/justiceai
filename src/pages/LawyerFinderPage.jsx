@@ -65,6 +65,7 @@ const LAWYERS_DATA = [
     court: 'Supreme Court of India',
     regNo: 'D/422/1986',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 2,
@@ -81,6 +82,7 @@ const LAWYERS_DATA = [
     court: 'Supreme Court of India',
     regNo: 'D/215/1978',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 3,
@@ -97,6 +99,7 @@ const LAWYERS_DATA = [
     court: 'Calcutta High Court',
     regNo: 'WB/1432/2000',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 4,
@@ -113,6 +116,7 @@ const LAWYERS_DATA = [
     court: 'Bombay High Court',
     regNo: 'MAH/2105/2005',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 5,
@@ -129,6 +133,7 @@ const LAWYERS_DATA = [
     court: 'Madras High Court',
     regNo: 'TN/5432/2002',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 6,
@@ -145,6 +150,7 @@ const LAWYERS_DATA = [
     court: 'Karnataka High Court',
     regNo: 'KAR/3211/2013',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 7,
@@ -161,6 +167,7 @@ const LAWYERS_DATA = [
     court: 'Rajasthan High Court',
     regNo: 'RAJ/4221/2009',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 8,
@@ -177,6 +184,7 @@ const LAWYERS_DATA = [
     court: 'Pune District Court',
     regNo: 'MAH/5621/2016',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 9,
@@ -193,6 +201,7 @@ const LAWYERS_DATA = [
     court: 'Allahabad High Court',
     regNo: 'UP/3112/2010',
     verified: true,
+    availableInPerson: true,
   },
   {
     id: 10,
@@ -209,6 +218,7 @@ const LAWYERS_DATA = [
     court: 'Delhi High Court',
     regNo: 'D/842/1996',
     verified: true,
+    availableInPerson: true,
   },
 ];
 
@@ -232,7 +242,14 @@ function LawyerCard({ lawyer, index }) {
               {lawyer.name.split(' ').pop()[0]}
             </div>
             <div>
-              <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
+                {lawyer.availableInPerson && (
+                   <span className="px-2 py-0.5 rounded-sm bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-bold uppercase tracking-widest italic">
+                    In-Person Available
+                   </span>
+                )}
+              </div>
               <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60">
                 {lawyer.court} // BCI ID: {lawyer.regNo}
               </p>
@@ -287,13 +304,20 @@ function LawyerCard({ lawyer, index }) {
           </div>
         </div>
 
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-hard active:translate-y-[1px] italic ${expanded ? 'bg-gold border-gold/40 text-midnight shadow-hard' : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-white/20'}`}
-        >
-          <span>{expanded ? 'Secure Contact' : 'Contact Lawyer'}</span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-        </button>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`flex items-center justify-center gap-3 py-4 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-hard active:translate-y-[1px] italic ${expanded ? 'bg-gold border-gold/40 text-midnight shadow-hard' : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-white/20'}`}
+          >
+            <span>{expanded ? 'Hide Details' : 'View Contact'}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          </button>
+          <button
+            className="flex items-center justify-center gap-3 py-4 rounded-sm bg-blue-600 border-2 border-blue-400/20 text-white text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-hard active:translate-y-[1px] italic hover:bg-blue-500"
+          >
+            <span>Book In-Person</span>
+          </button>
+        </div>
 
         <AnimatePresence>
           {expanded && (
