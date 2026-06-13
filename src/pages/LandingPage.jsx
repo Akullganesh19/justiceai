@@ -416,9 +416,22 @@ export default function LandingPage() {
           </div>
 
           {/* Right Column: Visual Component Overlay */}
-          <motion.div variants={itemVariants} className="hidden lg:block relative">
+          <motion.div
+            variants={itemVariants}
+            className="hidden lg:block relative"
+            animate={{
+              rotateY: [0, 5, 0, -5, 0],
+              rotateX: [0, -2, 0, 2, 0]
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
+          >
             <div className="absolute inset-0 bg-gold/10 blur-[150px] rounded-sm opacity-20" />
-            <div className="relative bg-void border-2 border-white/5 rounded-sm p-12 shadow-hard space-y-10 group overflow-hidden">
+            <div className="relative bg-void border-2 border-white/5 rounded-sm p-12 shadow-luxe space-y-10 group overflow-hidden">
                {/* Internal Animation Accent */}
               <div className="absolute top-0 right-0 w-full h-[1px] bg-gold/20 group-hover:bg-gold/40 transition-colors" />
               
@@ -498,7 +511,14 @@ export default function LandingPage() {
                   key={i}
                   variants={itemVariants}
                   onClick={() => navigate(feature.link)}
-                  className="group cursor-pointer p-10 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 space-y-8 shadow-hard relative overflow-hidden"
+                  whileHover={{
+                    rotateY: 5,
+                    rotateX: -5,
+                    scale: 1.02,
+                    translateZ: 20
+                  }}
+                  style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+                  className="group cursor-pointer p-10 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 space-y-8 shadow-luxe relative overflow-hidden"
                 >
                   <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center group-hover:border-gold group-hover:bg-gold/5 transition-all duration-500 shadow-hard">
                     <Icon className="w-8 h-8 text-gold" />

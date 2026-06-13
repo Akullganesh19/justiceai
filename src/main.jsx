@@ -39,18 +39,6 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
-// Loading fallback component
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-void flex flex-col items-center justify-center space-y-6 font-mono">
-      <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-sm animate-spin shadow-luxe" />
-      <p className="text-[10px] text-gold font-extrabold uppercase tracking-[0.4em] animate-pulse italic">
-        INITIALIZING_SYSTEM_CORE...
-      </p>
-    </div>
-  );
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
@@ -60,7 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />

@@ -1,27 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Scale, Zap } from 'lucide-react';
+import { Scale, Shield } from 'lucide-react';
 
 export default function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 bg-void flex items-center justify-center z-[200]">
+    <div className="fixed inset-0 bg-void flex items-center justify-center z-[200]" role="status" aria-live="polite">
       {/* STATUTORY_BACKGROUND_GRID */}
       <div className="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
       <div className="flex flex-col items-center gap-10 relative z-10">
         {/* Animated Scale Icon */}
-        <div className="relative">
+        <div className="relative" style={{ perspective: '1000px' }}>
           <motion.div
             animate={{
               scale: [1, 1.1, 1],
               opacity: [0.6, 1, 0.6],
+              rotateY: [0, 180, 360],
+              rotateX: [0, 10, 0, -10, 0],
             }}
             transition={{
-              duration: 2.5,
+              duration: 4,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="w-24 h-24 rounded-sm bg-void border-2 border-gold/40 flex items-center justify-center shadow-hard"
+            style={{ transformStyle: 'preserve-3d' }}
+            className="w-24 h-24 rounded-sm bg-void border-2 border-gold/40 flex items-center justify-center shadow-luxe"
           >
             <Scale className="w-12 h-12 text-gold" />
           </motion.div>
@@ -34,7 +37,7 @@ export default function LoadingSpinner() {
           {/* Scanning Loading Bar */}
           <div className="w-64 h-1.5 bg-void/5 border border-white/10 rounded-sm overflow-hidden relative">
             <motion.div
-              className="absolute inset-y-0 bg-gold shadow-[0_0:15px_rgba(212,175,55,0.8)]"
+              className="absolute inset-y-0 bg-gold shadow-[0_0_15px_rgba(212,175,55,0.8)]"
               animate={{ left: ['-20%', '120%'] }}
               transition={{
                 duration: 1.5,
