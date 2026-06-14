@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
+import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2, Search, X } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -11,6 +11,19 @@ export function CaseHistorySidebar({
   isOpen,
   setIsOpen,
 }) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredHistory = useMemo(() => {
+    if (!searchQuery.trim()) return history;
+    const query = searchQuery.toLowerCase();
+    return history.filter(
+      (item) =>
+        item.title?.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query) ||
+        item.messages?.some((m) => m.content.toLowerCase().includes(query)),
+    );
+  }, [history, searchQuery]);
+
   return (
     <motion.div
       initial={false}
@@ -50,21 +63,43 @@ export function CaseHistorySidebar({
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Search Registry Input */}
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-gold transition-colors" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="SEARCH_REGISTRY..."
+                  className="w-full bg-void border-2 border-white/5 rounded-sm pl-11 pr-10 py-3 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-text-tertiary/30 focus:outline-none focus:border-gold/40 transition-all italic"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-white text-text-tertiary transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Sidebar Content */}
             <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
-              {history.length === 0 ? (
+              {filteredHistory.length === 0 ? (
                 <div className="text-center py-20 px-8 space-y-6 opacity-40">
                   <div className="w-16 h-16 rounded-2xl bg-midnight border border-white/5 flex items-center justify-center mx-auto text-white shadow-inner">
-                    <FileText className="w-8 h-8" />
+                    {searchQuery ? <Search className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
                   </div>
                   <p className="text-[10px] text-text-tertiary leading-relaxed font-bold uppercase tracking-widest italic">
-                    No history found. Start a new consultation to begin.
+                    {searchQuery
+                      ? `No records matching "${searchQuery.toUpperCase()}"`
+                      : 'No history found. Start a new consultation to begin.'}
                   </p>
                 </div>
               ) : (
-                history.map((item) => (
+                filteredHistory.map((item) => (
                   <div
                     key={item.id}
                     className={`group relative p-5 rounded-2xl border transition-all cursor-pointer ${
