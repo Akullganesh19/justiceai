@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2, Search, X } from 'lucide-react';
+import { History, Plus, ChevronLeft, FileText, Trash2, Search, X, Edit2 } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -8,10 +8,14 @@ export function CaseHistorySidebar({
   onSelect,
   onNew,
   onDelete,
+  onRename,
   isOpen,
   setIsOpen,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const editInputRef = useRef(null);
 
   const filteredHistory = useMemo(() => {
     if (!searchQuery.trim()) return history;
@@ -109,12 +113,36 @@ export function CaseHistorySidebar({
                     }`}
                     onClick={() => onSelect(item.id)}
                   >
-                    <div className="space-y-2 pr-8">
-                      <h4
-                        className={`text-xs font-display font-bold uppercase tracking-tight truncate transition-colors ${currentCaseId === item.id ? 'text-gold' : 'text-white/60 group-hover:text-white'}`}
-                      >
-                        {item.title || 'Untitled Consultation'}
-                      </h4>
+                    <div className="space-y-2 pr-12">
+                      {editingId === item.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={editInputRef}
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => {
+                              onRename(item.id, editValue);
+                              setEditingId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                onRename(item.id, editValue);
+                                setEditingId(null);
+                              }
+                              if (e.key === 'Escape') setEditingId(null);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-void border border-gold/40 text-xs font-display font-bold uppercase tracking-tight text-white px-2 py-1 rounded-sm w-full outline-none focus:border-gold shadow-luxe italic"
+                            autoFocus
+                          />
+                        </div>
+                      ) : (
+                        <h4
+                          className={`text-xs font-display font-bold uppercase tracking-tight truncate transition-colors ${currentCaseId === item.id ? 'text-gold' : 'text-white/60 group-hover:text-white'}`}
+                        >
+                          {item.title || 'Untitled Consultation'}
+                        </h4>
+                      )}
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-1 h-1 rounded-full ${currentCaseId === item.id ? 'bg-gold animate-pulse' : 'bg-white/10'}`}
@@ -125,15 +153,29 @@ export function CaseHistorySidebar({
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(item.id);
-                      }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-xl text-text-tertiary hover:bg-gold/10 hover:text-gold opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-gold/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(item.id);
+                          setEditValue(item.title || '');
+                        }}
+                        className="p-2 rounded-lg text-text-tertiary hover:bg-gold/10 hover:text-gold border border-transparent hover:border-gold/20"
+                        title="Rename Consultation"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(item.id);
+                        }}
+                        className="p-2 rounded-lg text-text-tertiary hover:bg-red/10 hover:text-red-400 border border-transparent hover:border-red-400/20"
+                        title="Delete Consultation"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
