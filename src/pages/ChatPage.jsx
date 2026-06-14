@@ -137,6 +137,12 @@ export default function ChatPage() {
     );
   };
 
+  const handleToggleFavorite = (id) => {
+    setHistory((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, isFavorite: !c.isFavorite } : c)),
+    );
+  };
+
   const handleNewCase = () => {
     // Save current before resetting if it has content
     if (messages.length > 1) {
@@ -284,6 +290,7 @@ export default function ChatPage() {
           onNew={handleNewCase}
           onDelete={deleteCase}
           onRename={handleRenameCase}
+          onToggleFavorite={handleToggleFavorite}
         />
 
         <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">

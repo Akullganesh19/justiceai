@@ -3,6 +3,7 @@
 ## Built so far
 - Case History Search — 2025-05-14 — Added a search and filtering system to the `CaseHistorySidebar` allowing users to find consultations by title, ID, or content.
 - Consultation Renaming — 2025-05-14 — Implemented inline renaming for history items in the sidebar with persistence to `localStorage`.
+- Star/Favorite Consultations — 2025-05-14 — Added ability to "Star" important consultations and filter the sidebar to show only favorites.
 
 ## Deferred (good ideas, not yet)
 - Interactive Timeline — Would require larger refactor of `AnalysisPanel`'s data structure.

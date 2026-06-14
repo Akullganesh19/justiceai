@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, FileText, Trash2, Search, X, Edit2 } from 'lucide-react';
+import { History, Plus, ChevronLeft, FileText, Trash2, Search, X, Edit2, Star } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -9,24 +9,32 @@ export function CaseHistorySidebar({
   onNew,
   onDelete,
   onRename,
+  onToggleFavorite,
   isOpen,
   setIsOpen,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const editInputRef = useRef(null);
 
   const filteredHistory = useMemo(() => {
-    if (!searchQuery.trim()) return history;
-    const query = searchQuery.toLowerCase();
-    return history.filter(
-      (item) =>
-        item.title?.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
-        item.messages?.some((m) => m.content.toLowerCase().includes(query)),
-    );
-  }, [history, searchQuery]);
+    let result = history;
+    if (showOnlyFavorites) {
+      result = result.filter((item) => item.isFavorite);
+    }
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.title?.toLowerCase().includes(query) ||
+          item.id.toLowerCase().includes(query) ||
+          item.messages?.some((m) => m.content.toLowerCase().includes(query)),
+      );
+    }
+    return result;
+  }, [history, searchQuery, showOnlyFavorites]);
 
   return (
     <motion.div
@@ -68,24 +76,33 @@ export function CaseHistorySidebar({
                 </button>
               </div>
 
-              {/* Search Registry Input */}
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-gold transition-colors" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="SEARCH_REGISTRY..."
-                  className="w-full bg-void border-2 border-white/5 rounded-sm pl-11 pr-10 py-3 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-text-tertiary/30 focus:outline-none focus:border-gold/40 transition-all italic"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-white text-text-tertiary transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+              {/* Search Registry Input & Filter */}
+              <div className="flex gap-2">
+                <div className="relative group flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-gold transition-colors" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="SEARCH_REGISTRY..."
+                    className="w-full bg-void border-2 border-white/5 rounded-sm pl-11 pr-10 py-3 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-text-tertiary/30 focus:outline-none focus:border-gold/40 transition-all italic"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-white text-text-tertiary transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+                  className={`p-3 rounded-sm border-2 transition-all ${showOnlyFavorites ? 'bg-gold/10 border-gold text-gold shadow-luxe' : 'bg-void border-white/5 text-text-tertiary hover:border-white/20'}`}
+                  title={showOnlyFavorites ? 'Show All' : 'Show Favorites'}
+                >
+                  <Star className={`w-4 h-4 ${showOnlyFavorites ? 'fill-gold' : ''}`} />
+                </button>
               </div>
             </div>
 
@@ -153,7 +170,17 @@ export function CaseHistorySidebar({
                       </div>
                     </div>
 
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-all ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFavorite(item.id);
+                        }}
+                        className={`p-2 rounded-lg transition-colors border border-transparent ${item.isFavorite ? 'text-gold hover:bg-gold/10 hover:border-gold/20' : 'text-text-tertiary hover:bg-gold/10 hover:text-gold hover:border-gold/20'}`}
+                        title={item.isFavorite ? 'Unstar' : 'Star'}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${item.isFavorite ? 'fill-gold' : ''}`} />
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
