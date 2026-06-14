@@ -267,18 +267,29 @@ function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
   return chunks;
 }
 
-// Native Cosine Similarity
-function cosineSimilarity(vecA, vecB) {
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-  let div = (Math.sqrt(normA) * Math.sqrt(normB));
-  return div === 0 ? 0 : (dotProduct / div);
+/**
+ * Normalizes a vector to unit length (L2 normalization).
+ * Pre-normalizing vectors allows using Dot Product instead of Cosine Similarity
+ * inside hot retrieval loops, significantly reducing expensive sqrt/division operations.
+ */
+function normalizeVector(vec) {
+  let sqSum = 0;
+  for (let i = 0; i < vec.length; i++) sqSum += vec[i] * vec[i];
+  const norm = Math.sqrt(sqSum);
+  if (norm === 0) return vec;
+  const result = new Float32Array(vec.length);
+  for (let i = 0; i < vec.length; i++) result[i] = vec[i] / norm;
+  return result;
+}
+
+/**
+ * Fast Dot Product for normalized vectors.
+ * Equivalent to Cosine Similarity when both vectors are unit length.
+ */
+function dotProduct(vecA, vecB) {
+  let sum = 0;
+  for (let i = 0; i < vecA.length; i++) sum += vecA[i] * vecB[i];
+  return sum;
 }
 
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
@@ -436,10 +447,10 @@ async function loadAndIndexDocuments() {
       
       for (let j = 0; j < rawChunks.length; j++) {
         const chunk = rawChunks[j];
-        const vector = await embeddings.embedQuery(chunk);
+        const rawVector = await embeddings.embedQuery(chunk);
         documentChunks.push({
           content: chunk,
-          vector: vector,
+          vector: normalizeVector(rawVector), // Pre-normalize for faster retrieval
           source: source
         });
       }
@@ -629,8 +640,11 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error', { error: err.message, stack: err.stack });
+    res.status(500).json({
+      error: 'Voice processing failed',
+      details: NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -645,8 +659,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -659,6 +673,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           text = fs.readFileSync(filePath, 'utf-8');
         } else {
           failedFiles.push({ name: fileName, error: 'Unsupported file type' });
+          // Ensure file is deleted even if unsupported
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
           continue;
         }
 
@@ -667,10 +683,10 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         let chunksEmbedded = 0;
 
         for (const chunk of rawChunks) {
-          const vector = await embeddings.embedQuery(chunk);
+          const rawVector = await embeddings.embedQuery(chunk);
           documentChunks.push({
             content: chunk,
-            vector: vector,
+            vector: normalizeVector(rawVector), // Pre-normalize for faster retrieval
             source: fileName
           });
           chunksEmbedded++;
@@ -681,12 +697,18 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           size: file.size,
           chunks: chunksEmbedded
         });
-
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
-        failedFiles.push({ name: file.originalname, error: err.message });
+        logger.error('Document processing failed', { file: file.originalname, error: err.message });
+        failedFiles.push({ name: file.originalname, error: 'Failed to process document' });
+      } finally {
+        // Critical: Always clean up temporary uploaded files to prevent DoS via disk exhaustion
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch (unlinkErr) {
+            logger.error('Failed to delete temporary file', { path: filePath, error: unlinkErr.message });
+          }
+        }
       }
     }
 
@@ -698,8 +720,11 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error', { error: error.message, stack: error.stack });
+    res.status(500).json({
+      error: 'Upload failed',
+      details: NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -753,11 +778,13 @@ app.post('/api/chat', async (req, res) => {
     
     if (documentChunks.length > 0) {
       try {
-        const userVector = await embeddings.embedQuery(latestUserMessage);
+        const userVector = normalizeVector(await embeddings.embedQuery(latestUserMessage));
         
         // Calculate scores for all chunks, prioritizing ones that match the jurisdiction if specified
         const scoredChunks = documentChunks.map(chunk => {
-          let score = cosineSimilarity(userVector, chunk.vector);
+          // Both vectors are pre-normalized, so dotProduct === cosineSimilarity
+          // This eliminates O(N) sqrt and division calls inside the retrieval loop.
+          let score = dotProduct(userVector, chunk.vector);
           
           // Boost chunks from the correct jurisdiction (filename-based tagging)
           if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(jurisdiction.toLowerCase())) {
@@ -940,10 +967,10 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error('Chat Error', { error: err.message, stack: err.stack });
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'Chat operation failed',
+      details: NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });
@@ -963,16 +990,20 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error('Embedding error', { error: err.message, stack: err.stack });
+    res.status(500).json({
+      error: 'Embedding failed',
+      details: NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err.message, stack: err.stack });
   res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 

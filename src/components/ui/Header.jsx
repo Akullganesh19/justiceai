@@ -68,6 +68,7 @@ export default function Header({ onNewCase }) {
               onClick={() => setShowSearch(true)}
               className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all group shadow-hard active:translate-y-[1px] italic"
               title="SEARCH_REGISTRY [CTRL+K] or [/]"
+              aria-label="Search Registry"
             >
               <Command className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             </button>
@@ -84,6 +85,7 @@ export default function Header({ onNewCase }) {
               to="/settings"
               className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all group shadow-hard active:translate-y-[1px]"
               title="INTELLIGENCE_TERMINAL_CONFIG"
+              aria-label="Settings"
             >
               <Settings2 className="w-5 h-5 group-hover:rotate-45 transition-transform" />
             </Link>
@@ -91,6 +93,7 @@ export default function Header({ onNewCase }) {
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-3 rounded-sm bg-void border-2 border-white/5 text-text-tertiary hover:text-gold hover:border-gold/40 transition-all shadow-hard"
+              aria-label="Open Mobile Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
