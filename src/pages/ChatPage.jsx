@@ -223,12 +223,24 @@ export default function ChatPage() {
       const finaleMsgs = [...updatedMessages, aiMsg];
       setMessages(finaleMsgs);
 
+      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // Synapse: Dispatch cross-system event for IntelligenceBridge
+        const event = new CustomEvent('justice-ai-analysis-complete', {
+          detail: {
+            caseId: activeCaseId,
+            caseTitle: title,
+            analysis: newAnalysis
+          }
+        });
+        console.log(`[SYNAPSE] ChatPage emitted justice-ai-analysis-complete event for case: ${activeCaseId}`);
+        window.dispatchEvent(event);
       }
 
       // Auto-save to history
-      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
       const caseData = {
         id: activeCaseId,
         title,
