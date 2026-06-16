@@ -23,6 +23,18 @@ class ErrorBoundary extends React.Component {
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
+
+    // Synapse Connection: Dispatch error event for telemetry bridge
+    window.dispatchEvent(
+      new CustomEvent('justice.system.error', {
+        detail: {
+          error: error.toString(),
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+        },
+      })
+    );
   }
 
   handleReset = () => {
