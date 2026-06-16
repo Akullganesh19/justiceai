@@ -1,0 +1,6 @@
+## 2024-06-16 — Saved Documents History
+**Product understood as:** An AI-powered legal co-pilot that helps Indian citizens understand rights, estimate costs, and draft legal documents.
+**Derivation reasoning:** The app provides a powerful document generator that users rely on for drafting notices and complaints. However, generated documents are ephemeral—they are only visible right after generation. Users need a persistent way to retrieve past drafts because legal documents are important artifacts referenced over time. Without persistence, the product feels like a stateless tool rather than a cohesive "co-pilot".
+**Feature built:** Added persistent tracking for generated legal documents (`justice_ai_generated_docs` in `localStorage`), with a new "Saved Drafts" view on the Documents page allowing users to view, re-download, or delete past generated items.
+**User impact:** Users can confidently rely on the app to maintain their drafted legal artifacts, eliminating the anxiety of accidentally navigating away and losing a carefully customized document draft.
+**Next logical feature:** Since users can save cases and now documents, the next logical step is to link them: attaching generated documents directly to specific cases in the Case Tracker, creating a unified case file.

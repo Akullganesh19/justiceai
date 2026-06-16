@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FileText,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +379,23 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('justice_ai_generated_docs');
+    if (saved) {
+      try {
+        setSavedDocs(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse saved documents', e);
+      }
+    }
+  }, []);
+
+  const saveDocsToLocal = (docs) => {
+    setSavedDocs(docs);
+    localStorage.setItem('justice_ai_generated_docs', JSON.stringify(docs));
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,12 +406,34 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Auto-save the generated document
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      timestamp: new Date().toISOString(),
+      content: doc,
+    };
+    saveDocsToLocal([newDoc, ...savedDocs]);
   };
 
   const handleReset = () => {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+  };
+
+  const handleOpenSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || { title: doc.title, fields: [] };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (e, id) => {
+    e.stopPropagation();
+    saveDocsToLocal(savedDocs.filter((d) => d.id !== id));
   };
 
   return (
@@ -422,7 +464,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +474,51 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents */}
+              {savedDocs.length > 0 && (
+                <div className="space-y-6 pt-10 border-t border-white/5">
+                  <div className="flex items-center gap-3 mb-6">
+                    <FileText className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display text-white uppercase tracking-tighter italic">
+                      SAVED_DRAFTS
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocs.map((doc, i) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        onClick={() => handleOpenSaved(doc)}
+                        className="group p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all cursor-pointer shadow-hard relative overflow-hidden"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-sm font-display font-bold text-white uppercase tracking-tight italic group-hover:text-gold transition-colors">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={(e) => handleDeleteSaved(e, doc.id)}
+                            className="p-1.5 rounded-sm hover:bg-red/10 text-text-tertiary hover:text-red transition-colors z-10"
+                            title="Delete Draft"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-mono uppercase tracking-widest opacity-60">
+                          <Clock className="w-3.5 h-3.5" />
+                          {new Date(doc.timestamp).toLocaleDateString()}
+                        </div>
+
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 blur-2xl group-hover:bg-gold/10 transition-all pointer-events-none" />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
