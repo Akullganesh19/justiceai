@@ -1,0 +1,21 @@
+--- server.js
++++ server.js
+@@ -335,11 +335,13 @@
+     }
+   };
+
+-  const response = await fetch(url, {
+-    method: 'POST',
+-    headers: { 'Content-Type': 'application/json' },
+-    body: JSON.stringify(payload)
+-  });
++  const response = await withRetry(() =>
++    fetch(url, {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify(payload)
++    })
++  );
+
+   if (!response.ok) {
+     const errText = await response.text();

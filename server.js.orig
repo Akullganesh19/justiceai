@@ -256,7 +256,7 @@ async function parsePdf(dataBuffer) {
   }
 }
 
-// Custom lightweight text splitter 
+// Custom lightweight text splitter
 function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
   const chunks = [];
   let i = 0;
@@ -321,17 +321,17 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   }
 
   const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-  
+
   // Transform messages for Gemini format (v1 compatible)
   const contents = [];
-  
+
   // Prepend system prompt to the first user message for maximum compatibility
   let firstUserMessageIndex = messages.findIndex(m => m.role === 'user');
-  
+
   for (let i = 0; i < messages.length; i++) {
     const m = messages[i];
     if (m.role === 'system') continue;
-    
+
     let text = m.content;
     if (i === firstUserMessageIndex) {
       text = `SYSTEM_INSTRUCTION: ${systemPrompt}\n\nUSER_QUERY: ${text}`;
@@ -366,7 +366,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
 
   const data = await response.json();
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  
+
   return {
     message: { role: 'assistant', content },
     model: `Gemini (${GEMINI_MODEL})`
@@ -427,7 +427,7 @@ async function loadAndIndexDocuments() {
     }
 
     console.log(`Found ${pdfFiles.length} PDFs, ${txtFiles.length} TXT files, ${mdFiles.length} MD files. Extracting text...`);
-    
+
     // Track text per source file for proper source attribution
     const sourceTexts = [];
 
@@ -470,7 +470,7 @@ async function loadAndIndexDocuments() {
     for (const { source, text } of sourceTexts) {
       const rawChunks = splitTextIntoChunks(text, 1000, 200);
       totalChunks += rawChunks.length;
-      
+
       for (let j = 0; j < rawChunks.length; j++) {
         const chunk = rawChunks[j];
         const vector = await embeddings.embedQuery(chunk);
@@ -482,7 +482,7 @@ async function loadAndIndexDocuments() {
       }
       console.log(`  📦 Embedded ${rawChunks.length} chunks from ${source}`);
     }
-    
+
     console.log(`✅ RAG Vector Database Loaded! Total chunks indexed: ${totalChunks}`);
   } catch (error) {
     console.error('Error loading documents:', error);
@@ -550,13 +550,13 @@ app.get('/api/voice/config', (req, res) => {
   };
 
   const bhashiniConfigured = !isPlaceholder(BHASHINI_API_KEY) && !isPlaceholder(BHASHINI_USER_ID);
-  
+
   // Only return pipelineId when Bhashini is actually configured (avoid info leak)
   const bhashiniResponse = { available: bhashiniConfigured };
   if (bhashiniConfigured) {
     bhashiniResponse.pipelineId = BHASHINI_PIPELINE_ID;
   }
-  
+
   res.json({
     bhashini: bhashiniResponse
     // Web Speech API availability is checked client-side
@@ -567,22 +567,22 @@ app.get('/api/voice/config', (req, res) => {
 app.post('/api/voice/process', async (req, res) => {
   try {
     const { task, audioContent, text, sourceLanguage, targetLanguage } = req.body;
-    
+
     // Check if Bhashini credentials are provided, otherwise enter Mock Mode
     if (!BHASHINI_API_KEY || !BHASHINI_USER_ID) {
       console.log('⚠️ Bhashini Credentials missing. Running in MOCK MODE.');
-      
+
       if (task === 'asr') {
         // Mock transcription
-        return res.json({ 
+        return res.json({
           status: 'mock',
-          output: [{ source: 'JusticeAI Mock ASR', transcription: 'This is a simulated transcription because Bhashini API keys are not configured.' }] 
+          output: [{ source: 'JusticeAI Mock ASR', transcription: 'This is a simulated transcription because Bhashini API keys are not configured.' }]
         });
       } else if (task === 'tts') {
         // Mock TTS (no audio)
-        return res.json({ 
+        return res.json({
           status: 'mock',
-          output: [{ audioContent: '', message: 'Simulated TTS output' }] 
+          output: [{ audioContent: '', message: 'Simulated TTS output' }]
         });
       }
     }
@@ -627,8 +627,8 @@ app.post('/api/voice/process', async (req, res) => {
         {
           taskType: task,
           config: configData.pipelineResponseConfig[0].config,
-          input: task === 'asr' 
-            ? [{ audioContent }] 
+          input: task === 'asr'
+            ? [{ audioContent }]
             : [{ source: text }]
         }
       ],
@@ -651,7 +651,7 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
     const computeData = await computeResponse.json();
-    
+
     // Return the specific output based on task
     if (task === 'asr') {
       res.json({
@@ -746,7 +746,7 @@ app.delete('/api/documents/:source', (req, res) => {
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
   const removed = beforeCount - documentChunks.length;
-  
+
   res.json({
     message: `Removed ${removed} chunks from ${source}`,
     remainingChunks: documentChunks.length
@@ -767,58 +767,58 @@ app.delete('/api/documents', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
   try {
-    const { 
-      messages, 
-      personality, 
-      mode, 
-      jurisdiction, 
-      basePrompt, 
+    const {
+      messages,
+      personality,
+      mode,
+      jurisdiction,
+      basePrompt,
       stream = false,
-      provider = 'auto', 
-      apiKeys = {} 
+      provider = 'auto',
+      apiKeys = {}
     } = req.body;
-    
+
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
     // Get the latest user message to search for context
     const latestUserMessage = messages[messages.length - 1].content;
-    
+
     let contextStr = '';
     let retrievedSources = [];
-    
+
     if (documentChunks.length > 0) {
       try {
         const userVector = await embeddings.embedQuery(latestUserMessage);
-        
+
         // Calculate scores for all chunks, prioritizing ones that match the jurisdiction if specified
         const scoredChunks = documentChunks.map(chunk => {
           let score = cosineSimilarity(userVector, chunk.vector);
-          
+
           // Boost chunks from the correct jurisdiction (filename-based tagging)
           if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(jurisdiction.toLowerCase())) {
             score += 0.2;
           }
-          
+
           return {
             content: chunk.content,
             score: score,
             source: chunk.source
           };
         });
-        
+
         // Sort descending by score
         scoredChunks.sort((a, b) => b.score - a.score);
-        
+
         // Take top 5 chunks for richer context
         const topChunks = scoredChunks.slice(0, 5).filter(c => c.score > 0.1); // Filter low-relevance chunks
-        
+
         retrievedSources = [...new Set(topChunks.map(c => c.source))];
-        
-        contextStr = "\n\nCRITICAL LEGAL PRECEDENTS (From Knowledge Base):\n" + 
+
+        contextStr = "\n\nCRITICAL LEGAL PRECEDENTS (From Knowledge Base):\n" +
                      topChunks.map(c => `[Source: ${c.source}] [Relevance: ${(c.score * 100).toFixed(1)}%]\n${c.content}`).join("\n\n---\n\n");
-        
+
         console.log(`  🔍 RAG retrieved top chunks from: ${retrievedSources.join(', ')}`);
       } catch (embedError) {
         console.warn('Embedding failed, proceeding without RAG context:', embedError.message);
@@ -827,7 +827,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Format the prompt
     let systemPrompt = basePrompt || `You are JusticeAI, a powerful legal co-pilot specializing in Indian law.`;
-    
+
     systemPrompt += `\n\nCURRENT CONTEXT: You are providing assistance under the jurisdiction of ${jurisdiction || 'India (National)'}.`;
 
     if (mode === 'simulator') {
@@ -836,7 +836,7 @@ app.post('/api/chat', async (req, res) => {
     if (personality) {
       systemPrompt += `\n\nYour judicial/opponent personality is: ${personality}.`;
     }
-    
+
     if (mode === 'analyzer') {
       systemPrompt += `\n\nCRITICAL RULE: You must return your response strictly as a structured JSON object.`;
     } else {
@@ -859,7 +859,7 @@ app.post('/api/chat', async (req, res) => {
     };
 
     console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
-    
+
     try {
       if (stream) {
         // Streaming response
@@ -867,14 +867,12 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await withRetry(() =>
-          fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData),
-            signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
-          })
-        );
+        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+        });
 
         if (!response.ok) {
           throw new Error(`Ollama Error: ${response.statusText}`);
@@ -887,7 +885,7 @@ app.post('/api/chat', async (req, res) => {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          
+
           const chunk = decoder.decode(value);
           res.write(`data: ${chunk}\n\n`);
         }
@@ -909,10 +907,10 @@ app.post('/api/chat', async (req, res) => {
         }
 
         const data = await ollamaResponse.json();
-        res.json({ 
-          message: { 
-            role: 'assistant', 
-            content: data.message.content 
+        res.json({
+          message: {
+            role: 'assistant',
+            content: data.message.content
           },
           metadata: {
             sources: retrievedSources,
@@ -924,7 +922,7 @@ app.post('/api/chat', async (req, res) => {
       }
     } catch (ollamaErr) {
       console.warn(`⚠️ Ollama failure detected: ${ollamaErr.message}. Shifting to Gemini fallback...`);
-      
+
       let finalResult = null;
       let usedProvider = null;
       let errorChain = [`Ollama: ${ollamaErr.message}`];
@@ -939,7 +937,7 @@ app.post('/api/chat', async (req, res) => {
           usedProvider = 'DeepSeek (User Controlled)';
         } else {
           // Fall back to Ollama if forced provider is ollama or invalid
-          throw ollamaErr; 
+          throw ollamaErr;
         }
       } else {
         // Waterfall Tier 2: Gemini
@@ -979,10 +977,10 @@ app.post('/api/chat', async (req, res) => {
         throw new Error(`Multi-tier failover exhausted. Chain: ${errorChain.join(' -> ')}`);
       }
     }
-    
+
   } catch (err) {
     console.error("Chat Error:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: err.message,
       details: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
@@ -996,7 +994,7 @@ app.post('/api/embed', async (req, res) => {
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
     }
-    
+
     const vector = await embeddings.embedQuery(text);
     res.json({
       vector: vector.slice(0, 10), // Return first 10 dimensions for brevity

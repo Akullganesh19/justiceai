@@ -1,0 +1,23 @@
+--- server.js
++++ server.js
+@@ -876,12 +876,14 @@
+         res.end();
+       } else {
+         // Non-streaming response
+-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+-          method: 'POST',
+-          headers: { 'Content-Type': 'application/json' },
+-          body: JSON.stringify(requestData),
+-          signal: AbortSignal.timeout(15000) // 15s timeout
+-        });
++        const ollamaResponse = await withRetry(() =>
++          fetch(`${OLLAMA_BASE_URL}/api/chat`, {
++            method: 'POST',
++            headers: { 'Content-Type': 'application/json' },
++            body: JSON.stringify(requestData),
++            signal: AbortSignal.timeout(15000) // 15s timeout
++          })
++        );
+
+         if (!ollamaResponse.ok) {
+           throw new Error(`Ollama Error: ${await ollamaResponse.text()}`);
