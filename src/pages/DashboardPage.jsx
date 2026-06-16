@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Animated counter hook
 function useAnimatedCounter(target, duration = 1500) {
@@ -145,19 +146,12 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
+  const [history] = useLocalStorage('justice_ai_history', []);
+  const recentCases = history.slice(0, 5);
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
   useEffect(() => {
-    const saved = localStorage.getItem('justice_ai_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
-    }
-
     const hour = new Date().getHours();
     if (hour < 12) {
       setGreeting('Welcome Back');

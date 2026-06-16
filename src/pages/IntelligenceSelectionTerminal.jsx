@@ -15,35 +15,31 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function IntelligenceSelectionTerminal() {
   const { addToast } = useToast();
   
-  // Settings State
-  const [activeProvider, setActiveProvider] = useState('ollama');
-  const [apiKeys, setApiKeys] = useState({
+  // Storage Hooks
+  const [providerStorage, setProviderStorage] = useLocalStorage('justice_ai_provider', 'ollama');
+  const [keysStorage, setKeysStorage] = useLocalStorage('justice_ai_keys', {
     gemini: '',
     deepseek: ''
   });
+
+  // Settings State
+  const [activeProvider, setActiveProvider] = useState(providerStorage);
+  const [apiKeys, setApiKeys] = useState(keysStorage);
   
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(null); // null | 'ollama' | 'gemini' | 'deepseek'
 
-  // Load settings on mount
-  useEffect(() => {
-    const savedProvider = localStorage.getItem('justice_ai_provider');
-    const savedKeys = localStorage.getItem('justice_ai_keys');
-    
-    if (savedProvider) setActiveProvider(savedProvider);
-    if (savedKeys) setApiKeys(JSON.parse(savedKeys));
-  }, []);
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('justice_ai_provider', activeProvider);
-      localStorage.setItem('justice_ai_keys', JSON.stringify(apiKeys));
+      setProviderStorage(activeProvider);
+      setKeysStorage(apiKeys);
       
       // Artificial delay for industrial "crunching" feel
       await new Promise(r => setTimeout(r, 800));

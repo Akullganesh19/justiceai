@@ -29,6 +29,7 @@ import {
 import { useToast } from '../components/ui/Toast.jsx';
 import Header from '../components/ui/Header.jsx';
 import Footer from '../components/ui/Footer.jsx';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Case type specific milestone templates
 const CASE_TEMPLATES = {
@@ -629,14 +630,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
 
 export default function CaseTrackerPage() {
   const { success, error: showError } = useToast();
-  const [cases, setCases] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [cases, setCases] = useLocalStorage(STORAGE_KEY, []);
 
   const [activeCaseId, setActiveCaseId] = useState(cases[0]?.id);
   const [newStepLabel, setNewStepLabel] = useState('');
@@ -673,11 +667,6 @@ export default function CaseTrackerPage() {
       // Notification logic can go here
     }
   }, [activeCase]);
-
-  // Persist to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-  }, [cases]);
 
   const updateActiveCase = (updater) => {
     setCases((prev) => prev.map((c) => (c.id === activeCaseId ? updater(c) : c)));
