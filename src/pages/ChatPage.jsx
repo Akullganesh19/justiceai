@@ -11,18 +11,12 @@ import { parseAIResponse } from '../lib/parseAnalysis';
 import { generateSummary } from '../lib/generateSummary';
 import { Milestone, Sword, ShieldCheck, MapPin, AlertCircle } from 'lucide-react';
 import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function ChatPage() {
   const location = useLocation();
   const [activeCaseId, setActiveCaseId] = useState(Date.now().toString());
-  const [history, setHistory] = useState(() => {
-    try {
-      const savedHistory = localStorage.getItem('justice_ai_history');
-      return savedHistory ? JSON.parse(savedHistory) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [history, setHistory] = useLocalStorage('justice_ai_history', []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Case State
@@ -78,11 +72,6 @@ export default function ChatPage() {
       handleSampleTrigger(initialMsgs, location.state.sampleCase);
     }
   }, [location.state]);
-
-  // 3. Save History to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('justice_ai_history', JSON.stringify(history));
-  }, [history]);
 
   // 4. Handle System Setting Change Notification
   const initialMount = React.useRef(true);
