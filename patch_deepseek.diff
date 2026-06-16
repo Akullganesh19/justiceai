@@ -1,0 +1,26 @@
+--- server.js
++++ server.js
+@@ -373,12 +373,14 @@
+     max_tokens: 2048
+   };
+
+-  const response = await fetch(DEEPSEEK_BASE_URL, {
+-    method: 'POST',
+-    headers: {
+-      'Content-Type': 'application/json',
+-      'Authorization': `Bearer ${apiKey}`
+-    },
+-    body: JSON.stringify(payload)
+-  });
++  const response = await withRetry(() =>
++    fetch(DEEPSEEK_BASE_URL, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        'Authorization': `Bearer ${apiKey}`
++      },
++      body: JSON.stringify(payload)
++    })
++  );
+
+   if (!response.ok) {

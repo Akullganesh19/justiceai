@@ -1,0 +1,26 @@
+--- server.js
++++ server.js
+@@ -282,6 +282,23 @@
+   }
+ }
+
++// Genesis: Auto-Retry with Exponential Backoff
++async function withRetry(fn, maxAttempts = 3) {
++  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
++    try {
++      return await fn();
++    } catch (err) {
++      if (attempt === maxAttempts) throw err;
++      // Only retry transient errors (network issues, 5xx, 429)
++      if (err.message && (err.message.includes('401') || err.message.includes('403') || err.message.includes('400'))) {
++        throw err;
++      }
++      logger.warn(`API call failed (Attempt ${attempt}/${maxAttempts}). Retrying in ${100 * Math.pow(2, attempt - 1)}ms...`, { error: err.message });
++      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
++    }
++  }
++}
++
+ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
+   const apiKey = overrideApiKey || GEMINI_API_KEY;
+   if (!apiKey) {

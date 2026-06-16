@@ -1,0 +1,23 @@
+--- server.js
++++ server.js
+@@ -846,12 +846,14 @@
+         res.setHeader('Cache-Control', 'no-cache');
+         res.setHeader('Connection', 'keep-alive');
+
+-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+-          method: 'POST',
+-          headers: { 'Content-Type': 'application/json' },
+-          body: JSON.stringify(requestData),
+-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+-        });
++        const response = await withRetry(() =>
++          fetch(`${OLLAMA_BASE_URL}/api/chat`, {
++            method: 'POST',
++            headers: { 'Content-Type': 'application/json' },
++            body: JSON.stringify(requestData),
++            signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
++          })
++        );
+
+         if (!response.ok) {
+           throw new Error(`Ollama Error: ${response.statusText}`);
