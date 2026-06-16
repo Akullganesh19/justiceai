@@ -1,0 +1,6 @@
+## 2024-10-27 — [AI Chat ↔ Case Tracker Integration]
+**Systems connected:** [AI Chat Analysis ↔ Case Tracker]
+**Intelligence emerged:** [The AI analysis of a user's case now automatically generates a formal timeline within the Case Tracker. Users immediately get a trackable checklist of next steps based directly on the intelligence gathered during their chat consultation.]
+**Data flows:** [ChatPage (System A) parses the AI's timeline recommendation and broadcasts a `justice-ai-analysis-complete` custom event. IntelligenceBridge (Connection Mechanism) listens for this event, maps the timeline items into a generic Case Tracker format, and persists it into the `localStorage('justice_ai_case_tracker_v2')`. Finally, a toast is shown to the user indicating the intelligence emerged.]
+**Coupling approach:** [Event Bridge Pattern: System A (`ChatPage.jsx`) simply broadcasts an event when it has parsed analysis data. It doesn't know about `CaseTrackerPage.jsx` or its local storage mechanism. The `IntelligenceBridge` handles the data translation and storage logic. Both remain decoupled and independently testable.]
+**Next connection:** [Perhaps correlating the Document Generator output with the next steps in the Case Tracker timeline, automatically checking off tasks once a related document is drafted.]
