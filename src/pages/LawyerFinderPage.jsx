@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,6 +21,9 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
+import OraclePrediction from '../components/oracle/OraclePrediction';
+import { predictUserNeeds } from '../lib/oracle';
+
 import Footer from '../components/ui/Footer';
 
 const SPECIALIZATIONS = [
@@ -347,6 +350,15 @@ export default function LawyerFinderPage() {
   const [selectedSpec, setSelectedSpec] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
+  const [prediction, setPrediction] = useState(null);
+
+  useEffect(() => {
+    const predicted = predictUserNeeds();
+    if (predicted && SPECIALIZATIONS.some(s => s.id === predicted.domain)) {
+      setPrediction(predicted);
+      setSelectedSpec(predicted.domain);
+    }
+  }, []);
 
   const filteredLawyers = useMemo(() => {
     let results = LAWYERS_DATA;
@@ -383,6 +395,8 @@ export default function LawyerFinderPage() {
             <p className="text-xs text-text-tertiary leading-relaxed max-w-xl mx-auto md:mx-0 opacity-40 uppercase tracking-[0.2em] italic">
               ACCESS THE VALIDATED REGISTRY OF INDIAN STATUTORY ADVOCATES. FILTER BY JURISDICTION, SPECIALIZATION, AND PROCEDURAL CATEGORY.
             </p>
+
+            <OraclePrediction prediction={prediction} onDismiss={() => { setPrediction(null); setSelectedSpec('all'); }} />
           </div>
 
           <div className="pb-4">
