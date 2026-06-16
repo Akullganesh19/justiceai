@@ -187,6 +187,13 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    // Save to localStorage for Synapse bridge
+    localStorage.setItem('justice_auth_user', JSON.stringify({ email }));
+    console.log('[Synapse] Auth data stored in localStorage (Sign In)');
+
     console.log('UI: Sign In form submitted');
   };
   return (
@@ -229,6 +236,14 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+
+    // Save to localStorage for Synapse bridge
+    localStorage.setItem('justice_auth_user', JSON.stringify({ name, email }));
+    console.log('[Synapse] Auth data stored in localStorage (Sign Up)');
+
     console.log('UI: Sign Up form submitted');
   };
   return (
