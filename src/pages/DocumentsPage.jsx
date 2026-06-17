@@ -52,8 +52,8 @@ function TemplateCard({ template, onSelect, index }) {
   );
 }
 
-function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+function FormWizard({ template, onBack, onGenerate, initialData = {} }) {
+  const [formData, setFormData] = useState(initialData || {});
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -189,7 +189,7 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onEdit }) {
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
 
@@ -339,6 +339,15 @@ function DocumentPreview({ document, template, onBack }) {
             <Download className="w-4 h-4" />
             <span>EXPORT_PDF</span>
           </button>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all shadow-hard"
+            >
+              <FileWarning className="w-4 h-4" />
+              <span>EDIT_DRAFT</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -376,19 +385,66 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [initialData, setInitialData] = useState({});
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
+  // Save to localStorage when updated
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+  }, [savedDocs]);
+  // Duplicate state removed
   const handleSelect = (template) => {
+    setInitialData({});
     setSelectedTemplate(template);
     setStage('form');
   };
 
   const handleGenerate = (formData) => {
+    // Generate doc
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save draft
+    setSavedDocs(prev => {
+      const updated = prev.filter(d => !(d.templateId === selectedTemplate.id && JSON.stringify(d.formData) === JSON.stringify(formData)));
+      return [{
+        id: Date.now().toString(),
+        templateId: selectedTemplate.id,
+        templateTitle: selectedTemplate.title,
+        formData,
+        date: new Date().toISOString()
+      }, ...updated].slice(0, 10); // Keep last 10
+    });
+  };
+
+  const handleEditDraft = () => {
+    setStage('form');
+  };
+
+  const loadDraft = (draft) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === draft.templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setInitialData(draft.formData);
+      setStage('form');
+    }
+  };
+
+  const deleteDraft = (e, id) => {
+    e.stopPropagation();
+    setSavedDocs(prev => prev.filter(d => d.id !== id));
   };
 
   const handleReset = () => {
+    setInitialData({});
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
@@ -421,6 +477,33 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+              {/* Recent Drafts */}
+              {savedDocs.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-3">
+                      <div className="w-1.5 h-6 bg-gold shadow-luxe" />
+                      RECENT_DRAFTS
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocs.map(draft => (
+                      <div key={draft.id} onClick={() => loadDraft(draft)} className="group relative p-6 bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm cursor-pointer transition-all shadow-hard">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-sm font-bold text-white group-hover:text-gold uppercase tracking-wider italic">{draft.templateTitle}</h3>
+                          <button onClick={(e) => deleteDraft(e, draft.id)} className="p-1 text-text-tertiary hover:text-red-400 transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest opacity-60">
+                          {new Date(draft.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
@@ -446,6 +529,7 @@ export default function DocumentsPage() {
                 template={selectedTemplate}
                 onBack={handleReset}
                 onGenerate={handleGenerate}
+                initialData={initialData}
               />
             </motion.div>
           )}
@@ -461,6 +545,7 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onEdit={handleEditDraft}
               />
             </motion.div>
           )}
