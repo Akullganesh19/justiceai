@@ -187,6 +187,14 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    // Dispatch auth event for other systems (like Analytics) to consume
+    window.dispatchEvent(
+      new CustomEvent('justice-ai-auth-login', { detail: { email, type: 'signin' } })
+    );
+
     console.log('UI: Sign In form submitted');
   };
   return (
@@ -229,6 +237,14 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    // Dispatch auth event for other systems (like Analytics) to consume
+    window.dispatchEvent(
+      new CustomEvent('justice-ai-auth-login', { detail: { email, type: 'signup' } })
+    );
+
     console.log('UI: Sign Up form submitted');
   };
   return (
