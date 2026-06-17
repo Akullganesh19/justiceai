@@ -244,6 +244,20 @@ const embeddings = new OllamaEmbeddings({
   baseUrl: OLLAMA_BASE_URL,
 });
 
+// Helper for external API retry logic
+async function withRetry(fn, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+      const sleepTime = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`External API call failed. Retrying in ${sleepTime}ms (Attempt ${attempt}/${maxAttempts}): ${err.message}`);
+      await new Promise(r => setTimeout(r, sleepTime));
+    }
+  }
+}
+
 // Dynamic import for pdf-parse (CJS module in ESM project)
 async function parsePdf(dataBuffer) {
   try {
@@ -318,16 +332,18 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+  const response = await withRetry(async () => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini API Error: ${res.status} - ${errText}`);
+    }
+    return res;
   });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API Error: ${response.status} - ${errText}`);
-  }
 
   const data = await response.json();
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -354,19 +370,21 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(payload)
+  const response = await withRetry(async () => {
+    const res = await fetch(DEEPSEEK_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`DeepSeek API Error: ${res.status} - ${errText}`);
+    }
+    return res;
   });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`DeepSeek API Error: ${response.status} - ${errText}`);
-  }
 
   const data = await response.json();
   const content = data.choices[0].message.content;
@@ -567,20 +585,22 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ulcaApiKey': BHASHINI_API_KEY,
-        'userID': BHASHINI_USER_ID
-      },
-      body: JSON.stringify(configPayload)
+    const configResponse = await withRetry(async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ulcaApiKey': BHASHINI_API_KEY,
+          'userID': BHASHINI_USER_ID
+        },
+        body: JSON.stringify(configPayload)
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Config Error: ${res.status} - ${errorText}`);
+      }
+      return res;
     });
-
-    if (!configResponse.ok) {
-      const errorText = await configResponse.text();
-      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
-    }
 
     const configData = await configResponse.json();
 
@@ -598,20 +618,22 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
-        'Accept': '*/*'
-      },
-      body: JSON.stringify(computePayload)
+    const computeResponse = await withRetry(async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
+          'Accept': '*/*'
+        },
+        body: JSON.stringify(computePayload)
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Compute Error: ${res.status} - ${errorText}`);
+      }
+      return res;
     });
-
-    if (!computeResponse.ok) {
-      const errorText = await computeResponse.text();
-      throw new Error(`Bhashini Compute Error: ${computeResponse.status} - ${errorText}`);
-    }
 
     const computeData = await computeResponse.json();
     
