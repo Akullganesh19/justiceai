@@ -36,6 +36,11 @@ const SPECIALIZATIONS = [
   { id: 'constitutional', label: 'Constitutional Law' },
 ];
 
+const SPECIALIZATIONS_MAP = SPECIALIZATIONS.reduce((acc, curr) => {
+  acc[curr.id] = curr.label;
+  return acc;
+}, {});
+
 const CITIES = [
   { id: 'all', label: 'All Cities' },
   { id: 'delhi', label: 'New Delhi' },
@@ -48,6 +53,11 @@ const CITIES = [
   { id: 'jaipur', label: 'Jaipur' },
   { id: 'lucknow', label: 'Lucknow' },
 ];
+
+const CITIES_MAP = CITIES.reduce((acc, curr) => {
+  acc[curr.id] = curr.label;
+  return acc;
+}, {});
 
 const LAWYERS_DATA = [
   {
@@ -214,9 +224,8 @@ const LAWYERS_DATA = [
 
 function LawyerCard({ lawyer, index }) {
   const [expanded, setExpanded] = useState(false);
-  const specLabel =
-    SPECIALIZATIONS.find((s) => s.id === lawyer.specialization)?.label || lawyer.specialization;
-  const cityLabel = CITIES.find((c) => c.id === lawyer.city)?.label || lawyer.city;
+  const specLabel = SPECIALIZATIONS_MAP[lawyer.specialization] || lawyer.specialization;
+  const cityLabel = CITIES_MAP[lawyer.city] || lawyer.city;
 
   return (
     <motion.div
@@ -234,7 +243,7 @@ function LawyerCard({ lawyer, index }) {
             <div>
               <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
               <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60">
-                {lawyer.court} // BCI ID: {lawyer.regNo}
+                {lawyer.court} {'//'} BCI ID: {lawyer.regNo}
               </p>
               {lawyer.verified && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/10 border-2 border-gold/20 rounded-sm mt-3 italic">
@@ -277,7 +286,7 @@ function LawyerCard({ lawyer, index }) {
               <Info className="w-4 h-4 text-white/10 hover:text-gold cursor-help transition-colors" />
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-void border-2 border-gold/20 rounded-sm shadow-hard opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center italic">
                 <p className="text-[10px] text-text-tertiary uppercase tracking-wider leading-relaxed">
-                  // Professional fee estimates may vary based on case complexity and jurisdiction.
+                  {'//'} Professional fee estimates may vary based on case complexity and jurisdiction.
                 </p>
               </div>
             </div>
@@ -408,7 +417,7 @@ export default function LawyerFinderPage() {
 
         <div className="bg-void border-2 border-gold/20 rounded-sm px-6 py-4 flex items-center justify-center text-center -mt-4 shadow-inner italic">
           <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-[0.3em] font-extrabold">
-            <span className="text-gold mr-3 underline decoration-dotted">// INSTITUTIONAL_NOTICE:</span>
+            <span className="text-gold mr-3 underline decoration-dotted">{'//'} INSTITUTIONAL_NOTICE:</span>
             ADVOCATE PROFILES ARE FOR INFORMATIONAL PURPOSES. SYSTEM DOES NOT OFFICIALLY ENDORSE SPECIFIC COUNSEL.
           </p>
         </div>
