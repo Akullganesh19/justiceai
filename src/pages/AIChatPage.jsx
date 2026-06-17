@@ -30,8 +30,8 @@ export default function AIChatPage() {
     try {
       const saved = localStorage.getItem('justice_ai_simple_chat');
       if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // Ignore parsing errors and fallback to initial state
     }
     return [
       {
@@ -105,8 +105,7 @@ How may I assist you with your legal matters today?`,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err) {
-      console.error('Chat error:', err);
+    } catch (_err) {
       const errorMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
