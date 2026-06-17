@@ -1,0 +1,7 @@
+## 2024-06-17 — Network Coalescing & Caching Utility
+**Gap found:** The frontend application currently makes raw `fetch` calls directly from components without any request coalescing (deduplication) or caching strategy for GET requests. For example, checking `/api/voice/config` or `/api/health` happens without protection against redundant inflight network operations or stale-while-revalidate caching.
+**Why it existed:** The app initially had simple API needs, directly fetching within `useEffect` or button click handlers using raw `fetch`.
+**Built:** An intelligent, invisible `fetchWithCache` utility inside `src/lib/fetchUtils.js` that wraps native `fetch`. It supports Request Coalescing (multiple identical simultaneous requests return the same promise) and Stale-While-Revalidate caching (returning stale local cache instantly while revalidating in the background without blocking the UI).
+**Hot path affected:** Any component that does non-mutating GET requests (like loading configuration, status, or simple data).
+**Measurable improvement:** Multiple components asking for the same data at the exact same time will result in only 1 network request instead of N. Cached responses resolve instantly (< 1ms) rather than network latency roundtrip.
+**Next opportunity:** Background Sync queue for persisting non-critical data (like analytics or chat history backup) to the server without blocking user interactions.
