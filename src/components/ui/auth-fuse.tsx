@@ -187,7 +187,6 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign In form submitted');
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -229,7 +228,6 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign Up form submitted');
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
@@ -313,7 +311,6 @@ function AuthFormContainer({ isSignIn, onToggle }: { isSignIn: boolean; onToggle
         variant="outline"
         type="button"
         className="gap-3"
-        onClick={() => console.log('UI: Google clicked')}
       >
         <img
           src="https://www.svgrepo.com/show/475656/google-color.svg"
