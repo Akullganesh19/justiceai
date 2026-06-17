@@ -93,7 +93,7 @@ app.use(helmet({
 
 // CORS with better security
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : '*'),
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : (NODE_ENV === 'production' ? false : ['http://localhost:5173']),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
