@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
+import { fetchWithCache } from '../lib/fetchUtils';
 
 export default function IntelligenceSelectionTerminal() {
   const { addToast } = useToast();
@@ -53,7 +54,7 @@ export default function IntelligenceSelectionTerminal() {
         description: `Active analysis provider shifted to ${activeProvider.toUpperCase()}.`,
         type: 'success'
       });
-    } catch (e) {
+    } catch (_e) {
       addToast({
         title: 'SYSTEM_ERROR',
         description: 'Failed to write to local storage framework.',
@@ -69,7 +70,7 @@ export default function IntelligenceSelectionTerminal() {
     try {
       // For now, we'll just simulate a ping to the backend
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/health`);
+      const response = await fetchWithCache(`${baseUrl}/api/health`);
       if (!response.ok) throw new Error('Backend Unreachable');
       
       await new Promise(r => setTimeout(r, 1200));
@@ -79,7 +80,7 @@ export default function IntelligenceSelectionTerminal() {
         description: 'Analysis link verified. System ready to assist.',
         type: 'success'
       });
-    } catch (e) {
+    } catch (_e) {
       addToast({
         title: 'LINK_FAILURE',
         description: 'Could not establish connection with backend system.',
