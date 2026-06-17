@@ -36,8 +36,6 @@ export async function sendMessage(conversationHistory, userMessage, options = {}
     const data = await response.json();
     return data.message.content;
   } catch (error) {
-    console.error('❌ Backend connection failed:', error.message);
-
     // Re-throw the error so the UI can display it properly
     // instead of silently returning a fake response
     throw new Error(
