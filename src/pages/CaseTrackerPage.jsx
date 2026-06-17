@@ -27,6 +27,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useToast } from '../components/ui/Toast.jsx';
+import { Oracle } from '../lib/oracle.js';
 import Header from '../components/ui/Header.jsx';
 import Footer from '../components/ui/Footer.jsx';
 
@@ -647,6 +648,16 @@ export default function CaseTrackerPage() {
   const [cnrNumber, setCnrNumber] = useState('');
 
   // Case details fields
+  useEffect(() => {
+    const context = Oracle.consumeContext('CASE_TRACKING');
+    if (context) {
+      if (context.title) setNewCaseName(context.title);
+      if (context.type) setSelectedCaseType(context.type);
+      setShowNewCaseModal(true);
+      sessionStorage.removeItem('oracle_prediction'); // Consume it
+    }
+  }, []);
+
   const [caseDetails, setCaseDetails] = useState({
     caseNumber: '',
     courtName: '',
