@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Oracle } from '../lib/oracle.js';
 import {
   Calculator,
   IndianRupee,
@@ -179,6 +180,14 @@ function ResultCard({ icon: Icon, label, value, sublabel, color = 'gold' }) {
 
 export default function EstimatorPage() {
   const [caseType, setCaseType] = useState(null);
+
+  useEffect(() => {
+    const context = Oracle.consumeContext('COST_ESTIMATION');
+    if (context && context.type) {
+      setCaseType(context.type);
+      sessionStorage.removeItem('oracle_prediction'); // Consume it
+    }
+  }, []);
   const [courtLevel, setCourtLevel] = useState('district');
   const [cityTier, setCityTier] = useState('tier2');
   const [complexity, setComplexity] = useState('simple');

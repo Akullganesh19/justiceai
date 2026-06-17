@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
+import { Oracle } from '../lib/oracle.js';
 import jsPDF from 'jspdf';
 
 const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
@@ -376,6 +377,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+
+  useEffect(() => {
+    const context = Oracle.consumeContext('DOCUMENT_GENERATION');
+    if (context && context.templateId) {
+      const template = DOCUMENT_TEMPLATES.find(t => t.id === context.templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setStage('form');
+        sessionStorage.removeItem('oracle_prediction'); // Consume it
+      }
+    }
+  }, []);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
