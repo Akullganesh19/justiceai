@@ -652,11 +652,11 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         let text = '';
 
         if (ext === '.pdf') {
-          const dataBuffer = fs.readFileSync(filePath);
+          const dataBuffer = await fs.promises.readFile(filePath);
           const pdfData = await parsePdf(dataBuffer);
           text = pdfData.text;
         } else if (ext === '.txt' || ext === '.md') {
-          text = fs.readFileSync(filePath, 'utf-8');
+          text = await fs.promises.readFile(filePath, 'utf-8');
         } else {
           failedFiles.push({ name: fileName, error: 'Unsupported file type' });
           continue;
