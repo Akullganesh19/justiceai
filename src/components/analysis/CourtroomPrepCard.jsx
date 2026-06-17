@@ -1,3 +1,4 @@
+import React from "react";
 import { Milestone, Scale, Quote, AlertTriangle, MessageSquare } from 'lucide-react';
 
 export function CourtroomPrepCard({ prep, grounds }) {
