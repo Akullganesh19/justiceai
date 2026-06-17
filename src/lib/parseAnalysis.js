@@ -24,8 +24,7 @@ export function parseAIResponse(rawText) {
     }
 
     return { chatMessage, analysis };
-  } catch (e) {
-    console.warn('AI provided an analysis block but JSON parsing failed:', e);
+  } catch (_err) {
     // Even if JSON fails, we still want the chat part
     const chatMessage = rawText.replace(/<analysis>[\s\S]*?<\/analysis>/, '').trim();
     return {
