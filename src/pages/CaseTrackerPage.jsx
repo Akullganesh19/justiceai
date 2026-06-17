@@ -433,6 +433,112 @@ function daysUntil(dateStr) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+function StepDetails({ step, onUpdateStep }) {
+  return (
+    <div className="mt-8 pt-8 border-t border-white/5 space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="space-y-3">
+           <input
+            type="date"
+            value={step.expectedDate || ''}
+            onChange={(e) => onUpdateStep(step.id, { expectedDate: e.target.value })}
+            className="w-full bg-void border-2 border-white/5 rounded px-5 py-3.5 text-[10px] text-white focus:outline-none focus:border-gold/40 shadow-inner font-mono italic"
+          />
+        </div>
+        <div className="space-y-3">
+          <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
+            Completion Date
+          </label>
+          <input
+            type="date"
+            value={step.completedDate || ''}
+            onChange={(e) => onUpdateStep(step.id, { completedDate: e.target.value })}
+            className="w-full bg-void border-2 border-white/5 rounded px-5 py-3.5 text-[10px] text-white focus:outline-none focus:border-blue/40 shadow-inner font-mono italic"
+          />
+        </div>
+      </div>
+      <div className="space-y-3">
+        <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
+          Strategic Notes
+        </label>
+        <textarea
+          value={step.notes || ''}
+          onChange={(e) => onUpdateStep(step.id, { notes: e.target.value })}
+          placeholder="Add case observations or notes..."
+          rows={2}
+          className="w-full bg-void border-2 border-white/10 rounded-sm px-5 py-4 text-[13px] text-white focus:outline-none focus:border-gold/40 font-body italic resize-none shadow-hard transition-all placeholder:text-white/10"
+        />
+      </div>
+      <div className="space-y-3">
+        <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
+          Document Reference
+        </label>
+        <input
+          type="text"
+          value={step.documentRef || ''}
+          onChange={(e) => onUpdateStep(step.id, { documentRef: e.target.value })}
+          placeholder="Enter reference ID or title..."
+          className="w-full bg-void border-2 border-white/10 rounded-sm px-5 py-3.5 text-xs text-white focus:outline-none focus:border-gold/40 font-display font-bold uppercase tracking-widest italic shadow-hard transition-all placeholder:text-white/10"
+        />
+      </div>
+    </div>
+  );
+}
+
+function StepEditForm({ editLabel, setEditLabel, editDesc, setEditDesc, handleSave, setIsEditing }) {
+  return (
+    <div className="space-y-6">
+      <input
+        value={editLabel}
+        onChange={(e) => setEditLabel(e.target.value)}
+        className="w-full bg-void border-2 border-white/10 rounded-sm px-6 py-4 text-[15px] text-white focus:outline-none focus:border-gold/60 font-display font-bold uppercase tracking-tight italic shadow-hard"
+      />
+      <textarea
+        value={editDesc}
+        onChange={(e) => setEditDesc(e.target.value)}
+        rows={2}
+        className="w-full bg-void border-2 border-white/10 rounded-sm px-6 py-4 text-[14px] text-white focus:outline-none focus:border-gold/60 font-body italic resize-none shadow-hard"
+      />
+      <div className="flex gap-4">
+        <button
+          onClick={handleSave}
+          className="flex items-center gap-3 px-8 py-3 bg-gold text-midnight rounded-sm font-extrabold text-[10px] uppercase tracking-widest shadow-hard active:translate-y-[2px] italic border-2 border-gold/40"
+        >
+          <Save className="w-4 h-4" /> COMMIT_CHANGES
+        </button>
+        <button
+          onClick={() => setIsEditing(false)}
+          className="flex items-center gap-3 px-8 py-3 bg-midnight border border-white/10 text-white/60 rounded-sm font-bold text-xs uppercase tracking-widest hover:text-white transition-colors"
+        >
+          <X className="w-4 h-4" /> Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StepIndicator({ step, isLast, completedBefore, onToggle }) {
+  return (
+    <div className="flex flex-col items-center">
+      <button
+        onClick={() => onToggle(step.id)}
+        className={`w-12 h-12 rounded-sm bg-void border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-hard active:translate-y-[2px] ${completedBefore ? 'bg-gold border-gold/40 text-midnight' : 'bg-void border-white/10 text-white/20 hover:border-gold/50 hover:text-gold'}`}
+      >
+        {completedBefore ? (
+          <CheckCircle2 className="w-6 h-6" />
+        ) : (
+          <div className="w-1.5 h-1.5 rounded-sm bg-white/20" />
+        )}
+      </button>
+      {!isLast && (
+        <div
+          className={`w-[1px] flex-1 min-h-[50px] transition-all duration-500 ${completedBefore ? 'bg-gold/30' : 'bg-white/5'}`}
+        />
+      )}
+    </div>
+  );
+}
+
 function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(step.label);
@@ -457,24 +563,12 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
       transition={{ delay: index * 0.04 }}
       className="flex gap-6"
     >
-      {/* Timeline Line */}
-      <div className="flex flex-col items-center">
-        <button
-          onClick={() => onToggle(step.id)}
-          className={`w-12 h-12 rounded-sm bg-void border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-hard active:translate-y-[2px] ${completedBefore ? 'bg-gold border-gold/40 text-midnight' : 'bg-void border-white/10 text-white/20 hover:border-gold/50 hover:text-gold'}`}
-        >
-          {completedBefore ? (
-            <CheckCircle2 className="w-6 h-6" />
-          ) : (
-            <div className="w-1.5 h-1.5 rounded-sm bg-white/20" />
-          )}
-        </button>
-        {!isLast && (
-          <div
-            className={`w-[1px] flex-1 min-h-[50px] transition-all duration-500 ${completedBefore ? 'bg-gold/30' : 'bg-white/5'}`}
-          />
-        )}
-      </div>
+      <StepIndicator
+        step={step}
+        isLast={isLast}
+        completedBefore={completedBefore}
+        onToggle={onToggle}
+      />
 
       {/* Content */}
       <div className="flex-1 pb-12">
@@ -482,33 +576,14 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
           className={`p-8 rounded-sm border-2 transition-all duration-500 shadow-hard ${completedBefore ? 'bg-void border-gold/40 shadow-gold/5' : 'bg-void border-white/5 hover:border-white/10 group-hover:border-white/20'}`}
         >
           {isEditing ? (
-            <div className="space-y-6">
-              <input
-                value={editLabel}
-                onChange={(e) => setEditLabel(e.target.value)}
-                className="w-full bg-void border-2 border-white/10 rounded-sm px-6 py-4 text-[15px] text-white focus:outline-none focus:border-gold/60 font-display font-bold uppercase tracking-tight italic shadow-hard"
-              />
-              <textarea
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-                rows={2}
-                className="w-full bg-void border-2 border-white/10 rounded-sm px-6 py-4 text-[14px] text-white focus:outline-none focus:border-gold/60 font-body italic resize-none shadow-hard"
-              />
-              <div className="flex gap-4">
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-3 px-8 py-3 bg-gold text-midnight rounded-sm font-extrabold text-[10px] uppercase tracking-widest shadow-hard active:translate-y-[2px] italic border-2 border-gold/40"
-                >
-                  <Save className="w-4 h-4" /> COMMIT_CHANGES
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-3 px-8 py-3 bg-midnight border border-white/10 text-white/60 rounded-sm font-bold text-xs uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  <X className="w-4 h-4" /> Cancel
-                </button>
-              </div>
-            </div>
+            <StepEditForm
+              editLabel={editLabel}
+              setEditLabel={setEditLabel}
+              editDesc={editDesc}
+              setEditDesc={setEditDesc}
+              handleSave={handleSave}
+              setIsEditing={setIsEditing}
+            />
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">
@@ -570,55 +645,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
                 {step.description}
               </p>
 
-              {showDetails && (
-                <div className="mt-8 pt-8 border-t border-white/5 space-y-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                       <input
-                        type="date"
-                        value={step.expectedDate || ''}
-                        onChange={(e) => onUpdateStep(step.id, { expectedDate: e.target.value })}
-                        className="w-full bg-void border-2 border-white/5 rounded px-5 py-3.5 text-[10px] text-white focus:outline-none focus:border-gold/40 shadow-inner font-mono italic"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
-                        Completion Date
-                      </label>
-                      <input
-                        type="date"
-                        value={step.completedDate || ''}
-                        onChange={(e) => onUpdateStep(step.id, { completedDate: e.target.value })}
-                        className="w-full bg-void border-2 border-white/5 rounded px-5 py-3.5 text-[10px] text-white focus:outline-none focus:border-blue/40 shadow-inner font-mono italic"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
-                      Strategic Notes
-                    </label>
-                    <textarea
-                      value={step.notes || ''}
-                      onChange={(e) => onUpdateStep(step.id, { notes: e.target.value })}
-                      placeholder="Add case observations or notes..."
-                      rows={2}
-                      className="w-full bg-void border-2 border-white/10 rounded-sm px-5 py-4 text-[13px] text-white focus:outline-none focus:border-gold/40 font-body italic resize-none shadow-hard transition-all placeholder:text-white/10"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[9px] uppercase font-extrabold tracking-widest text-white/20 block ml-2 italic">
-                      Document Reference
-                    </label>
-                    <input
-                      type="text"
-                      value={step.documentRef || ''}
-                      onChange={(e) => onUpdateStep(step.id, { documentRef: e.target.value })}
-                      placeholder="Enter reference ID or title..."
-                      className="w-full bg-void border-2 border-white/10 rounded-sm px-5 py-3.5 text-xs text-white focus:outline-none focus:border-gold/40 font-display font-bold uppercase tracking-widest italic shadow-hard transition-all placeholder:text-white/10"
-                    />
-                  </div>
-                </div>
-              )}
+              {showDetails && <StepDetails step={step} onUpdateStep={onUpdateStep} />}
             </>
           )}
         </div>
