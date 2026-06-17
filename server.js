@@ -434,12 +434,11 @@ async function loadAndIndexDocuments() {
       const rawChunks = splitTextIntoChunks(text, 1000, 200);
       totalChunks += rawChunks.length;
       
+      const vectors = await embeddings.embedDocuments(rawChunks);
       for (let j = 0; j < rawChunks.length; j++) {
-        const chunk = rawChunks[j];
-        const vector = await embeddings.embedQuery(chunk);
         documentChunks.push({
-          content: chunk,
-          vector: vector,
+          content: rawChunks[j],
+          vector: vectors[j],
           source: source
         });
       }
@@ -666,11 +665,11 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         const rawChunks = splitTextIntoChunks(text, 1000, 200);
         let chunksEmbedded = 0;
 
-        for (const chunk of rawChunks) {
-          const vector = await embeddings.embedQuery(chunk);
+        const vectors = await embeddings.embedDocuments(rawChunks);
+        for (let i = 0; i < rawChunks.length; i++) {
           documentChunks.push({
-            content: chunk,
-            vector: vector,
+            content: rawChunks[i],
+            vector: vectors[i],
             source: fileName
           });
           chunksEmbedded++;
