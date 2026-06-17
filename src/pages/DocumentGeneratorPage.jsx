@@ -209,8 +209,7 @@ export default function DocumentGeneratorPage() {
       
       doc.save(`${selectedTemplate.id}_draft.pdf`);
       success({ title: 'PDF Downloaded', message: 'Document saved securely.' });
-    } catch (err) {
-      console.error('PDF Generation Error:', err);
+    } catch (_err) {
       const blob = new Blob([generatedDoc], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
