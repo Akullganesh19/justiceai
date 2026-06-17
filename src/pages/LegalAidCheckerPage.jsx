@@ -122,10 +122,10 @@ const STATE_SLSAs = {
 function generateApplication(state, criteriaMet) {
   const date = new Date().toLocaleDateString('en-IN');
   const grounds = criteriaMet
-    .map(
-      (c) =>
-        `• ${CRITERIA.find((cr) => cr.id === c)?.label} (Sec ${CRITERIA.find((cr) => cr.id === c)?.section})`,
-    )
+    .map((c) => {
+      const criterion = CRITERIA.find((cr) => cr.id === c);
+      return `• ${criterion?.label} (Sec ${criterion?.section})`;
+    })
     .join('\n');
 
   return `To,
