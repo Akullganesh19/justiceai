@@ -63,7 +63,6 @@ export default function FloatingVoiceButton({ onTranscription }) {
   const [language, setLanguage] = useState('en');
   const [transcription, setTranscription] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [audioBlob, setAudioBlob] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [recognitionMode, setRecognitionMode] = useState('checking'); // 'checking', 'bhashini', 'webspeech', 'mock'
   const [webSpeechSupported, setWebSpeechSupported] = useState(false);
@@ -94,8 +93,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
         } else {
           setRecognitionMode('mock');
         }
-      } catch (err) {
-        console.error('Failed to fetch voice config:', err);
+      } catch (_err) {
         if (webSpeechSupported) {
           setRecognitionMode('webspeech');
         } else {
@@ -131,7 +129,6 @@ export default function FloatingVoiceButton({ onTranscription }) {
       };
 
       recognition.onerror = (event) => {
-        console.error('Web Speech API Error:', event.error);
         switch (event.error) {
           case 'no-speech':
             setErrorMsg('No speech detected. Please try again.');
@@ -215,11 +212,9 @@ export default function FloatingVoiceButton({ onTranscription }) {
             setErrorMsg('Recording too short. Please record for at least 0.5 seconds.');
             return;
           }
-          setAudioBlob(blob);
           processAudio(blob);
         };
       } catch (err) {
-        console.error('Microphone access error:', err);
         if (err.name === 'NotAllowedError') {
           setErrorMsg('Microphone permission denied. Please allow in browser settings.');
         } else if (err.name === 'NotFoundError') {
@@ -246,8 +241,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
         setIsRecording(true);
         setTranscription('');
         setErrorMsg('');
-      } catch (err) {
-        console.error('Web Speech API start error:', err);
+      } catch (_err) {
         setErrorMsg('Failed to start speech recognition. Please try again.');
       }
     } else {
@@ -313,7 +307,6 @@ export default function FloatingVoiceButton({ onTranscription }) {
       const data = await response.json();
       setTranscription(data.transcription || data.output?.[0]?.transcription || '');
     } catch (err) {
-      console.error('Audio processing error:', err);
       setErrorMsg(`Processing error: ${err.message}`);
     } finally {
       setIsProcessing(false);
