@@ -705,7 +705,18 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 
 // Delete specific document chunks by source
 app.delete('/api/documents/:source', (req, res) => {
-  const source = decodeURIComponent(req.params.source);
+  if (!req.params.source || typeof req.params.source !== 'string') {
+    return res.status(400).json({ error: 'Invalid source parameter' });
+  }
+
+  // Decode and sanitize: trim and remove null bytes/control characters
+  let source = decodeURIComponent(req.params.source).trim();
+  source = source.replace(/[\x00-\x1F\x7F]/g, '');
+
+  if (!source) {
+    return res.status(400).json({ error: 'Source cannot be empty after sanitization' });
+  }
+
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
   const removed = beforeCount - documentChunks.length;
