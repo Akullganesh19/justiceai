@@ -19,7 +19,7 @@ export default function ChatPage() {
     try {
       const savedHistory = localStorage.getItem('justice_ai_history');
       return savedHistory ? JSON.parse(savedHistory) : [];
-    } catch (e) {
+    } catch (_e) {
       return [];
     }
   });
@@ -193,8 +193,8 @@ export default function ChatPage() {
       };
       setMessages((prev) => [...prev, aiMsg]);
       if (newAnalysis) setAnalysis(newAnalysis);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // Swallowing the error intentionally.
     } finally {
       setIsLoading(false);
     }
@@ -242,7 +242,6 @@ export default function ChatPage() {
         return [caseData, ...filtered];
       });
     } catch (error) {
-      console.error('Chat Error:', error);
       const errorMsg = {
         id: Date.now().toString(),
         role: 'assistant',
