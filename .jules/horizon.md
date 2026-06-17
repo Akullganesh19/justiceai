@@ -1,0 +1,6 @@
+## 2024-06-17 — React Router v6 Data APIs Migration
+**Risk identified:** The application was using the legacy component-based routing approach (`<BrowserRouter>`, `<Routes>`, `<Route>`) from earlier versions of React Router. As the application grows and integrates features like concurrent rendering, data fetching, and SSR, this pattern ages badly. The ecosystem has moved toward centralized data-driven routing configurations which enable powerful features like layout nesting, data loaders, and early fetching.
+**Migration target:** React Router v6 Data APIs (`createBrowserRouter` and `RouterProvider`).
+**Migrated this session:** Replaced the legacy routing wrapper in `src/main.jsx` with a `createBrowserRouter` configuration array and a `<RouterProvider>`. Extracted the global layout logic (providers, persistent components like scroll to top and command palette, and suspense boundaries) into a dedicated `src/components/layout/AppLayout.jsx` component acting as the root route.
+**Remaining:** Migrate individual pages to use route-level loaders and actions if they handle data fetching natively, rather than relying solely on `useEffect` at the component level.
+**Next session:** Start converting data-heavy pages (like `DashboardPage` or `CaseTrackerPage`) to define and export `loader` functions, integrating them into the route configuration in `src/main.jsx`.
