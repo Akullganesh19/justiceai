@@ -1,0 +1,6 @@
+## 2023-10-27 — Auth/Errors ↔ Analytics Event Bridge
+**Systems connected:** Auth & ErrorBoundary ↔ Analytics
+**Intelligence emerged:** We now have a centralized timeline of user actions (logins/signups) and system errors (client crashes). By correlating errors to the last authenticated user, we gain insights into *which users* are experiencing specific failures, enabling targeted support and impact analysis.
+**Data flows:** Auth System and ErrorBoundary emit isolated CustomEvents on the window object. A loosely-coupled Analytics bridge listens for these events and aggregates them into a central `localStorage` log, associating anonymous errors with the last active user session.
+**Coupling approach:** Event Bridge Pattern. Auth and ErrorBoundary dispatch DOM `CustomEvent`s. The Analytics module (`src/lib/analyticsBridge.js`) simply attaches event listeners to the window. Neither system imports the other. Removing the listener has zero impact on core system functionality.
+**Next connection:** Connect Case Tracker updates to the Notification system (Toast) so users get passive confirmations when their case progress changes without needing direct component coupling.

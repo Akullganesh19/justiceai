@@ -19,6 +19,18 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
+    // Dispatch global error event for Analytics/Monitoring systems to consume
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('justice-ai-error-caught', {
+          detail: {
+            error: error ? error.toString() : 'Unknown error',
+            componentStack: errorInfo ? errorInfo.componentStack : null
+          }
+        })
+      );
+    }
+
     // Log to error reporting service (if configured)
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
