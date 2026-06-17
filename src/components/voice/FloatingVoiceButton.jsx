@@ -140,7 +140,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
             setErrorMsg('Microphone not accessible. Please check permissions.');
             break;
           case 'not-allowed':
-            setErrorMsg('Microphone permission denied. Please allow in browser settings.');
+            setErrorMsg('Microphone permission denied. Please allow access.');
             break;
           case 'network':
             setErrorMsg('Network error. Please check your connection.');
@@ -221,7 +221,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
       } catch (err) {
         console.error('Microphone access error:', err);
         if (err.name === 'NotAllowedError') {
-          setErrorMsg('Microphone permission denied. Please allow in browser settings.');
+          setErrorMsg('Microphone permission denied. Please allow access.');
         } else if (err.name === 'NotFoundError') {
           setErrorMsg('No microphone found. Please connect a microphone.');
         } else if (err.name === 'NotReadableError') {
