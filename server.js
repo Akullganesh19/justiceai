@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -665,10 +665,11 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         // Chunk and embed
         const rawChunks = splitTextIntoChunks(text, 1000, 200);
         let chunksEmbedded = 0;
+        const tempChunks = [];
 
         for (const chunk of rawChunks) {
           const vector = await embeddings.embedQuery(chunk);
-          documentChunks.push({
+          tempChunks.push({
             content: chunk,
             vector: vector,
             source: fileName
@@ -676,17 +677,22 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunksEmbedded++;
         }
 
+        // Atomic append: Only push to the global state if all chunks are successfully embedded
+        documentChunks.push(...tempChunks);
+
         uploadedFiles.push({
           name: fileName,
           size: file.size,
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file to prevent storage quota leaks
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
