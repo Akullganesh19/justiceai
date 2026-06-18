@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Globe, X, Send, Play, Square, Loader2, Zap, AlertTriangle } from 'lucide-react';
+import { phantomFetch } from '../../lib/api';
 
 const BHASHINI_LANGUAGES = [
   { code: 'hi', name: 'Hindi' },
@@ -85,7 +86,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
   useEffect(() => {
     const checkVoiceConfig = async () => {
       try {
-        const response = await fetch('/api/voice/config');
+        const response = await phantomFetch('/api/voice/config');
         const data = await response.json();
         if (data.bhashini.available) {
           setRecognitionMode('bhashini');
@@ -298,7 +299,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
         reader.onerror = reject;
       });
 
-      const response = await fetch('/api/voice/process', {
+      const response = await phantomFetch('/api/voice/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
