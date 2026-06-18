@@ -93,7 +93,7 @@ app.use(helmet({
 
 // CORS with better security
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : '*'),
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : (NODE_ENV === 'production' ? false : '*'),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Ensure uploaded file is always cleaned up, even on parsing/embedding error
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -706,12 +708,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 // Delete specific document chunks by source
 app.delete('/api/documents/:source', (req, res) => {
   const source = decodeURIComponent(req.params.source);
+  const sanitizedSource = String(source).replace(/[\x00-\x1F\x7F]/g, '');
   const beforeCount = documentChunks.length;
-  documentChunks = documentChunks.filter(chunk => chunk.source !== source);
+  documentChunks = documentChunks.filter(chunk => chunk.source !== sanitizedSource);
   const removed = beforeCount - documentChunks.length;
   
   res.json({
-    message: `Removed ${removed} chunks from ${source}`,
+    message: `Removed ${removed} chunks from ${sanitizedSource}`,
     remainingChunks: documentChunks.length
   });
 });
