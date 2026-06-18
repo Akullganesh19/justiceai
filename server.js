@@ -281,6 +281,20 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+// Genesis: Global Auto-Retry utility for external APIs
+async function withRetry(fn, maxAttempts = 3, baseDelayMs = 200) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      console.warn(`[Genesis Auto-Recovery] Attempt ${attempt} failed: ${err.message}. Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,16 +332,20 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const response = await withRetry(async () => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API Error: ${response.status} - ${errText}`);
-  }
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini API Error: ${res.status} - ${errText}`);
+    }
+
+    return res;
+  });
 
   const data = await response.json();
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -354,19 +372,23 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(payload)
-  });
+  const response = await withRetry(async () => {
+    const res = await fetch(DEEPSEEK_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`DeepSeek API Error: ${response.status} - ${errText}`);
-  }
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`DeepSeek API Error: ${res.status} - ${errText}`);
+    }
+
+    return res;
+  });
 
   const data = await response.json();
   const content = data.choices[0].message.content;
@@ -567,20 +589,23 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ulcaApiKey': BHASHINI_API_KEY,
-        'userID': BHASHINI_USER_ID
-      },
-      body: JSON.stringify(configPayload)
-    });
+    const configResponse = await withRetry(async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ulcaApiKey': BHASHINI_API_KEY,
+          'userID': BHASHINI_USER_ID
+        },
+        body: JSON.stringify(configPayload)
+      });
 
-    if (!configResponse.ok) {
-      const errorText = await configResponse.text();
-      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
-    }
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Config Error: ${res.status} - ${errorText}`);
+      }
+      return res;
+    });
 
     const configData = await configResponse.json();
 
@@ -598,20 +623,23 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
-        'Accept': '*/*'
-      },
-      body: JSON.stringify(computePayload)
-    });
+    const computeResponse = await withRetry(async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
+          'Accept': '*/*'
+        },
+        body: JSON.stringify(computePayload)
+      });
 
-    if (!computeResponse.ok) {
-      const errorText = await computeResponse.text();
-      throw new Error(`Bhashini Compute Error: ${computeResponse.status} - ${errorText}`);
-    }
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Compute Error: ${res.status} - ${errorText}`);
+      }
+      return res;
+    });
 
     const computeData = await computeResponse.json();
     
@@ -856,16 +884,19 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
-        });
+        const ollamaResponse = await withRetry(async () => {
+          const res = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData),
+            signal: AbortSignal.timeout(15000) // 15s timeout
+          });
 
-        if (!ollamaResponse.ok) {
-          throw new Error(`Ollama Error: ${await ollamaResponse.text()}`);
-        }
+          if (!res.ok) {
+            throw new Error(`Ollama Error: ${await res.text()}`);
+          }
+          return res;
+        });
 
         const data = await ollamaResponse.json();
         res.json({ 
