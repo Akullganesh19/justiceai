@@ -1,4 +1,5 @@
 import { SYSTEM_PROMPT } from './systemPrompt';
+import { phantomFetch } from './api';
 
 // Route requests to our local Node.js RAG backend instead of raw Ollama
 const RAG_BACKEND_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/chat`;
@@ -7,7 +8,7 @@ export async function sendMessage(conversationHistory, userMessage, options = {}
   const { judgePersonality = 'Neutral', mode = 'copilot', jurisdiction = 'National' } = options;
 
   try {
-    const response = await fetch(RAG_BACKEND_URL, {
+    const response = await phantomFetch(RAG_BACKEND_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
