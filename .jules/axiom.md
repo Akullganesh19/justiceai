@@ -1,0 +1,6 @@
+## 2024-10-24 — Eliminated `auth-fuse.tsx` completely
+**Complexity found:** `src/components/ui/auth-fuse.tsx` was a 400-line file that provided overly abstracted UI components (`Typewriter`, `Label`, `Button`, `Input`, `PasswordInput`) and layout specifically for `AuthPage.jsx`. It also reimplemented the `cn` utility function and imported large external dependencies (`@radix-ui/react-slot`, `@radix-ui/react-label`, `class-variance-authority`) that weren't used anywhere else in the application.
+**Why it existed:** Presumably designed to mimic a generic UI component library or framework, but overengineered for a single specific use case (authentication page) without any reuse across the rest of the application.
+**Eliminated:** `auth-fuse.tsx` was completely deleted. The `AuthPage.jsx` was rewritten to directly use native HTML elements with standard Tailwind classes. Unnecessary dependencies (`@radix-ui/*`, `class-variance-authority`) were uninstalled.
+**Net change:** -410 lines (`auth-fuse.tsx`), +230 lines (`AuthPage.jsx`), 3 dependencies eliminated, 1 full file abstraction layer removed.
+**Next target:** Evaluate `CaseTrackerPage.jsx` and `LegalQuizPage.jsx` for excessive local state, repeated template definitions, or tightly coupled components that could be derived or simplified.
