@@ -77,7 +77,12 @@ export default function FloatingVoiceButton({ onTranscription }) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       setWebSpeechSupported(true);
-      speechRecognitionRef.current = new SpeechRecognition();
+      try {
+        speechRecognitionRef.current = new SpeechRecognition();
+      } catch (err) {
+        console.warn('SpeechRecognition supported but initialization failed:', err);
+        speechRecognitionRef.current = null;
+      }
     }
   }, []);
 
