@@ -1,0 +1,9 @@
+## 🛸 Predictive Intelligence Added
+
+**What:** Implemented `Oracle`, a predictive navigation engine that tracks local page transitions to anticipate the user's next action.
+**Why:** To make the application feel impossibly ahead of the user by reducing cognitive load and laying the groundwork for component and data prefetching.
+**Signal used:** Local `localStorage` Markov chain of the user's own `useLocation` history.
+**How users feel it:** Links the user is highly probable (>60% confidence, min 2 visits) to click next receive a subtle gold pulse, gently guiding them through their natural workflow.
+**Accuracy:** Exacting to the user's historical habits. Requires at least two identical transitions to establish a baseline before predicting.
+**Failure mode:** If prediction is wrong, the normal UI flow takes over smoothly with no broken links or missing data.
+**Next:** Oracle should be expanded to actually prefetch the JavaScript chunks for the predicted route using React's lazy loading mechanisms, or pre-warming the RAG backend cache.

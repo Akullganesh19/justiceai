@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import OracleTracker from './components/ui/OracleTracker';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -58,6 +59,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
+          <OracleTracker />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
           <Suspense fallback={<PageLoader />}>

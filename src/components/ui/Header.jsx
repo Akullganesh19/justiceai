@@ -18,6 +18,7 @@ import {
   Settings2
 } from 'lucide-react';
 import MobileNav from './MobileNav.jsx';
+import useOraclePrediction from './OracleNavIndicator.jsx';
 import CommandPalette from './CommandPalette.jsx';
 
 const navLinks = [
@@ -36,6 +37,7 @@ export default function Header({ onNewCase }) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const predictedPath = useOraclePrediction();
 
   return (
     <>
@@ -56,7 +58,7 @@ export default function Header({ onNewCase }) {
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center gap-1 bg-void/80 backdrop-blur-xl border-2 border-white/5 p-1 rounded-sm shadow-hard">
             {navLinks.map((link) => (
-              <NavLink key={link.to} to={link.to} icon={link.icon}>
+              <NavLink key={link.to} to={link.to} icon={link.icon} predictedPath={predictedPath}>
                 {link.label}
               </NavLink>
             ))}
@@ -118,9 +120,10 @@ export default function Header({ onNewCase }) {
   );
 }
 
-function NavLink({ to, children, icon: Icon }) {
+function NavLink({ to, children, icon: Icon, predictedPath }) {
   const location = useLocation();
   const isActive = location.pathname === to;
+  const isPredicted = predictedPath === to;
 
   return (
     <Link
@@ -128,11 +131,16 @@ function NavLink({ to, children, icon: Icon }) {
       className={`relative flex items-center gap-2 text-[9px] font-extrabold uppercase tracking-[0.2em] transition-all px-4 py-2 rounded-sm border-2 italic ${
         isActive
           ? 'text-midnight bg-gold border-gold/40 shadow-hard'
+          : isPredicted
+          ? 'text-gold border-gold/20 shadow-[0_0_15px_rgba(255,215,0,0.3)] animate-pulse'
           : 'text-text-tertiary border-transparent hover:text-white hover:border-white/10'
       }`}
     >
       {Icon && <Icon className="w-3.5 h-3.5" />}
       {children}
+      {isPredicted && (
+        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-gold shadow-[0_0_8px_rgba(255,215,0,0.8)]" title="Predicted Next Action" />
+      )}
     </Link>
   );
 }
