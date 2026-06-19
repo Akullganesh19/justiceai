@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
+import { predictUserIntent } from '../lib/predictiveIntelligence.js';
 
 const SPECIALIZATIONS = [
   { id: 'all', label: 'All Specializations' },
@@ -347,6 +348,17 @@ export default function LawyerFinderPage() {
   const [selectedSpec, setSelectedSpec] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
+  const [predictedBadge, setPredictedBadge] = useState(false);
+
+  React.useEffect(() => {
+    const prediction = predictUserIntent();
+    if (prediction && prediction.lawyerSpecialization) {
+      setTimeout(() => {
+        setSelectedSpec(prediction.lawyerSpecialization);
+        setPredictedBadge(true);
+      }, 0);
+    }
+  }, []);
 
   const filteredLawyers = useMemo(() => {
     let results = LAWYERS_DATA;
@@ -425,6 +437,11 @@ export default function LawyerFinderPage() {
             />
           </div>
           <div className="relative group">
+            {predictedBadge && (
+              <div className="absolute -top-3 left-4 z-10 px-2 py-0.5 bg-void text-gold text-[8px] uppercase tracking-widest font-extrabold border border-gold/20 rounded-sm">
+                🛸 Predicted from your recent case
+              </div>
+            )}
             <select
               value={selectedSpec}
               onChange={(e) => setSelectedSpec(e.target.value)}
