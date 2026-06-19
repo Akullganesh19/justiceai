@@ -154,21 +154,42 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+        setTimeout(() => setRecentCases(parsed.slice(0, 5)), 0);
+      } catch (_e) {
+        // Suppress parsing errors
+      }
     }
 
+
+
     const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
-    } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
-    } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
-    }
+    setTimeout(() => {
+      if (hour < 12) {
+        setGreeting('Welcome Back');
+        setGreetIcon(Sunrise);
+      } else if (hour < 17) {
+        setGreeting('Afternoon Session');
+        setGreetIcon(Sun);
+      } else {
+        setGreeting('Good Evening');
+        setGreetIcon(Moon);
+      }
+
+      // Check if we have analytics context to personalize immediately
+      try {
+        const analyticsRaw = localStorage.getItem('justice_ai_analytics');
+        if (analyticsRaw) {
+          const analytics = JSON.parse(analyticsRaw);
+          if (analytics.loginCount > 5) {
+            setGreeting('Welcome Back, Advocate');
+          }
+        }
+      } catch(_e) {
+        // Suppress parsing errors
+      }
+    }, 0);
+
+
   }, []);
 
   const containerVariants = {

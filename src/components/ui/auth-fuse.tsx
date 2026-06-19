@@ -187,7 +187,24 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign In form submitted');
+    const email = event.currentTarget.email?.value || 'unknown@justiceai.law';
+
+    // Simulate auth API call
+    console.log('UI: Sign In form submitted, authenticating...');
+    setTimeout(() => {
+      console.log('UI: Authentication successful');
+      // 🧠 Synapse Event Bridge: Auth -> Global Analytics
+      const authEvent = new CustomEvent('justice-ai-auth-success', {
+        detail: {
+          userEmail: email,
+          timestamp: new Date().toISOString()
+        }
+      });
+      window.dispatchEvent(authEvent);
+
+      // Normally we'd navigate here, simulating success flow
+      window.location.href = '/dashboard';
+    }, 500);
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -229,7 +246,27 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign Up form submitted');
+    const email = event.currentTarget.email?.value || 'unknown@justiceai.law';
+    const name = event.currentTarget.name?.value || 'Unknown User';
+
+    // Simulate auth API call
+    console.log('UI: Sign Up form submitted, creating account...');
+    setTimeout(() => {
+      console.log('UI: Account creation successful');
+      // 🧠 Synapse Event Bridge: Auth -> Global Analytics
+      const authEvent = new CustomEvent('justice-ai-auth-success', {
+        detail: {
+          userEmail: email,
+          userName: name,
+          isNewUser: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+      window.dispatchEvent(authEvent);
+
+      // Normally we'd navigate here, simulating success flow
+      window.location.href = '/dashboard';
+    }, 500);
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
