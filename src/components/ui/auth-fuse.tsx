@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useState, useId, useEffect } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import * as LabelPrimitive from '@radix-ui/react-label';
-import { cva, type VariantProps } from 'class-variance-authority';
 import { Eye, EyeOff, Scale } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -76,54 +75,52 @@ export function Typewriter({
   );
 }
 
-const labelVariants = cva(
-  'text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-);
-
 const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root ref={ref} className={cn(labelVariants(), className)} {...props} />
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn('text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70', className)}
+    {...props}
+  />
 ));
 Label.displayName = LabelPrimitive.Root.displayName;
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold tracking-widest uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]',
-  {
-    variants: {
-      variant: {
-        default: 'bg-purple text-white hover:bg-purple-light shadow-lg shadow-purple/10',
-        destructive: 'bg-accent-error text-white hover:bg-red-600',
-        outline:
-          'border border-white/5 bg-raised/50 hover:bg-void/5 hover:border-purple/30 text-text-primary',
-        secondary: 'bg-ink text-white hover:bg-ink/80 border border-white/5',
-        ghost: 'hover:bg-void/5 text-text-secondary hover:text-white',
-        link: 'text-purple underline-offset-4 hover:underline',
-      },
-      size: {
-        default: 'h-11 px-6 py-2',
-        sm: 'h-9 rounded-lg px-4',
-        lg: 'h-14 rounded-2xl px-8',
-        icon: 'h-10 w-10',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  },
-);
-interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
 }
+
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
+
+    const baseStyles = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold tracking-widest uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]';
+
+    const variants = {
+      default: 'bg-purple text-white hover:bg-purple-light shadow-lg shadow-purple/10',
+      destructive: 'bg-accent-error text-white hover:bg-red-600',
+      outline: 'border border-white/5 bg-raised/50 hover:bg-void/5 hover:border-purple/30 text-text-primary',
+      secondary: 'bg-ink text-white hover:bg-ink/80 border border-white/5',
+      ghost: 'hover:bg-void/5 text-text-secondary hover:text-white',
+      link: 'text-purple underline-offset-4 hover:underline',
+    };
+
+    const sizes = {
+      default: 'h-11 px-6 py-2',
+      sm: 'h-9 rounded-lg px-4',
+      lg: 'h-14 rounded-2xl px-8',
+      icon: 'h-10 w-10',
+    };
+
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <Comp
+        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        ref={ref}
+        {...props}
+      />
     );
   },
 );
