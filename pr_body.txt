@@ -1,0 +1,9 @@
+## 🛸 Predictive Intelligence Added
+
+**What:** An intelligent default prediction engine that pre-selects contextually relevant options across the platform (Cost Estimator, Lawyer Finder, Document Generator) based on the user's most recent interaction.
+**Why:** To reduce friction and make the application feel anticipatory. Users shouldn't have to manually select their domain (e.g., Consumer Law) repeatedly if they just explained a consumer issue to the AI.
+**Signal used:** `justice_ai_history` stored in local storage, specifically the most recent case title, AI-assigned caseType, and the first few user messages. This is passed through a keyword heuristic engine (`predictUserIntent`).
+**How users feel it:** The UI automatically pre-selects relevant inputs (e.g., "Consumer Protection" case type, "Consumer Complaint" document template, "Consumer" lawyer specialization) and displays a subtle badge reading "🛸 Predicted from your recent case", eliminating repetitive manual input.
+**Accuracy:** High for distinct domains (criminal, divorce, consumer, property, rti). Less accurate for highly nuanced civil cases where overlap occurs.
+**Failure mode:** If no clear prediction is made, or the data doesn't map to a specific domain, the UI simply falls back to its original neutral state without predictions. The user can always manually override a prediction.
+**Next:** Pre-fetching documents or underlying data when the prediction confidence is very high.

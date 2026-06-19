@@ -29,6 +29,7 @@ import {
 import { useToast } from '../components/ui/Toast';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
+import { predictUserIntent } from '../lib/predictiveIntelligence.js';
 
 // Document templates
 const DOCUMENT_TEMPLATES = {
@@ -169,6 +170,17 @@ export default function DocumentGeneratorPage() {
   const [formData, setFormData] = useState({});
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [predictedBadge, setPredictedBadge] = useState(false);
+
+  React.useEffect(() => {
+    const prediction = predictUserIntent();
+    if (prediction && prediction.documentTemplateId && DOCUMENT_TEMPLATES[prediction.documentTemplateId]) {
+      setTimeout(() => {
+        setSelectedTemplate(DOCUMENT_TEMPLATES[prediction.documentTemplateId]);
+        setPredictedBadge(true);
+      }, 0);
+    }
+  }, []);
 
   const handleFieldChange = (id, value) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -283,6 +295,11 @@ export default function DocumentGeneratorPage() {
               </button>
 
               <div className="bg-void rounded-sm border-2 border-white/10 p-10 space-y-10 shadow-hard relative overflow-hidden">
+                {predictedBadge && (
+                  <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-void text-gold text-[10px] uppercase tracking-widest font-extrabold border border-gold/20 rounded-sm">
+                    🛸 Predicted from your recent case
+                  </div>
+                )}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-3xl rounded-sm" />
                 <div className="flex items-center gap-4 relative z-10">
                   <div className="w-12 h-12 bg-void border-2 border-gold/20 rounded-sm flex items-center justify-center text-gold shadow-luxe">

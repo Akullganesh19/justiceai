@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import Footer from '../components/ui/Footer.jsx';
+import { predictUserIntent } from '../lib/predictiveIntelligence.js';
 
 const CASE_TYPES = [
   {
@@ -183,6 +184,17 @@ export default function EstimatorPage() {
   const [cityTier, setCityTier] = useState('tier2');
   const [complexity, setComplexity] = useState('simple');
   const [claimAmount, setClaimAmount] = useState('');
+  const [predictedBadge, setPredictedBadge] = useState(false);
+
+  React.useEffect(() => {
+    const prediction = predictUserIntent();
+    if (prediction && prediction.estimatorCaseType) {
+      setTimeout(() => {
+        setCaseType(prediction.estimatorCaseType);
+        setPredictedBadge(true);
+      }, 0);
+    }
+  }, []);
 
   const estimate = useMemo(() => {
     if (!caseType) return null;
@@ -328,6 +340,11 @@ export default function EstimatorPage() {
                   01
                 </span>
                 LOG_CASE_TYPE
+                {predictedBadge && (
+                  <span className="ml-auto text-[9px] bg-gold/10 text-gold px-2 py-1 rounded-sm tracking-wider">
+                    🛸 Predicted from your recent case
+                  </span>
+                )}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {CASE_TYPES.map((ct) => (
