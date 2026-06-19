@@ -188,6 +188,18 @@ function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign In form submitted');
+
+    // Synapse Connection: Auth -> Errors/Analytics
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    if (email) {
+      console.log('[SYNAPSE:DISPATCH] Auth system broadcasting user identity', email);
+      window.dispatchEvent(
+        new CustomEvent('justice-auth-identified', {
+          detail: { email, role: 'advocate', context: 'sign_in' },
+        })
+      );
+    }
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -230,6 +242,19 @@ function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign Up form submitted');
+
+    // Synapse Connection: Auth -> Errors/Analytics
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
+    if (email) {
+      console.log('[SYNAPSE:DISPATCH] Auth system broadcasting new user identity', email);
+      window.dispatchEvent(
+        new CustomEvent('justice-auth-identified', {
+          detail: { email, name, role: 'advocate', context: 'sign_up' },
+        })
+      );
+    }
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
