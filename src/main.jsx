@@ -15,6 +15,29 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// 🧠 Synapse Event Bridge Listener: Capture Auth Analytics Globally
+if (typeof window !== 'undefined') {
+  window.addEventListener('justice-ai-auth-success', (event) => {
+    console.log('🧠 Synapse Event Bridge Captured Auth Success:', event.detail);
+    try {
+      const analyticsRaw = localStorage.getItem('justice_ai_analytics') || '{}';
+      const analytics = JSON.parse(analyticsRaw);
+      analytics.lastLogin = event.detail.timestamp;
+      analytics.loginCount = (analytics.loginCount || 0) + 1;
+      if (event.detail.isNewUser) {
+        analytics.isNewUser = true;
+      }
+      // Store globally known user properties
+      if (event.detail.userName) {
+        analytics.lastKnownName = event.detail.userName;
+      }
+      localStorage.setItem('justice_ai_analytics', JSON.stringify(analytics));
+    } catch (_e) {
+      // Suppress parsing errors
+    }
+  });
+}
+
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
 const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
