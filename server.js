@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
       }
     }
 
@@ -746,7 +748,10 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Get the latest user message to search for context
-    const latestUserMessage = messages[messages.length - 1].content;
+    let latestUserMessage = messages[messages.length - 1].content;
+    if (typeof latestUserMessage !== 'string') {
+      latestUserMessage = String(latestUserMessage);
+    }
     
     let contextStr = '';
     let retrievedSources = [];
@@ -1015,3 +1020,5 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
+
+export { app };
