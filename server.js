@@ -281,6 +281,31 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+// Genesis: Self-Healing Architecture
+// Protects external API calls with exponential backoff retries
+async function withRetry(operationName, fn, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      // Don't retry on certain unrecoverable errors like 401 Unauthorized or 403 Forbidden
+      if (err.message && (err.message.includes('401') || err.message.includes('403') || err.message.includes('missing'))) {
+        logger.error(`[Genesis] ${operationName} failed with unrecoverable error: ${err.message}. Fast failing.`);
+        throw err;
+      }
+
+      if (attempt === maxAttempts) {
+        logger.error(`[Genesis] ${operationName} failed after ${maxAttempts} attempts. Giving up. Error: ${err.message}`);
+        throw err;
+      }
+
+      const delayMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`[Genesis] ${operationName} failed (Attempt ${attempt}/${maxAttempts}). Retrying in ${delayMs}ms... Error: ${err.message}`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,16 +343,19 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const response = await withRetry('Gemini API', async () => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API Error: ${response.status} - ${errText}`);
-  }
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini API Error: ${res.status} - ${errText}`);
+    }
+    return res;
+  });
 
   const data = await response.json();
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -354,19 +382,22 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(payload)
-  });
+  const response = await withRetry('DeepSeek API', async () => {
+    const res = await fetch(DEEPSEEK_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`DeepSeek API Error: ${response.status} - ${errText}`);
-  }
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`DeepSeek API Error: ${res.status} - ${errText}`);
+    }
+    return res;
+  });
 
   const data = await response.json();
   const content = data.choices[0].message.content;
@@ -567,20 +598,23 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ulcaApiKey': BHASHINI_API_KEY,
-        'userID': BHASHINI_USER_ID
-      },
-      body: JSON.stringify(configPayload)
-    });
+    const configResponse = await withRetry('Bhashini Config API', async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ulcaApiKey': BHASHINI_API_KEY,
+          'userID': BHASHINI_USER_ID
+        },
+        body: JSON.stringify(configPayload)
+      });
 
-    if (!configResponse.ok) {
-      const errorText = await configResponse.text();
-      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
-    }
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Config Error: ${res.status} - ${errorText}`);
+      }
+      return res;
+    });
 
     const configData = await configResponse.json();
 
@@ -598,20 +632,23 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
-        'Accept': '*/*'
-      },
-      body: JSON.stringify(computePayload)
-    });
+    const computeResponse = await withRetry('Bhashini Compute API', async () => {
+      const res = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
+          'Accept': '*/*'
+        },
+        body: JSON.stringify(computePayload)
+      });
 
-    if (!computeResponse.ok) {
-      const errorText = await computeResponse.text();
-      throw new Error(`Bhashini Compute Error: ${computeResponse.status} - ${errorText}`);
-    }
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Bhashini Compute Error: ${res.status} - ${errorText}`);
+      }
+      return res;
+    });
 
     const computeData = await computeResponse.json();
     
