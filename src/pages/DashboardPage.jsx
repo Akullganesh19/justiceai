@@ -154,7 +154,7 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
+        setTimeout(() => setRecentCases(parsed.slice(0, 5)), 0);
       } catch (e) {}
     }
 

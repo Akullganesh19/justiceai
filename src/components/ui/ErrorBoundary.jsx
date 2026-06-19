@@ -9,6 +9,21 @@ class ErrorBoundary extends React.Component {
       error: null,
       errorInfo: null,
     };
+    this.userContext = null;
+  }
+
+  componentDidMount() {
+    this.handleAuthEvent = (e) => {
+      console.log('[SYNAPSE:RECEIVE] ErrorBoundary received user identity', e.detail.email);
+      this.userContext = e.detail;
+    };
+    window.addEventListener('justice-auth-identified', this.handleAuthEvent);
+  }
+
+  componentWillUnmount() {
+    if (this.handleAuthEvent) {
+      window.removeEventListener('justice-auth-identified', this.handleAuthEvent);
+    }
   }
 
   static getDerivedStateFromError(error) {
@@ -17,11 +32,17 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Synapse Connection: Auth -> Errors
+    if (this.userContext) {
+      console.error('[ENRICHED_ERROR_LOG] Caught error for user:', this.userContext.email, error, errorInfo);
+    } else {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      this.props.onError(error, errorInfo, this.userContext);
     }
   }
 
