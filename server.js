@@ -22,10 +22,60 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Regex patterns for detecting PII in text
+const piiPatterns = {
+  email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  phone: /\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
+  ssn: /\b\d{3}[- ]?\d{2}[- ]?\d{4}\b/g,
+  creditCard: /\b(?:\d[ -]*?){13,16}\b/g
+};
+
+// Structural redaction formatter
+const redactFormat = winston.format((info) => {
+  const SENSITIVE_KEYS = ['password', 'token', 'messages', 'prompt', 'audioContent', 'text'];
+
+  const redactString = (str) => {
+    if (typeof str !== 'string') return str;
+    let redacted = str;
+    redacted = redacted.replace(piiPatterns.email, '[REDACTED_EMAIL]');
+    redacted = redacted.replace(piiPatterns.ssn, '[REDACTED_SSN]');
+    redacted = redacted.replace(piiPatterns.creditCard, '[REDACTED_CARD]');
+    return redacted;
+  };
+
+  const redactObject = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(redactObject);
+
+    const redactedObj = { ...obj };
+    for (const key of Object.keys(redactedObj)) {
+      if (SENSITIVE_KEYS.includes(key)) {
+        redactedObj[key] = '[REDACTED_SENSITIVE_DATA]';
+      } else if (typeof redactedObj[key] === 'string') {
+        redactedObj[key] = redactString(redactedObj[key]);
+      } else if (typeof redactedObj[key] === 'object') {
+        redactedObj[key] = redactObject(redactedObj[key]);
+      }
+    }
+    return redactedObj;
+  };
+
+  info.message = redactString(info.message);
+
+  for (const key of Object.keys(info)) {
+    if (key !== 'level' && key !== 'message' && key !== 'timestamp' && typeof key !== 'symbol') {
+      info[key] = redactObject(info[key]);
+    }
+  }
+
+  return info;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -728,7 +778,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  logger.info('Incoming POST /api/chat', { bodyKeys: Object.keys(req.body || {}) });
   try {
     const { 
       messages, 
@@ -821,7 +871,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info("Routing query to Ollama", { promptLength: latestUserMessage.length });
     
     try {
       if (stream) {
@@ -940,7 +990,7 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error('Chat Error', { error: err.message, stack: process.env.NODE_ENV === 'development' ? err.stack : undefined });
     res.status(500).json({ 
       error: err.message,
       details: process.env.NODE_ENV === 'development' ? err.stack : undefined
@@ -969,7 +1019,7 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err.message, stack: err.stack });
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
