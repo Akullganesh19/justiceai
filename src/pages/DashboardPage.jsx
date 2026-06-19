@@ -22,6 +22,7 @@ import {
   HeartHandshake,
   BookMarked,
   AlertCircle,
+  Timer,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -78,6 +79,17 @@ function StatCard({ icon: Icon, label, value, suffix = '', color = 'text-gold' }
       </div>
     </div>
   );
+}
+
+// Calculate days until a date string
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const hearingDate = new Date(dateStr);
+  hearingDate.setHours(0, 0, 0, 0);
+  const diff = hearingDate - today;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 function QuickActionCard({ icon: Icon, title, description, path, accent }) {
@@ -146,6 +158,7 @@ function RecentCaseCard({ caseData }) {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [recentCases, setRecentCases] = useState([]);
+  const [activeDeadlines, setActiveDeadlines] = useState([]);
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
@@ -154,20 +167,42 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
+        setTimeout(() => setRecentCases(parsed.slice(0, 5)), 0);
+      } catch (e) {}
+    }
+
+    const savedTracker = localStorage.getItem('justice_ai_case_tracker_v2');
+    if (savedTracker) {
+      try {
+        const cases = JSON.parse(savedTracker);
+        const deadlines = [];
+        cases.forEach(c => {
+          if (!c.steps) return;
+          const nextStep = c.steps.find(s => !s.completed && s.expectedDate);
+          if (nextStep) {
+            deadlines.push({
+              caseId: c.id,
+              caseTitle: c.title || 'Untitled Case',
+              stepLabel: nextStep.label,
+              daysLeft: daysUntil(nextStep.expectedDate)
+            });
+          }
+        });
+        deadlines.sort((a, b) => a.daysLeft - b.daysLeft);
+        setTimeout(() => setActiveDeadlines(deadlines.slice(0, 3)), 0);
       } catch (e) {}
     }
 
     const hour = new Date().getHours();
     if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
+      setTimeout(() => setGreeting('Welcome Back'), 0);
+      setTimeout(() => setGreetIcon(Sunrise), 0);
     } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
+      setTimeout(() => setGreeting('Afternoon Session'), 0);
+      setTimeout(() => setGreetIcon(Sun), 0);
     } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
+      setTimeout(() => setGreeting('Good Evening'), 0);
+      setTimeout(() => setGreetIcon(Moon), 0);
     }
   }, []);
 
@@ -325,6 +360,38 @@ export default function DashboardPage() {
 
             {/* Side Terminal: Activity & Insight */}
             <div className="space-y-12">
+              {activeDeadlines.length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-6">
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
+                      <div className="w-2 h-8 bg-red-500 shadow-luxe" />
+                      URGENT_DEADLINES
+                    </h2>
+                  </div>
+                  <div className="space-y-4">
+                    {activeDeadlines.map((step, i) => (
+                      <div
+                        key={i}
+                        className="p-5 rounded-sm bg-void border-2 border-white/5 relative overflow-hidden shadow-hard group cursor-pointer hover:border-red-500/30 transition-all"
+                        onClick={() => navigate('/tracker')}
+                      >
+                        <div className={`absolute top-0 right-0 w-2 h-full ${step.daysLeft <= 3 ? 'bg-red-500' : 'bg-gold'}`} />
+                        <div className="pr-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Timer className={`w-4 h-4 ${step.daysLeft <= 3 ? 'text-red-500 animate-pulse' : 'text-gold'}`} />
+                            <span className={`text-[10px] uppercase font-bold tracking-widest ${step.daysLeft <= 3 ? 'text-red-500' : 'text-gold'}`}>
+                              {step.daysLeft < 0 ? `OVERDUE BY ${Math.abs(step.daysLeft)} DAYS` : step.daysLeft === 0 ? 'DUE TODAY' : `DUE IN ${step.daysLeft} DAYS`}
+                            </span>
+                          </div>
+                          <h4 className="text-white font-bold uppercase tracking-wide text-sm truncate">{step.stepLabel}</h4>
+                          <p className="text-xs text-text-tertiary mt-1 truncate">{step.caseTitle}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between border-b border-white/5 pb-6">
                 <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
                   <div className="w-2 h-8 bg-gold shadow-luxe" />
