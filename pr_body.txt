@@ -1,0 +1,10 @@
+## 🌀 Invisible Infrastructure Added
+
+**What:** A `fetchWithRetry` network wrapper implementing exponential backoff with jitter.
+**Hot path:** LLM fallback chains (Gemini, DeepSeek) and voice processing pipelines (Bhashini).
+**Before:** Third-party integrations used native `fetch` with no retry logic, failing immediately on transient network errors or rate limits (429/5xx).
+**After:** External requests automatically retry on transient failures with exponential backoff, gracefully returning the error only if max retries are exceeded.
+**Users notice:** Nothing — but the app feels faster and significantly more reliable under poor network conditions or heavy load.
+**Measurable via:** Server logs (`logger.warn`) tracking retry attempts instead of immediate 500 errors propagating to the client.
+**Correctness risk:** Safe. Retries only occur on 429 and 5xx errors. The payload is stringified JSON, which can be safely re-read on subsequent attempts without stream exhaustion.
+**Next:** Implement stale-while-revalidate caching for frequently accessed, slowly changing reference data.
