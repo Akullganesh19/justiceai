@@ -281,6 +281,32 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+// Auto-Retry with Exponential Backoff for 3rd Party API Calls
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok || (response.status >= 400 && response.status < 500 && response.status !== 429)) {
+        // Return if successful, or if client error (but not rate limit)
+        return response;
+      }
+
+      if (attempt === maxAttempts) return response;
+
+      // Calculate backoff: 100ms -> 200ms -> 400ms
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`API request to ${url} failed with status ${response.status}. Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxAttempts})`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`Network error for ${url}: ${err.message}. Retrying in ${backoffMs}ms... (Attempt ${attempt}/${maxAttempts})`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,7 +344,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +380,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +593,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +624,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -645,8 +671,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +708,17 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (cleanupErr) {
+          console.error(`Failed to clean up file ${filePath}:`, cleanupErr);
+        }
       }
     }
 
