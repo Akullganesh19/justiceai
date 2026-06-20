@@ -22,10 +22,68 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Winston logger
+// Initialize Winston logger with PII redaction
+import util from 'util';
+
+const redactPII = winston.format((info) => {
+  const maskEmail = (email) => {
+    const parts = email.split('@');
+    if (parts.length !== 2) return email;
+    const [name, domain] = parts;
+    return `${name[0]}***@${domain}`;
+  };
+
+  const redactString = (str) => {
+    if (typeof str !== 'string') return str;
+    return str
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, match => maskEmail(match))
+      .replace(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/g, '[REDACTED_PHONE]')
+      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[REDACTED_AADHAAR]')
+      // Avoid matching timestamps (e.g. 1700000000000) by requiring spaces/dashes, or card format strictly
+      .replace(/\b\d{4}[ -]\d{4}[ -]\d{4}[ -]\d{4}\b/g, '[REDACTED_CARD]');
+  };
+
+  const traverseAndRedact = (obj, seen = new WeakSet()) => {
+    if (typeof obj === 'string') return redactString(obj);
+    if (typeof obj !== 'object' || obj === null) return obj;
+
+    // Handle circular references
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    if (obj instanceof Error) {
+      const errObj = { name: obj.name, message: redactString(obj.message), stack: redactString(obj.stack) };
+      // Also redact custom properties attached to errors
+      for (const key of Object.keys(obj)) {
+        errObj[key] = traverseAndRedact(obj[key], seen);
+      }
+      return errObj;
+    }
+    if (obj instanceof Date) {
+      return obj; // Let winston format handle dates natively
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => traverseAndRedact(item, seen));
+    }
+
+    const newObj = {};
+    for (const key of Object.keys(obj)) {
+      newObj[key] = traverseAndRedact(obj[key], seen);
+    }
+    for (const sym of Object.getOwnPropertySymbols(obj)) {
+      newObj[sym] = traverseAndRedact(obj[sym], seen);
+    }
+    return newObj;
+  };
+
+  return traverseAndRedact(info);
+});
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactPII(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -35,6 +93,11 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+// Patch console methods to route through Winston for structural redaction
+console.log = (...args) => logger.info(util.format(...args));
+console.error = (...args) => logger.error(util.format(...args));
+console.warn = (...args) => logger.warn(util.format(...args));
 
 const app = express();
 
