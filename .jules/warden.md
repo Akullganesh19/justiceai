@@ -1,0 +1,6 @@
+## 2026-06-20 — Plaintext PII logging in backend Chat route
+**Data traced:** User queries containing emails, phone numbers, aadhaar, and card numbers.
+**Exposure found:** `server.js` was using `console.log("Routing query to Ollama: " + latestUserMessage.substring(0, 50))` which directly exposed user chat query contents, as well as `console.error` and default error objects that cascaded through error reporting paths.
+**Fix:** Created a custom `winston` formatter (`redactPII`) that deeply traverses objects and strings, irreversibly masking emails (e.g. `s***@gmail.com`) and completely redacting phone, Aadhaar, and credit card numbers. Overrode global `console.log`, `console.error`, and `console.warn` to funnel through this Winston logger, structurally protecting all existing and future backend logging paths.
+**Coverage confirmed:** Start of Express backend, firing chat requests holding mock PII, then querying `logs/combined.log` confirmed interception and correct irreversible masking before the log is printed or saved.
+**Still exposed elsewhere:** The client UI (e.g. `auth-fuse.tsx`) uses `console.log` for form events. Depending on what is tracked there, client-side PII could leak in developer tools. There are also data models exported as document templates that haven't been secured at a field level, and `documentChunks` in memory RAG are fully plaintext.
