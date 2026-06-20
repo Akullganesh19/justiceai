@@ -19,6 +19,16 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
+    // Dispatch a custom event with error telemetry
+    const telemetryEvent = new CustomEvent('justice-telemetry-error', {
+      detail: {
+        error: error.toString(),
+        componentStack: errorInfo?.componentStack,
+        timestamp: new Date().toISOString()
+      }
+    });
+    window.dispatchEvent(telemetryEvent);
+
     // Log to error reporting service (if configured)
     if (this.props.onError) {
       this.props.onError(error, errorInfo);

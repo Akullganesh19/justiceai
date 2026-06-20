@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { initTelemetryBridge } from './lib/TelemetryBridge';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -14,6 +15,10 @@ const handleGlobalTranscription = (text) => {
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
   window.dispatchEvent(event);
 };
+
+// Initialize Synapse telemetry bridge
+initTelemetryBridge();
+
 
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));

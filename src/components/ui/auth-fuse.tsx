@@ -187,7 +187,18 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign In form submitted');
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    // Save to local storage
+    const userContext = { email, timestamp: new Date().toISOString() };
+    localStorage.setItem('justice_auth_user', JSON.stringify(userContext));
+
+    // Dispatch event
+    const loginEvent = new CustomEvent('justice-auth-login', { detail: userContext });
+    window.dispatchEvent(loginEvent);
+
+    console.log('UI: Sign In form submitted', userContext);
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -229,7 +240,19 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign Up form submitted');
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
+
+    // Save to local storage
+    const userContext = { email, name, timestamp: new Date().toISOString() };
+    localStorage.setItem('justice_auth_user', JSON.stringify(userContext));
+
+    // Dispatch event
+    const signupEvent = new CustomEvent('justice-auth-signup', { detail: userContext });
+    window.dispatchEvent(signupEvent);
+
+    console.log('UI: Sign Up form submitted', userContext);
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
