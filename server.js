@@ -281,6 +281,36 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+// Resilient Network Fetch with Exponential Backoff
+async function fetchWithRetry(url, options = {}, maxRetries = 3, initialDelay = 500) {
+  let retries = 0;
+  while (true) {
+    try {
+      const response = await fetch(url, options);
+      // Only retry on 429 (Rate Limit) and 5xx (Server Errors)
+      if (response.ok || (response.status !== 429 && response.status < 500)) {
+        return response;
+      }
+
+      if (retries >= maxRetries) {
+        return response; // Give up and return the failing response
+      }
+
+      logger.warn(`API returned ${response.status} for ${url}, retrying (${retries + 1}/${maxRetries})...`);
+    } catch (error) {
+      if (retries >= maxRetries) {
+        throw error; // Give up and throw network error
+      }
+      logger.warn(`Network error for ${url}: ${error.message}, retrying (${retries + 1}/${maxRetries})...`);
+    }
+
+    // Calculate delay with exponential backoff and jitter
+    const delay = initialDelay * Math.pow(2, retries) + Math.random() * 100;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    retries++;
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,7 +348,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +384,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +597,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +628,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
