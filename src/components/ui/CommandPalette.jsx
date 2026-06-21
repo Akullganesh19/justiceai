@@ -196,6 +196,15 @@ export default function CommandPalette() {
   const listRef = useRef(null);
   const navigate = useNavigate();
 
+  const [recentCommands, setRecentCommands] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_recent_commands');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   // Keyboard shortcut to open
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -223,7 +232,14 @@ export default function CommandPalette() {
 
   // Filter commands
   const filteredCommands = useMemo(() => {
-    if (!query.trim()) return ALL_COMMANDS;
+    if (!query.trim()) {
+      if (recentCommands.length > 0) {
+        const recents = recentCommands.map(id => ALL_COMMANDS.find(c => c.id === id)).filter(Boolean);
+        const others = ALL_COMMANDS.filter(c => !recentCommands.includes(c.id));
+        return [...recents, ...others];
+      }
+      return ALL_COMMANDS;
+    }
     const q = query.toLowerCase();
     return ALL_COMMANDS.filter(
       (cmd) =>
@@ -231,17 +247,30 @@ export default function CommandPalette() {
         cmd.group.toLowerCase().includes(q) ||
         cmd.description?.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, recentCommands]);
 
   // Group commands
   const groupedCommands = useMemo(() => {
     const groups = {};
-    filteredCommands.forEach((cmd) => {
-      if (!groups[cmd.group]) groups[cmd.group] = [];
-      groups[cmd.group].push(cmd);
-    });
+
+    if (!query.trim() && recentCommands.length > 0) {
+      const recents = recentCommands.map(id => ALL_COMMANDS.find(c => c.id === id)).filter(Boolean);
+      if (recents.length > 0) {
+        groups['Recent'] = recents;
+      }
+      ALL_COMMANDS.filter(c => !recentCommands.includes(c.id)).forEach((cmd) => {
+        if (!groups[cmd.group]) groups[cmd.group] = [];
+        groups[cmd.group].push(cmd);
+      });
+    } else {
+      filteredCommands.forEach((cmd) => {
+        if (!groups[cmd.group]) groups[cmd.group] = [];
+        groups[cmd.group].push(cmd);
+      });
+    }
+
     return groups;
-  }, [filteredCommands]);
+  }, [filteredCommands, query, recentCommands]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -278,6 +307,15 @@ export default function CommandPalette() {
   }, [activeIndex]);
 
   const handleSelect = (cmd) => {
+    const newRecents = [cmd.id, ...recentCommands.filter(id => id !== cmd.id)].slice(0, 5);
+    setRecentCommands(newRecents);
+
+    try {
+      localStorage.setItem('justice_ai_recent_commands', JSON.stringify(newRecents));
+    } catch (e) {
+      // Ignore localStorage errors (e.g., in incognito or strict privacy modes)
+    }
+
     setIsOpen(false);
     setQuery('');
     navigate(cmd.action);
