@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** Centralized Winston log redaction and removed user prompt query console logs in `server.js`
+**Data classification:** PII (Emails, Phones, SSNs, Credit Cards) and Raw User Interaction Data
+**Exposure before:** User prompts and parsed payloads containing potential PII were logged in plaintext directly to standard output via hardcoded `console.log`, `console.warn`, and `console.error` methods, accessible by any process scraping application logs.
+**Fix:** Created a custom regex-driven Winston formatter mapped to the global `logger` instance. Masked PII string patterns and gracefully handled circular references and `Error` objects. Migrated all scattered `console.*` outputs to `logger.*` invocations to mandate routing through the compliance filter. Eliminated the query prompt string logging entirely.
+**Verified:** Confirmed data flow coverage via `/api/chat` using mock PII. Ensured `[REDACTED_*]` masking works effectively without breaking internal logic, memory parsing or raising TypeErrors on Circular structures.
+**Remaining gaps:** The current scope is limited to `server.js` Express `winston` logs. Client-side trackers, potential exceptions unhandled outside Express, or database stores (if caching exists) may still leak data. Embedded PII inside uploaded PDF/TXT blobs during `parsePdf` extraction isn't sanitized on disk or in the RAG chunks.
