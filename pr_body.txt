@@ -1,0 +1,9 @@
+## 🌌 Emergent Feature Added
+
+**What:** Global Command Palette Recent History
+**Derivation:** This product relies on a global Command Palette (`Ctrl+K`) for fast navigation, but it previously started as a static list. Users frequently navigate to the same set of tools (e.g., Case Tracker, Estimator) during repeated workflows. Therefore, users obviously need a memory of their recent searches because having to repeatedly search for the same commonly used tools adds friction to an otherwise efficient navigation mechanism.
+**Why it was missing:** The Command Palette was originally built as a static filter rather than an adaptive search tool with a persistence layer.
+**User story:** As a user, when I open the Command Palette, I immediately see my 5 most recently selected commands at the top without typing, allowing instant navigation back to my frequently used tools.
+**Data used:** LocalStorage (`justice_ai_recent_commands`) and existing Command definitions.
+**Discovery:** Users will see the new "Recent" section at the top of the Command Palette the next time they use it after their first command selection.
+**Next:** "Dashboard Activity Feed" — combining recent cases and recent commands into one stream.
