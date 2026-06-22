@@ -57,8 +57,11 @@ const WEB_SPEECH_LANGUAGES = [
   { code: 'ur-IN', name: 'Urdu' },
 ];
 
-export default function FloatingVoiceButton({ onTranscription }) {
+import { useVoiceTranscription } from '../../contexts/VoiceTranscriptionContext';
+
+export default function FloatingVoiceButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const { dispatchTranscription } = useVoiceTranscription();
   const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState('en');
   const [transcription, setTranscription] = useState('');
@@ -321,8 +324,8 @@ export default function FloatingVoiceButton({ onTranscription }) {
   };
 
   const handleConfirm = () => {
-    if (transcription && onTranscription) {
-      onTranscription(transcription);
+    if (transcription) {
+      dispatchTranscription(transcription);
       setTranscription('');
       setIsOpen(false);
     }
