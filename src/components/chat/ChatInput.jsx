@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useVoiceTranscription } from '../../contexts/VoiceTranscriptionContext';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
   const [text, setText] = useState('');
@@ -33,6 +34,15 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
     }
   };
 
+  const { consumeTranscription } = useVoiceTranscription();
+
+  useEffect(() => {
+    const newText = consumeTranscription();
+    if (newText) {
+      setText((prev) => (prev ? `${prev} ${newText}` : newText));
+    }
+  }, [consumeTranscription]);
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -40,16 +50,6 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
     }
   }, [text]);
 
-  useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
-
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">

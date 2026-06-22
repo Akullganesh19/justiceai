@@ -1,0 +1,12 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated global DOM `CustomEvent` ('justice-ai-transcription') to React Context API (`VoiceTranscriptionContext`).
+**Risk it eliminates:** Relying on global `window` events for localized state sharing is a brittle anti-pattern in React that scales poorly, breaks type-safety, makes tests harder, and invites memory leaks.
+**Why now:** As the codebase grows and more components become deeply nested, tracing floating event dispatches becomes a nightmare. Context is the standard, native solution.
+**Migration approach:**
+- Created `VoiceTranscriptionContext` with a queue-like `consumeTranscription` pattern.
+- Wrapped `main.jsx` with the new Provider.
+- Hooked up `FloatingVoiceButton` as the dispatcher.
+- Hooked up `ChatInput` as the consumer.
+**Remaining:** Identify any other usages of `CustomEvent` or raw `window.addEventListener` for application state and migrate them to Context or local state.
+**Next session:** Look for other native DOM event usage for app state and migrate to proper React patterns.
