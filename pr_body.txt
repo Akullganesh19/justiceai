@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Implemented `fetchWithRetry` utility with exponential backoff and replaced direct `fetch` calls for external APIs.
+**Failure scenario protected:** Transient network failures, rate limits (HTTP 429), and server errors (HTTP 5xx) from third-party APIs (Gemini, DeepSeek, Bhashini, Ollama).
+**Recovery flow:** Intercepts failed requests matching specific status codes, applies an exponential delay (1s, 2s, 4s...), and retries up to 3 times before failing gracefully. Respects `AbortSignal` to prevent retrying cancelled requests.
+**Blast radius before:** Any network hiccup resulted in an immediate, unhandled exception propagating to the user UI.
+**Blast radius after:** Transient errors are swallowed and retried silently. Users only experience failure if the external dependency is down for > 7 seconds.
+**Logging/alerting:** Logs warning on retry attempts and error on final failure via Winston logger.
+**Remaining failure points:** Any external API calls occurring directly in the React frontend without a retry wrapper.
