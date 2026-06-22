@@ -22,10 +22,68 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+// PII Redaction Formatter
+const redactPII = winston.format((info) => {
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+  const phoneRegex = /\b\d{10}\b/g;
+  const ccRegex = /\b(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})\b/g;
+  const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/g;
+
+  const mask = '[REDACTED]';
+
+  const redactString = (str) => {
+    if (typeof str !== 'string') return str;
+    return str
+      .replace(emailRegex, mask)
+      .replace(phoneRegex, mask)
+      .replace(ccRegex, mask)
+      .replace(ssnRegex, mask);
+  };
+
+  const seen = new WeakSet();
+
+  const traverseAndRedact = (obj) => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === 'string') return redactString(obj);
+    if (typeof obj !== 'object') return obj;
+
+    if (obj instanceof Date || obj instanceof Error) return obj;
+
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => traverseAndRedact(item));
+    }
+
+    const redactedObj = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        redactedObj[key] = traverseAndRedact(obj[key]);
+      }
+    }
+    return redactedObj;
+  };
+
+  if (info.message) {
+    info.message = traverseAndRedact(info.message);
+  }
+
+  for (const key in info) {
+    if (key !== 'level' && key !== 'message' && typeof key !== 'symbol') {
+      info[key] = traverseAndRedact(info[key]);
+    }
+  }
+
+  return info;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactPII(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -821,7 +879,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    // Redacted: removed logging of user query to prevent PII leakage
     
     try {
       if (stream) {
