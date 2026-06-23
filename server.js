@@ -23,12 +23,88 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Winston logger
+
+
+
+const redactFormat = winston.format((info) => {
+  const sensitiveKeys = ['password', 'token', 'authorization', 'cookie', 'secret', 'apikey', 'email', 'phone', 'ssn', 'query', 'prompt', 'messages', 'message', 'text', 'audiocontent'];
+
+  const piiRegexes = [
+    { name: 'CREDIT_CARD', pattern: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11})\b/g },
+    { name: 'EMAIL', pattern: /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g },
+    { name: 'SSN', pattern: /\b\d{3}-\d{2}-\d{4}\b/g }
+  ];
+
+  function redactString(str) {
+    let redacted = str;
+    for (const { name, pattern } of piiRegexes) {
+      redacted = redacted.replace(pattern, `[REDACTED_${name}]`);
+    }
+    return redacted;
+  }
+
+  function redactPayload(obj, seen = new WeakSet(), isRoot = true) {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === 'string') return redactString(obj);
+    if (typeof obj !== 'object') return obj;
+
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) {
+      // Return a plain object so properties are enumerable and get logged properly by winston.format.json
+      const newErr = {
+        message: redactString(obj.message),
+        name: obj.name
+      };
+      if (typeof obj.stack === 'string') {
+        newErr.stack = redactString(obj.stack);
+      }
+      for (const key of Object.getOwnPropertyNames(obj)) {
+        if (key !== 'message' && key !== 'stack' && key !== 'name') {
+          newErr[key] = redactPayload(obj[key], seen, false);
+        }
+      }
+      return newErr;
+    }
+
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => redactPayload(item, seen, false));
+    }
+
+    const result = {};
+    for (const key of Object.keys(obj)) {
+      if (isRoot && key === 'message' && typeof obj[key] === 'string') {
+        result[key] = redactString(obj[key]);
+      } else if (sensitiveKeys.includes(key.toLowerCase()) && !(isRoot && key === 'message')) {
+        result[key] = '[REDACTED]';
+      } else {
+        result[key] = redactPayload(obj[key], seen, false);
+      }
+    }
+
+    const symbols = Object.getOwnPropertySymbols(obj);
+    for (const sym of symbols) {
+       result[sym] = redactPayload(obj[sym], seen, false);
+    }
+
+    return result;
+  }
+
+  return redactPayload(info, new WeakSet(), true);
+});
+
+
+
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
+  level: process.env.LOG_LEVEL || 'info',
+
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
@@ -629,7 +705,7 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
+    logger.error('Bhashini Proxy Error', { error: err });
     res.status(500).json({ error: err.message });
   }
 });
@@ -698,7 +774,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error', { error });
     res.status(500).json({ error: error.message });
   }
 });
@@ -728,7 +804,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  logger.info(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
   try {
     const { 
       messages, 
@@ -821,7 +897,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
     
     try {
       if (stream) {
@@ -918,7 +994,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
-            console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
+            logger.error(`❌ DeepSeek fallback failed`, { error: deepseekErr });
             errorChain.push(`DeepSeek: ${deepseekErr.message}`);
           }
         }
@@ -940,7 +1016,7 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error("Chat Error", { error: err });
     res.status(500).json({ 
       error: err.message,
       details: process.env.NODE_ENV === 'development' ? err.stack : undefined
@@ -969,7 +1045,7 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
