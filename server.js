@@ -434,14 +434,16 @@ async function loadAndIndexDocuments() {
       const rawChunks = splitTextIntoChunks(text, 1000, 200);
       totalChunks += rawChunks.length;
       
-      for (let j = 0; j < rawChunks.length; j++) {
-        const chunk = rawChunks[j];
-        const vector = await embeddings.embedQuery(chunk);
-        documentChunks.push({
-          content: chunk,
-          vector: vector,
-          source: source
-        });
+      if (rawChunks.length > 0) {
+        // Batch embed all chunks for this source
+        const vectors = await embeddings.embedDocuments(rawChunks);
+        for (let j = 0; j < rawChunks.length; j++) {
+          documentChunks.push({
+            content: rawChunks[j],
+            vector: vectors[j],
+            source: source
+          });
+        }
       }
       console.log(`  📦 Embedded ${rawChunks.length} chunks from ${source}`);
     }
@@ -666,14 +668,16 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         const rawChunks = splitTextIntoChunks(text, 1000, 200);
         let chunksEmbedded = 0;
 
-        for (const chunk of rawChunks) {
-          const vector = await embeddings.embedQuery(chunk);
-          documentChunks.push({
-            content: chunk,
-            vector: vector,
-            source: fileName
-          });
-          chunksEmbedded++;
+        if (rawChunks.length > 0) {
+          const vectors = await embeddings.embedDocuments(rawChunks);
+          for (let j = 0; j < rawChunks.length; j++) {
+            documentChunks.push({
+              content: rawChunks[j],
+              vector: vectors[j],
+              source: fileName
+            });
+            chunksEmbedded++;
+          }
         }
 
         uploadedFiles.push({
