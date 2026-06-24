@@ -93,7 +93,9 @@ app.use(helmet({
 
 // CORS with better security
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : '*'),
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : (NODE_ENV === 'development' ? true : false),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -630,7 +632,10 @@ app.post('/api/voice/process', async (req, res) => {
 
   } catch (err) {
     console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: 'Voice processing failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -682,11 +687,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -699,7 +706,10 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: 'File upload failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -942,8 +952,8 @@ app.post('/api/chat', async (req, res) => {
   } catch (err) {
     console.error("Chat Error:", err);
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'Chat processing failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });
@@ -963,7 +973,11 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Embedding Error:", err);
+    res.status(500).json({
+      error: 'Embedding failed',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -1015,3 +1029,5 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
+
+export { app };
