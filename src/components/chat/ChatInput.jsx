@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../voice/TranscriptionContext';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
+  const { transcriptionData, clearTranscription, isConsumed } = useTranscription();
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -41,15 +43,12 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
   }, [text]);
 
   useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
-
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+    if (transcriptionData && !isConsumed(transcriptionData.id)) {
+      setText((prev) => (prev ? `${prev} ${transcriptionData.text}` : transcriptionData.text));
+      // Defer clearing to prevent set-state-in-effect synchronous cascades
+      setTimeout(() => clearTranscription(transcriptionData.id), 0);
+    }
+  }, [transcriptionData, isConsumed, clearTranscription]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">
