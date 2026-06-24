@@ -497,6 +497,78 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// 🌀 Phantom: Bhashini Config Request Coalescing and Intelligent Cache
+const bhashiniConfigCache = new Map();
+const inFlightConfigPromises = new Map();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+async function getBhashiniConfig(task, sourceLanguage) {
+  const cacheKey = `${task}-${sourceLanguage || 'hi'}`;
+
+  // Check if we have a valid cache for this specific task and language config
+  if (bhashiniConfigCache.has(cacheKey)) {
+    const cached = bhashiniConfigCache.get(cacheKey);
+    if (Date.now() - cached.time < CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
+  // Request Coalescing: If a request is already in flight, wait for it
+  if (inFlightConfigPromises.has(cacheKey)) {
+    return inFlightConfigPromises.get(cacheKey);
+  }
+
+  const fetchPromise = (async () => {
+    const configPayload = {
+      pipelineTasks: [
+        {
+          taskType: task,
+          config: {
+            language: {
+              sourceLanguage: sourceLanguage || 'hi'
+            }
+          }
+        }
+      ],
+      pipelineConfig: {
+        pipelineId: BHASHINI_PIPELINE_ID
+      }
+    };
+
+    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ulcaApiKey': BHASHINI_API_KEY,
+        'userID': BHASHINI_USER_ID
+      },
+      body: JSON.stringify(configPayload)
+    });
+
+    if (!configResponse.ok) {
+      const errorText = await configResponse.text();
+      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
+    }
+
+    const configData = await configResponse.json();
+
+    // Update cache
+    bhashiniConfigCache.set(cacheKey, { data: configData, time: Date.now() });
+
+    return configData;
+  })();
+
+  inFlightConfigPromises.set(cacheKey, fetchPromise);
+
+  try {
+    const result = await fetchPromise;
+    return result;
+  } finally {
+    // Clear the in-flight tracker once done or failed
+    inFlightConfigPromises.delete(cacheKey);
+  }
+}
+
 // Voice Configuration Endpoint (tells client which STT methods are available)
 app.get('/api/voice/config', (req, res) => {
   // Check if Bhashini credentials are properly configured (not empty or placeholder values)
@@ -550,39 +622,8 @@ app.post('/api/voice/process', async (req, res) => {
       }
     }
 
-    // Step 1: Fetch Pipeline Configuration
-    const configPayload = {
-      pipelineTasks: [
-        {
-          taskType: task, // 'asr' or 'tts'
-          config: {
-            language: {
-              sourceLanguage: sourceLanguage || 'hi'
-            }
-          }
-        }
-      ],
-      pipelineConfig: {
-        pipelineId: BHASHINI_PIPELINE_ID
-      }
-    };
-
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ulcaApiKey': BHASHINI_API_KEY,
-        'userID': BHASHINI_USER_ID
-      },
-      body: JSON.stringify(configPayload)
-    });
-
-    if (!configResponse.ok) {
-      const errorText = await configResponse.text();
-      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
-    }
-
-    const configData = await configResponse.json();
+    // Step 1: Fetch Pipeline Configuration (Cached & Coalesced)
+    const configData = await getBhashiniConfig(task, sourceLanguage);
 
     // Step 2: Compute Inference
     const computePayload = {
