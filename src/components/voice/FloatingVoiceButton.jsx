@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Globe, X, Send, Play, Square, Loader2, Zap, AlertTriangle } from 'lucide-react';
+import { useTranscription } from './TranscriptionContext';
 
 const BHASHINI_LANGUAGES = [
   { code: 'hi', name: 'Hindi' },
@@ -57,7 +58,8 @@ const WEB_SPEECH_LANGUAGES = [
   { code: 'ur-IN', name: 'Urdu' },
 ];
 
-export default function FloatingVoiceButton({ onTranscription }) {
+export default function FloatingVoiceButton() {
+  const { dispatchTranscription } = useTranscription();
   const [isOpen, setIsOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -321,8 +323,8 @@ export default function FloatingVoiceButton({ onTranscription }) {
   };
 
   const handleConfirm = () => {
-    if (transcription && onTranscription) {
-      onTranscription(transcription);
+    if (transcription) {
+      dispatchTranscription(transcription);
       setTranscription('');
       setIsOpen(false);
     }
