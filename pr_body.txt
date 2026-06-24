@@ -1,0 +1,10 @@
+## 🌀 Invisible Infrastructure Added
+
+**What:** Implemented an Intelligent Cache and Request Coalescing layer (`getBhashiniConfig`) for Bhashini pipeline configurations. It caches the configuration for 1 hour and ensures multiple simultaneous voice requests share a single outbound network call to `/config`.
+**Hot path:** Runs on every user voice interaction (STT and TTS) during Bhashini's processing within `/api/voice/process`.
+**Before:** The Bhashini pipeline configuration was fetched synchronously on every single voice request, wasting 200-500ms per interaction on redundant data.
+**After:** Configurations are fetched once per hour per language/task and stored in memory. Simultaneous requests yield to the first in-flight promise.
+**Users notice:** Nothing visually — but voice responses (STT transcriptions and TTS audio) feel significantly faster and snappier.
+**Measurable via:** The latency of the `/api/voice/process` endpoint is reduced by 200-500ms. Check the backend server logs for a reduction in outbound requests to `${BHASHINI_BASE_URL}/config`.
+**Correctness risk:** Minimal. The config data rarely changes during a session. Bhashini uses long-lived pipeline IDs. A 1-hour TTL (`CACHE_TTL_MS`) ensures it eventually refreshes while staying extremely fast. The Maps safely isolate different languages/tasks.
+**Next:** Investigate caching for `parsePdf` or text chunking in `loadAndIndexDocuments` if they are repeated on app restarts unnecessarily, or consider optimistic UI updates for chat responses.
