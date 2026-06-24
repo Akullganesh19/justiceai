@@ -8,7 +8,31 @@ class ErrorBoundary extends React.Component {
       hasError: false,
       error: null,
       errorInfo: null,
+      currentUser: null,
     };
+  }
+
+  componentDidMount() {
+    try {
+      const savedUser = localStorage.getItem('justice_auth_user');
+      if (savedUser) {
+        this.setState({ currentUser: JSON.parse(savedUser) });
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+
+    this.handleLogin = (event) => {
+      if (event.detail) {
+        this.setState({ currentUser: event.detail });
+      }
+    };
+
+    window.addEventListener('justice.auth.login', this.handleLogin);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('justice.auth.login', this.handleLogin);
   }
 
   static getDerivedStateFromError(error) {
@@ -17,11 +41,22 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    const enrichedError = {
+      error,
+      errorInfo,
+      userContext: this.state.currentUser ? {
+        id: this.state.currentUser.id,
+        email: this.state.currentUser.email,
+        role: this.state.currentUser.role
+      } : 'anonymous'
+    };
+
+    console.error('ErrorBoundary caught an error:', enrichedError);
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      this.props.onError(error, errorInfo, this.state.currentUser);
     }
   }
 
@@ -41,7 +76,11 @@ class ErrorBoundary extends React.Component {
   };
 
   handleCopyError = () => {
-    const errorText = `Error: ${this.state.error?.toString()}\n\nComponent Stack:\n${this.state.errorInfo?.componentStack}`;
+    const errorText = `Error: ${this.state.error?.toString()}
+User: ${this.state.currentUser ? this.state.currentUser.email || this.state.currentUser.id : 'anonymous'}
+
+Component Stack:
+${this.state.errorInfo?.componentStack}`;
     navigator.clipboard.writeText(errorText).catch(console.error);
   };
 

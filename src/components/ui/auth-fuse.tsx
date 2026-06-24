@@ -188,6 +188,11 @@ function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign In form submitted');
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email');
+    const user = { id: 'usr_' + Date.now().toString(36), email, role: 'citizen' };
+    localStorage.setItem('justice_auth_user', JSON.stringify(user));
+    window.dispatchEvent(new CustomEvent('justice.auth.login', { detail: user }));
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -230,6 +235,12 @@ function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign Up form submitted');
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email');
+    const name = formData.get('name');
+    const user = { id: 'usr_' + Date.now().toString(36), email, name, role: 'citizen' };
+    localStorage.setItem('justice_auth_user', JSON.stringify(user));
+    window.dispatchEvent(new CustomEvent('justice.auth.login', { detail: user }));
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
