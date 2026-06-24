@@ -23,6 +23,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
         ...globals.vitest,
         global: 'readonly',
       },
