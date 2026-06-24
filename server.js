@@ -22,10 +22,59 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+
+const redactLog = winston.format((info) => {
+  const seen = new WeakSet();
+
+  const redact = (obj) => {
+    if (obj === null || typeof obj !== 'object') {
+      if (typeof obj === 'string') {
+        let val = obj;
+        val = val.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED_EMAIL]');
+        val = val.replace(/\b(?:\d{4}[ -]?){3}\d{4}\b/g, '[REDACTED_CC]');
+        return val;
+      }
+      return obj;
+    }
+
+    if (obj instanceof Date) return obj;
+
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    if (Array.isArray(obj)) {
+      return obj.map(redact);
+    }
+
+    const newObj = obj instanceof Error ? new Error(redact(obj.message)) : {};
+
+    if (obj instanceof Error) {
+      newObj.stack = redact(obj.stack);
+      newObj.name = obj.name;
+    }
+
+    // Iterate through all string/symbol keys to preserve Winston internals
+    const keys = Reflect.ownKeys(obj);
+    for (const key of keys) {
+      if (typeof key === 'string' && ['email', 'password', 'creditCard', 'ssn', 'phone'].includes(key.toLowerCase())) {
+        newObj[key] = '[REDACTED]';
+      } else {
+        newObj[key] = redact(obj[key]);
+      }
+    }
+    return newObj;
+  };
+
+  return redact(info);
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
+    redactLog(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -448,7 +497,7 @@ async function loadAndIndexDocuments() {
     
     console.log(`✅ RAG Vector Database Loaded! Total chunks indexed: ${totalChunks}`);
   } catch (error) {
-    console.error('Error loading documents:', error);
+    logger.error('Error loading documents', { error: error });
   }
 }
 
@@ -629,8 +678,8 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -698,8 +747,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error', { error: error });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -821,8 +870,6 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
-    
     try {
       if (stream) {
         // Streaming response
@@ -918,7 +965,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
-            console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
+            logger.error('❌ DeepSeek fallback failed', { error: deepseekErr });
             errorChain.push(`DeepSeek: ${deepseekErr.message}`);
           }
         }
@@ -940,11 +987,8 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
-    res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    logger.error('Chat Error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -963,16 +1007,16 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: 'Internal Server Error',
+    message: 'Something went wrong'
   });
 });
 
