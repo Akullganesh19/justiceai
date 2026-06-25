@@ -7,13 +7,14 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { TranscriptionProvider, useTranscription } from './context/TranscriptionContext';
 import './index.css';
 
-const handleGlobalTranscription = (text) => {
-  // Dispatch a custom event that any page (like ChatPage) can listen for
-  const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
-  window.dispatchEvent(event);
-};
+// A small bridge component to pass the context updater to the floating voice button
+function GlobalVoiceHandler() {
+  const { setTranscription } = useTranscription();
+  return <FloatingVoiceButton onTranscription={setTranscription} />;
+}
 
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
@@ -55,12 +56,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
+        <TranscriptionProvider>
+          <Router>
+            <div className="grain-overlay" aria-hidden="true" />
+            <ScrollToTop />
+            <CommandPalette />
+            <GlobalVoiceHandler />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -83,10 +85,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/showcase" element={<ShowcasePage />} />
               <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </TranscriptionProvider>
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
