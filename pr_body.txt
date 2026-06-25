@@ -1,0 +1,8 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Replaced the legacy use of transient global DOM CustomEvents (`window.dispatchEvent('justice-ai-transcription')`) with a modern, type-safe React Context (`TranscriptionContext`). Added context clearing logic after consumption to prevent replay bugs when components unmount and remount.
+**Risk it eliminates:** The global DOM event approach invites "replay bugs" on remount, completely breaks React's unidirectional data flow, makes component dependencies untraceable (who is listening to what event?), and makes unit testing significantly harder because it relies on mocking the global `window` object instead of simple component wrappers.
+**Why now:** As the application scales and multiple disconnected components need to emit or consume transcription events (e.g., from different inputs on different pages), debugging race conditions or ghost state on a global DOM object would become exponentially more difficult.
+**Migration approach:** We replaced the highest-visibility usage first: the `FloatingVoiceButton` passing data to `ChatInput`. The app is now wrapped in `TranscriptionProvider`. Data passes through React Context safely and explicitly, and the consuming component correctly calls a `clearTranscription` callback immediately after updating its local state to ensure remounts don't pull stale events.
+**Remaining:** Migrate any other components in the application that are listening to legacy DOM CustomEvents (`window.addEventListener`), then audit for other loosely-coupled states holding tight-coupled responsibilities.
+**Next session:** Investigate any remaining usage of `CustomEvent` or similar global DOM dispatchers across UI components and migrate to Context or Redux/Zustand as appropriate.

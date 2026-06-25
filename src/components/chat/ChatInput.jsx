@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../../context/TranscriptionContext';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { transcriptionData, clearTranscription } = useTranscription();
+  const processedTranscriptionId = useRef(null);
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -41,15 +44,15 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
   }, [text]);
 
   useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
+    if (transcriptionData.text && transcriptionData.id !== processedTranscriptionId.current) {
+      setText((prev) => (prev ? `${prev} ${transcriptionData.text}` : transcriptionData.text));
+      processedTranscriptionId.current = transcriptionData.id;
 
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+      // Clear transcription data from context after consumption
+      // to avoid replay bugs when components remount
+      clearTranscription();
+    }
+  }, [transcriptionData, clearTranscription]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">
