@@ -1,0 +1,6 @@
+## 2024-05-18 — Chat Payload Leak in Logs
+**Data traced:** Messages, personal prompts, potential PII or confidential legal query strings
+**Exposure found:** `server.js` logs incoming `/api/chat` request bodies in plaintext: `console.log(\`[ROUTE] Incoming POST /api/chat - Body Keys: \${Object.keys(req.body || {}).join(', ')}\`);` which doesn't expose the body, BUT further down it explicitly logs the user's latest query: `console.log(\`Routing query to Ollama: "\${latestUserMessage.substring(0, 50)}..."\`);`. More critically, there's no structural redaction in the Winston logger.
+**Fix:** Apply a Winston custom formatter that recursively strips out sensitive keys (email, password, auth, etc.) and masks credit cards in strings, replacing `console.log` with `logger.info` where PII might be logged. Remove the manual `console.log` of the user's prompt in `/api/chat`.
+**Coverage confirmed:** The prompt isn't logged to the console anymore, and any `logger.info` or `logger.warn` calls are subject to the Winston redaction filter.
+**Still exposed elsewhere:** Currently only patching the Winston logger and the `/api/chat` prompt leak. Other parts of the frontend might retain sensitive state in LocalStorage.

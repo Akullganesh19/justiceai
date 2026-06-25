@@ -22,10 +22,70 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Constants for redaction
+const sensitiveKeys = ['password', 'token', 'apikey', 'api_key', 'credentials', 'authorization', 'email', 'phone', 'ssn', 'address', 'dob', 'date_of_birth', 'card_number'];
+const strictCcRegex = /\b(?:\d{4}[ -]?){3}\d{4}\b/g;
+
+// Redaction helpers
+const redactValue = (value) => {
+  if (typeof value === 'string') {
+    return value.replace(strictCcRegex, '[REDACTED_CC]');
+  }
+  return value;
+};
+
+const redactPayload = (obj, seen = new WeakSet()) => {
+  if (obj === null || typeof obj !== 'object') {
+    return redactValue(obj);
+  }
+
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  if (obj instanceof Error) {
+    return {
+      message: redactValue(obj.message),
+      stack: redactValue(obj.stack),
+      name: obj.name
+    };
+  }
+
+  if (seen.has(obj)) {
+    return '[Circular]';
+  }
+  seen.add(obj);
+
+  if (Array.isArray(obj)) {
+    const res = obj.map(item => redactPayload(item, seen));
+    seen.delete(obj);
+    return res;
+  }
+
+  const result = {};
+  for (const key of Object.keys(obj)) {
+    if (sensitiveKeys.some(k => key.toLowerCase() === k || key.toLowerCase().endsWith('_' + k))) {
+      result[key] = '[REDACTED]';
+    } else {
+      result[key] = redactPayload(obj[key], seen);
+    }
+  }
+  seen.delete(obj);
+  return result;
+};
+
+const redactFormat = winston.format((info) => {
+  const redacted = redactPayload(info);
+  const result = Object.assign({}, info, redacted);
+  return result;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -820,8 +880,6 @@ app.post('/api/chat', async (req, res) => {
       ],
       stream: stream
     };
-
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
     
     try {
       if (stream) {
