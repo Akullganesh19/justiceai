@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -53,7 +53,20 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const oraclePrefill = sessionStorage.getItem('oracle_prefill');
+      if (oraclePrefill) {
+        const parsed = JSON.parse(oraclePrefill);
+        if (parsed.templateId === template.id && parsed.prefill) {
+          // Clear it so it doesn't repeatedly apply if user resets
+          sessionStorage.removeItem('oracle_prefill');
+          return parsed.prefill;
+        }
+      }
+    } catch(e) {}
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -376,6 +389,24 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+
+  useEffect(() => {
+    try {
+      const oraclePrefill = sessionStorage.getItem('oracle_prefill');
+      if (oraclePrefill) {
+        const parsed = JSON.parse(oraclePrefill);
+        if (parsed.type === 'document' && parsed.templateId) {
+          const tpl = DOCUMENT_TEMPLATES.find(t => t.id === parsed.templateId);
+          if (tpl) {
+            setTimeout(() => {
+              setSelectedTemplate(tpl);
+              setStage('form');
+            }, 0);
+          }
+        }
+      }
+    } catch(e) {}
+  }, []);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);

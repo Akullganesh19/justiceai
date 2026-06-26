@@ -22,9 +22,11 @@ import {
   HeartHandshake,
   BookMarked,
   AlertCircle,
+  Zap,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
+import { predictNextAction } from '../lib/oraclePredictor';
 
 // Animated counter hook
 function useAnimatedCounter(target, duration = 1500) {
@@ -148,8 +150,17 @@ export default function DashboardPage() {
   const [recentCases, setRecentCases] = useState([]);
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
+  const [prediction, setPrediction] = useState(null);
 
   useEffect(() => {
+    // Check for prediction based on history
+    const predictedAction = predictNextAction();
+    if (predictedAction) {
+      setTimeout(() => {
+        setPrediction(predictedAction);
+      }, 0);
+    }
+
     const saved = localStorage.getItem('justice_ai_history');
     if (saved) {
       try {
@@ -267,6 +278,48 @@ export default function DashboardPage() {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
             </button>
           </div>
+
+          {/* Prediction Module (Oracle) */}
+          {prediction && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-6 rounded-sm bg-gradient-to-r from-void via-blue-900/10 to-void border border-blue-500/30 relative overflow-hidden group shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/50 transition-all cursor-pointer"
+              onClick={() => {
+                if (prediction.prefill) {
+                  sessionStorage.setItem('oracle_prefill', JSON.stringify(prediction));
+                }
+                navigate(prediction.type === 'document' ? '/documents' : prediction.path);
+              }}
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Zap className="w-24 h-24 text-blue-400" />
+              </div>
+              <div className="relative z-10 flex items-start sm:items-center gap-6">
+                <div className="w-12 h-12 rounded bg-blue-500/10 border border-blue-400/30 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-6 h-6 text-blue-400 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-400 bg-blue-900/40 px-2 py-0.5 rounded">
+                      Intelligent Suggestion
+                    </span>
+                    <span className="text-[10px] text-text-tertiary">
+                      {Math.round(prediction.confidence * 100)}% Confidence
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-display font-bold text-white group-hover:text-blue-300 transition-colors">
+                    {prediction.title}
+                  </h3>
+                  <p className="text-sm text-blue-100/60 mt-1">{prediction.reason}</p>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-widest group-hover:bg-blue-400 transition-colors">
+                  {prediction.actionLabel}
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Key Indicators */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
