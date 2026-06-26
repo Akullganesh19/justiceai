@@ -36,6 +36,20 @@ const logger = winston.createLogger({
   ]
 });
 
+
+// Helper to check for placeholder credentials
+const isPlaceholder = (value) => {
+  if (!value || typeof value !== 'string') return true;
+  const trimmed = value.trim().toLowerCase();
+  return (
+    trimmed === '' ||
+    trimmed === 'your_bhashini_api_key_here' ||
+    trimmed === 'your_bhashini_user_id_here' ||
+    trimmed.startsWith('your_') ||
+    trimmed === 'placeholder'
+  );
+};
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
@@ -213,6 +227,98 @@ let documentChunks = [];
   }
 });
 
+
+// --- PHANTOM: INVISIBLE INFRASTRUCTURE ---
+// Intelligent Cache Layer & Request Coalescing for Bhashini Configuration
+// Users notice faster voice interactions because we eliminate a redundant HTTP roundtrip
+const bhashiniConfigCache = new Map();
+const bhashiniConfigInFlight = new Map();
+
+async function getBhashiniConfig(task, sourceLanguage) {
+  const cacheKey = `${task}_${sourceLanguage || 'hi'}`;
+
+  // 1. Return cached data if valid
+  if (bhashiniConfigCache.has(cacheKey)) {
+    const cached = bhashiniConfigCache.get(cacheKey);
+    if (Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+    bhashiniConfigCache.delete(cacheKey);
+  }
+
+  // 2. Request Coalescing: Join in-flight request if exists
+  if (bhashiniConfigInFlight.has(cacheKey)) {
+    return bhashiniConfigInFlight.get(cacheKey);
+  }
+
+  // 3. Fetch from source
+  const promise = (async () => {
+    try {
+      if (isPlaceholder(BHASHINI_API_KEY) || isPlaceholder(BHASHINI_USER_ID)) {
+        throw new Error('Bhashini credentials missing');
+      }
+
+      const configPayload = {
+        pipelineTasks: [{
+          taskType: task,
+          config: { language: { sourceLanguage: sourceLanguage || 'hi' } }
+        }],
+        pipelineConfig: { pipelineId: BHASHINI_PIPELINE_ID }
+      };
+
+      const response = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ulcaApiKey': BHASHINI_API_KEY,
+          'userID': BHASHINI_USER_ID
+        },
+        body: JSON.stringify(configPayload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Bhashini Config Error: ${response.status} - ${errorText}`);
+      }
+
+      const configData = await response.json();
+
+      // Cache for 12 hours (configs rarely change)
+      bhashiniConfigCache.set(cacheKey, {
+        data: configData,
+        expiresAt: Date.now() + 12 * 60 * 60 * 1000
+      });
+
+      return configData;
+    } finally {
+      bhashiniConfigInFlight.delete(cacheKey);
+    }
+  })();
+
+  bhashiniConfigInFlight.set(cacheKey, promise);
+  return promise;
+}
+
+// --- PHANTOM: INVISIBLE INFRASTRUCTURE ---
+// Robust network retry wrapper to handle transient failures gracefully
+async function fetchWithRetry(url, options = {}, retries = 3, backoff = 500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      // Only retry on 429 (Rate Limit) or 5xx (Server Error)
+      if (!response.ok && (response.status === 429 || response.status >= 500)) {
+        throw new Error(`Transient HTTP Error: ${response.status}`);
+      }
+      return response;
+    } catch (err) {
+      if (err.name === 'AbortError') throw err; // Do not retry intentional aborts
+      if (i === retries - 1) throw err; // Exhausted retries
+      console.log(`[Phantom] Transient error fetching ${url}. Retrying in ${backoff * Math.pow(2, i)}ms...`);
+      await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+    }
+  }
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -318,7 +424,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +460,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -500,18 +606,6 @@ app.get('/api/stats', (req, res) => {
 // Voice Configuration Endpoint (tells client which STT methods are available)
 app.get('/api/voice/config', (req, res) => {
   // Check if Bhashini credentials are properly configured (not empty or placeholder values)
-  const isPlaceholder = (value) => {
-    if (!value || typeof value !== 'string') return true;
-    const trimmed = value.trim().toLowerCase();
-    return (
-      trimmed === '' ||
-      trimmed === 'your_bhashini_api_key_here' ||
-      trimmed === 'your_bhashini_user_id_here' ||
-      trimmed.startsWith('your_') ||
-      trimmed === 'placeholder'
-    );
-  };
-
   const bhashiniConfigured = !isPlaceholder(BHASHINI_API_KEY) && !isPlaceholder(BHASHINI_USER_ID);
   
   // Only return pipelineId when Bhashini is actually configured (avoid info leak)
@@ -532,7 +626,7 @@ app.post('/api/voice/process', async (req, res) => {
     const { task, audioContent, text, sourceLanguage, targetLanguage } = req.body;
     
     // Check if Bhashini credentials are provided, otherwise enter Mock Mode
-    if (!BHASHINI_API_KEY || !BHASHINI_USER_ID) {
+    if (isPlaceholder(BHASHINI_API_KEY) || isPlaceholder(BHASHINI_USER_ID)) {
       console.log('⚠️ Bhashini Credentials missing. Running in MOCK MODE.');
       
       if (task === 'asr') {
@@ -550,39 +644,8 @@ app.post('/api/voice/process', async (req, res) => {
       }
     }
 
-    // Step 1: Fetch Pipeline Configuration
-    const configPayload = {
-      pipelineTasks: [
-        {
-          taskType: task, // 'asr' or 'tts'
-          config: {
-            language: {
-              sourceLanguage: sourceLanguage || 'hi'
-            }
-          }
-        }
-      ],
-      pipelineConfig: {
-        pipelineId: BHASHINI_PIPELINE_ID
-      }
-    };
-
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ulcaApiKey': BHASHINI_API_KEY,
-        'userID': BHASHINI_USER_ID
-      },
-      body: JSON.stringify(configPayload)
-    });
-
-    if (!configResponse.ok) {
-      const errorText = await configResponse.text();
-      throw new Error(`Bhashini Config Error: ${configResponse.status} - ${errorText}`);
-    }
-
-    const configData = await configResponse.json();
+    // Step 1: Fetch Pipeline Configuration (Cached & Coalesced)
+    const configData = await getBhashiniConfig(task, sourceLanguage);
 
     // Step 2: Compute Inference
     const computePayload = {
@@ -598,7 +661,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
