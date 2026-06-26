@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Added `fetchWithRetry` utility with exponential backoff and `AbortError` awareness to wrap external API calls.
+**Failure scenario protected:** Transient network failures, rate limiting (HTTP 429), or server-side errors (HTTP 5xx) causing application crashes or silent failures during interactions with LLMs (Gemini, DeepSeek, Ollama) and Bhashini API.
+**Recovery flow:** The wrapper retries the request with exponentially increasing delays. If it hits the maximum retries, or if it catches an intentional `AbortError`, it behaves exactly like a standard `fetch` call by throwing the error.
+**Blast radius before:** Any transient API failure would cause the request to fail entirely, resulting in an error shown to the user or a silent failure (100% of affected requests failed).
+**Blast radius after:** Most transient failures heal silently in the background. Users only see an error if the service is consistently down or rate-limited after multiple retries.
+**Logging/alerting:** Logs are captured server-side via Winston, and warnings are emitted on the frontend console.
+**Remaining failure points:** Need to evaluate other external dependencies, such as specific webhooks or database connections, to see if they also need circuit breakers or retry mechanisms.
