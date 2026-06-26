@@ -192,7 +192,22 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+        if (newAnalysis.timeline) {
+          const baseTitle = currentMsgs[1]?.content?.substring(0, 40);
+          const title = baseTitle ? baseTitle + '...' : 'Untitled Case';
+          const event = new CustomEvent('justice-ai-analysis-complete', {
+            detail: {
+              id: activeCaseId,
+              title: title,
+              caseType: newAnalysis.caseType,
+              timeline: newAnalysis.timeline
+            }
+          });
+          window.dispatchEvent(event);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -219,6 +234,20 @@ export default function ChatPage() {
         content: chatMessage,
         timestamp: new Date(),
       };
+
+      if (newAnalysis && newAnalysis.timeline) {
+        const baseTitle = updatedMessages[1]?.content?.substring(0, 40);
+        const title = baseTitle ? baseTitle + '...' : 'Untitled Case';
+        const event = new CustomEvent('justice-ai-analysis-complete', {
+          detail: {
+            id: activeCaseId,
+            title: title,
+            caseType: newAnalysis.caseType,
+            timeline: newAnalysis.timeline
+          }
+        });
+        window.dispatchEvent(event);
+      }
 
       const finaleMsgs = [...updatedMessages, aiMsg];
       setMessages(finaleMsgs);
