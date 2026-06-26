@@ -22,10 +22,72 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+const redactFormat = winston.format((info) => {
+  const seen = new WeakSet();
+
+  const redact = (obj) => {
+    if (obj == null) return obj;
+    if (typeof obj === 'string') {
+      let str = obj;
+      str = str.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED EMAIL]');
+      str = str.replace(/\b(?:\d{4}[ -]?){3}\d{4}\b|\b3[47][ -]?\d{6}[ -]?\d{5}\b/g, '[REDACTED CC]');
+      str = str.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED SSN]'); // SSN mask
+      return str;
+    }
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) {
+      return {
+        message: redact(obj.message),
+        stack: redact(obj.stack),
+        name: obj.name
+      };
+    }
+    if (typeof obj !== 'object') return obj;
+
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    const result = Array.isArray(obj) ? [] : {};
+    for (const key of Object.keys(obj)) {
+      const lowerKey = key.toLowerCase();
+      if (
+        lowerKey.includes('password') ||
+        lowerKey.includes('token') ||
+        lowerKey.includes('secret') ||
+        lowerKey.includes('authorization') ||
+        lowerKey.includes('apikey') ||
+        lowerKey === 'messages' ||
+        lowerKey === 'prompt' ||
+        lowerKey === 'query' ||
+        lowerKey === 'text' ||
+        lowerKey === 'audiocontent' ||
+        lowerKey.includes('email') ||
+        lowerKey.includes('ssn') ||
+        lowerKey.includes('phone')
+      ) {
+        result[key] = '[REDACTED]';
+      } else {
+        result[key] = redact(obj[key]);
+      }
+    }
+    seen.delete(obj);
+    return result;
+  };
+
+  const result = redact(info);
+  for (const sym of Object.getOwnPropertySymbols(info)) {
+    result[sym] = info[sym];
+  }
+  return result;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -533,7 +595,7 @@ app.post('/api/voice/process', async (req, res) => {
     
     // Check if Bhashini credentials are provided, otherwise enter Mock Mode
     if (!BHASHINI_API_KEY || !BHASHINI_USER_ID) {
-      console.log('⚠️ Bhashini Credentials missing. Running in MOCK MODE.');
+      logger.warn('Bhashini Credentials missing. Running in MOCK MODE.');
       
       if (task === 'asr') {
         // Mock transcription
@@ -629,8 +691,8 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -698,8 +760,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error', { error: error });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -728,7 +790,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  logger.info('[ROUTE] Incoming POST /api/chat', { bodyKeys: Object.keys(req.body || {}) });
   try {
     const { 
       messages, 
@@ -782,9 +844,9 @@ app.post('/api/chat', async (req, res) => {
         contextStr = "\n\nCRITICAL LEGAL PRECEDENTS (From Knowledge Base):\n" + 
                      topChunks.map(c => `[Source: ${c.source}] [Relevance: ${(c.score * 100).toFixed(1)}%]\n${c.content}`).join("\n\n---\n\n");
         
-        console.log(`  🔍 RAG retrieved top chunks from: ${retrievedSources.join(', ')}`);
+        logger.info('RAG retrieved top chunks', { sources: retrievedSources });
       } catch (embedError) {
-        console.warn('Embedding failed, proceeding without RAG context:', embedError.message);
+        logger.warn('Embedding failed, proceeding without RAG context', { error: embedError });
       }
     }
 
@@ -821,7 +883,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info('Routing query to Ollama', { query: latestUserMessage });
     
     try {
       if (stream) {
@@ -882,14 +944,14 @@ app.post('/api/chat', async (req, res) => {
         });
       }
     } catch (ollamaErr) {
-      console.warn(`⚠️ Ollama failure detected: ${ollamaErr.message}. Shifting to Gemini fallback...`);
+      logger.warn('Ollama failure detected. Shifting to Gemini fallback...', { error: ollamaErr });
       
       let finalResult = null;
       let usedProvider = null;
       let errorChain = [`Ollama: ${ollamaErr.message}`];
 
       if (provider !== 'auto') {
-        console.log(`User-forced provider: ${provider}`);
+        logger.info('User-forced provider', { provider });
         if (provider === 'gemini') {
           finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
           usedProvider = 'Gemini (User Controlled)';
@@ -907,7 +969,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
             usedProvider = 'Gemini (Cloud Fallback)';
           } catch (geminiErr) {
-            console.warn(`⚠️ Gemini fallback failed: ${geminiErr.message}. Shifting to DeepSeek...`);
+            logger.warn('Gemini fallback failed. Shifting to DeepSeek...', { error: geminiErr });
             errorChain.push(`Gemini: ${geminiErr.message}`);
           }
         }
@@ -918,7 +980,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
-            console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
+            logger.error('DeepSeek fallback failed', { error: deepseekErr });
             errorChain.push(`DeepSeek: ${deepseekErr.message}`);
           }
         }
@@ -940,10 +1002,9 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error("Chat Error", { error: err });
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'Internal Server Error'
     });
   }
 });
@@ -963,16 +1024,17 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error('Embed error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: 'Internal Server Error',
+    message: 'Something went wrong'
   });
 });
 
