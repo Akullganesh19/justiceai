@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../../contexts';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
+  const { transcription, transcriptionTimestamp, clearTranscription } = useTranscription();
+  const lastProcessedTranscription = useRef(null);
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -41,15 +44,13 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
   }, [text]);
 
   useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
-
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+    if (transcription && transcriptionTimestamp !== lastProcessedTranscription.current) {
+      setText((prev) => (prev ? `${prev} ${transcription}` : transcription));
+      lastProcessedTranscription.current = transcriptionTimestamp;
+      // Optional: Clear transcription after consuming if we don't want other components to use it
+      clearTranscription();
+    }
+  }, [transcription, transcriptionTimestamp]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">
