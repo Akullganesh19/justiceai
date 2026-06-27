@@ -452,6 +452,19 @@ async function loadAndIndexDocuments() {
   }
 }
 
+
+// Basic in-memory cache for static API responses
+const apiCache = new Map();
+function cacheResponse(key, ttlMs, generateFn) {
+  const cached = apiCache.get(key);
+  if (cached && cached.expiry > Date.now()) {
+    return cached.data;
+  }
+  const data = generateFn();
+  apiCache.set(key, { data, expiry: Date.now() + ttlMs });
+  return data;
+}
+
 // ============ API ROUTES ============
 // Root endpoint
 app.get('/', (req, res) => {
@@ -469,7 +482,7 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
+  const data = cacheResponse('health', 5000, () => ({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
@@ -483,7 +496,9 @@ app.get('/api/health', (req, res) => {
       embeddingModel: EMBEDDING_MODEL,
       chatModel: CHAT_MODEL
     }
-  });
+  }));
+  res.setHeader('Cache-Control', 'public, max-age=5');
+  res.json(data);
 });
 
 // Get RAG statistics
@@ -499,31 +514,37 @@ app.get('/api/stats', (req, res) => {
 
 // Voice Configuration Endpoint (tells client which STT methods are available)
 app.get('/api/voice/config', (req, res) => {
-  // Check if Bhashini credentials are properly configured (not empty or placeholder values)
-  const isPlaceholder = (value) => {
-    if (!value || typeof value !== 'string') return true;
-    const trimmed = value.trim().toLowerCase();
-    return (
-      trimmed === '' ||
-      trimmed === 'your_bhashini_api_key_here' ||
-      trimmed === 'your_bhashini_user_id_here' ||
-      trimmed.startsWith('your_') ||
-      trimmed === 'placeholder'
-    );
-  };
+  const data = cacheResponse('voiceConfig', 60000, () => {
+    const isPlaceholder = (value) => {
+      if (!value || typeof value !== 'string') return true;
+      const trimmed = value.trim().toLowerCase();
+      return (
+        trimmed === '' ||
+        trimmed === 'your_bhashini_api_key_here' ||
+        trimmed === 'your_bhashini_user_id_here' ||
+        trimmed.startsWith('your_') ||
+        trimmed === 'placeholder'
+      );
+    };
 
-  const bhashiniConfigured = !isPlaceholder(BHASHINI_API_KEY) && !isPlaceholder(BHASHINI_USER_ID);
-  
-  // Only return pipelineId when Bhashini is actually configured (avoid info leak)
-  const bhashiniResponse = { available: bhashiniConfigured };
-  if (bhashiniConfigured) {
-    bhashiniResponse.pipelineId = BHASHINI_PIPELINE_ID;
-  }
-  
-  res.json({
-    bhashini: bhashiniResponse
-    // Web Speech API availability is checked client-side
+    const bhashiniConfigured = !isPlaceholder(BHASHINI_API_KEY) && !isPlaceholder(BHASHINI_USER_ID);
+
+    const responseData = {
+      bhashini: {
+        available: bhashiniConfigured
+      }
+    };
+
+    // Only include pipeline ID if configured to avoid info leak
+    if (bhashiniConfigured) {
+      responseData.bhashini.pipelineId = BHASHINI_PIPELINE_ID;
+    }
+
+    return responseData;
   });
+
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.json(data);
 });
 
 // Bhashini Voice Processing Endpoint (STT & TTS Proxy)
