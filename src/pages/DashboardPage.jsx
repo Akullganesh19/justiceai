@@ -148,8 +148,18 @@ export default function DashboardPage() {
   const [recentCases, setRecentCases] = useState([]);
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
+  const [docCount, setDocCount] = useState(0);
 
   useEffect(() => {
+    const savedDocs = localStorage.getItem('justice_ai_documents');
+    if (savedDocs) {
+      try {
+        const parsed = JSON.parse(savedDocs);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDocCount(parsed.length);
+      } catch(e) {}
+    }
+
     const saved = localStorage.getItem('justice_ai_history');
     if (saved) {
       try {
@@ -278,7 +288,7 @@ export default function DashboardPage() {
               suffix="+"
               color="text-gold"
             />
-            <StatCard icon={Milestone} label="Drafting Templates" value={15} color="text-gold" />
+            <StatCard icon={FileText} label="Documents Drafted" value={docCount} color="text-gold" />
             <StatCard
               icon={TrendingUp}
               label="Total Engagements"
