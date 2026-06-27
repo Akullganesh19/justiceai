@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -373,13 +374,28 @@ function DocumentPreview({ document, template, onBack }) {
 }
 
 export default function DocumentsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  // Oracle: Smart defaults based on route state
+  useEffect(() => {
+    if (location.state?.autoSelectTemplate) {
+      const template = DOCUMENT_TEMPLATES.find(t => t.id === location.state.autoSelectTemplate);
+      if (template) {
+        setTimeout(() => { setSelectedTemplate(template); setStage('form'); }, 0);
+        // Clear state to prevent replay on reload
+        setTimeout(() => {
+          navigate(location.pathname, { replace: true, state: {} });
+        }, 0);
+      }
+    }
+  }, [location.state, location.pathname, navigate]);
+
   const handleSelect = (template) => {
-    setSelectedTemplate(template);
-    setStage('form');
+    setTimeout(() => { setSelectedTemplate(template); setStage('form'); }, 0);
   };
 
   const handleGenerate = (formData) => {

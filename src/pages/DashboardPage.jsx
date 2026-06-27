@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
+import { predictNextAction } from '../lib/predictNextAction';
 
 // Animated counter hook
 function useAnimatedCounter(target, duration = 1500) {
@@ -144,8 +145,9 @@ function RecentCaseCard({ caseData }) {
 }
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
   const [recentCases, setRecentCases] = useState([]);
+  const [predictedAction, setPredictedAction] = useState(null);
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
@@ -154,7 +156,7 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
+        setTimeout(() => { setRecentCases(parsed.slice(0, 5)); const prediction = predictNextAction(parsed); if (prediction) setPredictedAction(prediction); }, 0);
       } catch (e) {}
     }
 
@@ -322,6 +324,74 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* ORACLE PREDICTION BLOCK */}
+            {predictedAction && (
+              <div className="space-y-6 mb-12 animate-fade-in">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <h2 className="text-sm font-display font-extrabold uppercase tracking-[0.2em] text-white flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+                    SUGGESTED_NEXT_STEP
+                  </h2>
+                </div>
+                <button
+                  onClick={() => navigate(predictedAction.path, { state: predictedAction.state })}
+                  className="group w-full text-left p-6 rounded-sm bg-void border-2 border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 shadow-hard relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                  <div className="relative flex items-center gap-6">
+                    <div className={`w-12 h-12 rounded flex items-center justify-center flex-shrink-0 border border-white/10 shadow-luxe ${predictedAction.accent}`}>
+                      <predictedAction.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-display font-bold text-emerald-400 uppercase tracking-tight group-hover:text-emerald-300 transition-colors">
+                        {predictedAction.title}
+                      </h3>
+                      <p className="text-xs text-text-tertiary font-body mt-1 leading-relaxed opacity-90">
+                        {predictedAction.description}
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 rounded-sm bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-500/30 transition-all">
+                      <ChevronRight className="w-4 h-4 text-emerald-400 group-hover:text-white" />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* ORACLE PREDICTION BLOCK */}
+            {predictedAction && (
+              <div className="space-y-6 mb-12 animate-fade-in">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <h2 className="text-sm font-display font-extrabold uppercase tracking-[0.2em] text-white flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+                    SUGGESTED_NEXT_STEP
+                  </h2>
+                </div>
+                <button
+                  onClick={() => navigate(predictedAction.path, { state: predictedAction.state })}
+                  className="group w-full text-left p-6 rounded-sm bg-void border-2 border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 shadow-hard relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                  <div className="relative flex items-center gap-6">
+                    <div className={`w-12 h-12 rounded flex items-center justify-center flex-shrink-0 border border-white/10 shadow-luxe ${predictedAction.accent}`}>
+                      <predictedAction.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-display font-bold text-emerald-400 uppercase tracking-tight group-hover:text-emerald-300 transition-colors">
+                        {predictedAction.title}
+                      </h3>
+                      <p className="text-xs text-text-tertiary font-body mt-1 leading-relaxed opacity-90">
+                        {predictedAction.description}
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 rounded-sm bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-500/30 transition-all">
+                      <ChevronRight className="w-4 h-4 text-emerald-400 group-hover:text-white" />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
 
             {/* Side Terminal: Activity & Insight */}
             <div className="space-y-12">
