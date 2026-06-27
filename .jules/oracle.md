@@ -1,0 +1,6 @@
+## 2024-06-27 — Predictive Action Routing & Smart Defaults
+**Product understood as:** An AI legal assistant that helps citizens understand their rights and draft legal documents via a chat interface and specific tool pages.
+**Prediction invented:** Implemented a heuristic-based predictive engine that analyzes the user's most recent chat history (e.g. mentions of defective products, fees, police) and predicts the most likely next action they will want to take. The app now displays a prominent "SUGGESTED_NEXT_STEP" block on the Dashboard and automatically pre-selects the appropriate document template when they route to the Documents page.
+**Data used:** The existing `justice_ai_history` localStorage object, specifically the content of the user messages in the most recent consultation case.
+**Impact:** Users seamlessly transition from asking questions in chat to taking concrete action (drafting a document, calculating costs) without having to manually search for the right tool or template.
+**Next opportunity:** Predictive session warm-ups—pre-computing cost estimates or downloading template structures in the background as soon as high-confidence keywords are detected in the active chat, before they even visit the dashboard.
