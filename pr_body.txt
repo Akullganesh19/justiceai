@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Implemented `fetchWithRetry` utility with exponential backoff and updated all critical outbound HTTP calls (Gemini, DeepSeek, Bhashini, Ollama).
+**Failure scenario protected:** Transient network errors, rate limits (429), or temporary 5xx errors from third-party AI APIs and voice proxies breaking the user experience.
+**Recovery flow:** When an API call fails with a non-4xx error (or 429), it waits (100ms, 200ms, 400ms) and retries up to 3 times before finally throwing the error back to the client.
+**Blast radius before:** Any temporary glitch in an upstream provider caused a hard failure for the user, requiring a manual retry of their prompt.
+**Blast radius after:** The backend silently handles transient errors. Users experience a slightly longer delay (a few hundred milliseconds) but the request succeeds.
+**Logging/alerting:** Winston `logger.warn` fires on every retry attempt, capturing the status code or network error message.
+**Remaining failure points:** Internal fetch calls or database/vector store connections might still need similar retry wrappers.
