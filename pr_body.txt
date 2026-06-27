@@ -1,0 +1,8 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated the global `justice-ai-transcription` CustomEvent implementation to the React Context API.
+**Risk it eliminates:** Global DOM event bridges tightly couple otherwise independent components without type-safety or clear traceability, and natively fail to sync states correctly causing complex replay bugs on component remount.
+**Why now:** Technical debt from global events compounds as more inputs need to tap into the transcription stream. Migrating early reduces the blast radius of this legacy pattern.
+**Migration approach:** Created `TranscriptionContext` to centralize the state. Wrapped the application with `TranscriptionProvider`, refactored `FloatingVoiceButton` to update the context instead of dispatching global events, and updated `ChatInput` to consume `useTranscription`, correctly syncing the context timestamps using `useRef(transcription?.timestamp || 0)` to prevent replay bugs on remount.
+**Remaining:** Check if other components (like global document inputs) listen to the old 'justice-ai-transcription' CustomEvent and update them to `useTranscription`.
+**Next session:** Investigate other implicit event bridges (`justice-ai-history`, etc) to bring them into properly scoped React Contexts or local state.
