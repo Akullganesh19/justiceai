@@ -22,11 +22,96 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const redactRegexes = [
+  { regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, replacement: '[EMAIL REDACTED]' },
+  { regex: /\b\d{3}-\d{2}-\d{4}\b/g, replacement: '[SSN REDACTED]' },
+  { regex: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|2(?:22[1-9]|2[3-9][0-9]|[3-6][0-9]{2}|7[0-1][0-9]|720)[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|6(?:011|5[0-9]{2})[0-9]{12}|(?:2131|1800|35\d{3})\d{11})\b/g, replacement: '[CARD REDACTED]' },
+  { regex: /\b(?:api-?key|sk-[a-zA-Z0-9]{20,})\b/gi, replacement: '[KEY REDACTED]' }
+];
+
+const sensitiveKeys = ['email', 'password', 'ssn', 'card', 'cardnumber', 'apikey', 'api_key', 'authorization', 'secret', 'deepseek', 'gemini'];
+
+function redactString(str) {
+  let redacted = str;
+  for (const { regex, replacement } of redactRegexes) {
+    redacted = redacted.replace(regex, replacement);
+  }
+  return redacted;
+}
+
+function traverseAndRedactClone(obj, seen = new WeakSet()) {
+  if (obj === null || obj instanceof Date) {
+    return obj;
+  }
+
+  if (typeof obj === 'string') {
+    return redactString(obj);
+  }
+
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  let clone;
+  if (Array.isArray(obj)) {
+    clone = [];
+    for (let i = 0; i < obj.length; i++) {
+      clone[i] = traverseAndRedactClone(obj[i], seen);
+    }
+  } else if (obj instanceof Error) {
+    clone = new Error(redactString(obj.message));
+    if (obj.stack) clone.stack = redactString(obj.stack);
+
+    // Copy and redact custom properties on Error object
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key) && key !== 'message' && key !== 'stack') {
+         if (typeof key === 'string' && sensitiveKeys.includes(key.toLowerCase())) {
+          clone[key] = '[REDACTED]';
+        } else {
+          clone[key] = traverseAndRedactClone(obj[key], seen);
+        }
+      }
+    }
+  } else {
+    clone = Object.create(Object.getPrototypeOf(obj));
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (typeof key === 'string' && sensitiveKeys.includes(key.toLowerCase())) {
+          clone[key] = '[REDACTED]';
+        } else {
+          clone[key] = traverseAndRedactClone(obj[key], seen);
+        }
+      }
+    }
+  }
+
+  seen.delete(obj);
+  return clone;
+}
+
+const redactLog = winston.format((info) => {
+  // Pass info directly to traverseAndRedactClone; symbol keys might be lost by manual cloning
+  // but winston relies on them (e.g. Symbol.for('level')). So we shallow merge the clone back.
+  const clonedObj = traverseAndRedactClone(info);
+
+  // Winston needs Symbols (like Symbol.for('level'), Symbol.for('message')) which our cloner ignores
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    clonedObj[sym] = info[sym];
+  }
+  return clonedObj;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
     winston.format.timestamp(),
+    redactLog(),
     winston.format.json()
   ),
   transports: [
@@ -629,8 +714,8 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -698,8 +783,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -940,10 +1025,9 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error("Chat Error:", err);
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'Internal Server Error'
     });
   }
 });
@@ -963,16 +1047,16 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error('Embedding error:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error:', err);
   res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: 'Internal server error'
   });
 });
 
