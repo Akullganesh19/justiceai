@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,16 +379,53 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+  }, [savedDocs]);
 
   const handleSelect = (template) => {
+    if (!template) {
+      alert("Original template no longer exists.");
+      return;
+    }
     setSelectedTemplate(template);
     setStage('form');
   };
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      document: doc,
+      timestamp: new Date().toISOString()
+    };
+    setSavedDocs((prev) => [newDoc, ...prev]);
     setGeneratedDoc(doc);
     setStage('preview');
+  };
+
+  const loadDoc = (docId) => {
+    const d = savedDocs.find(x => x.id === docId);
+    if (!d) return;
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === d.templateId);
+    setSelectedTemplate(template);
+    setGeneratedDoc(d.document);
+    setStage('preview');
+  };
+
+  const deleteDoc = (docId) => {
+    setSavedDocs(prev => prev.filter(x => x.id !== docId));
   };
 
   const handleReset = () => {
@@ -432,6 +472,46 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="mt-16 space-y-6">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-white">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocs.map(doc => (
+                      <div key={doc.id} className="p-6 rounded-sm bg-void border-2 border-white/5 shadow-hard flex flex-col gap-4 group hover:border-gold/30 transition-all">
+                        <div>
+                          <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
+                            {doc.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-[10px] text-text-tertiary uppercase tracking-widest italic">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(doc.timestamp).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-auto pt-4 border-t border-white/5">
+                          <button
+                            onClick={() => loadDoc(doc.id)}
+                            className="flex-1 text-[10px] font-extrabold uppercase tracking-widest text-white bg-white/5 hover:bg-gold hover:text-midnight py-2 rounded-sm transition-all text-center"
+                          >
+                            VIEW
+                          </button>
+                          <button
+                            onClick={() => deleteDoc(doc.id)}
+                            className="p-2 rounded-sm bg-white/5 hover:bg-red-500/20 text-text-tertiary hover:text-red-400 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
