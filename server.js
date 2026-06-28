@@ -22,11 +22,63 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const sensitiveKeys = ['ip', 'email', 'password', 'token', 'apikey', 'card_number', 'ssn', 'address', 'dob', 'phone'];
+const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const ipRegex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
+const creditCardRegex = /\b(?:\d{4}[ -]?){3}\d{4}\b/g;
+
+const redactLog = winston.format((info) => {
+  const cloneAndRedact = (obj, seen = new WeakSet()) => {
+    if (obj === null || typeof obj !== 'object') {
+      if (typeof obj === 'string') {
+        let redacted = obj;
+        if (emailRegex.test(redacted)) redacted = redacted.replace(emailRegex, '[REDACTED EMAIL]');
+        if (ipRegex.test(redacted)) redacted = redacted.replace(ipRegex, '[REDACTED IP]');
+        if (creditCardRegex.test(redacted)) redacted = redacted.replace(creditCardRegex, '[REDACTED CC]');
+        return redacted;
+      }
+      return obj;
+    }
+
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) {
+      return { message: obj.message, stack: obj.stack, name: obj.name };
+    }
+
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    const cloned = Array.isArray(obj) ? [] : {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (sensitiveKeys.some(k => key.toLowerCase().includes(k))) {
+        cloned[key] = '[REDACTED]';
+      } else {
+        cloned[key] = cloneAndRedact(value, seen);
+      }
+    }
+
+    seen.delete(obj);
+    return cloned;
+  };
+
+  const redactedInfo = cloneAndRedact(info);
+
+  // Maintain Winston's required Symbol properties if they exist
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    redactedInfo[sym] = info[sym];
+  }
+
+  return redactedInfo;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format.errors({ stack: true }),
     winston.format.timestamp(),
+    redactLog(),
     winston.format.json()
   ),
   transports: [
@@ -385,11 +437,11 @@ async function loadAndIndexDocuments() {
     const mdFiles = allFiles.filter(f => f.endsWith('.md'));
 
     if (pdfFiles.length === 0 && txtFiles.length === 0 && mdFiles.length === 0) {
-      console.log('No documents found in public/documents/. RAG memory is empty.');
+      logger.info('No documents found in public/documents/. RAG memory is empty.');
       return;
     }
 
-    console.log(`Found ${pdfFiles.length} PDFs, ${txtFiles.length} TXT files, ${mdFiles.length} MD files. Extracting text...`);
+    logger.info(`Found ${pdfFiles.length} PDFs, ${txtFiles.length} TXT files, ${mdFiles.length} MD files. Extracting text...`);
     
     // Track text per source file for proper source attribution
     const sourceTexts = [];
@@ -400,9 +452,9 @@ async function loadAndIndexDocuments() {
         const dataBuffer = fs.readFileSync(path.join(DOCUMENTS_DIR, file));
         const pdfData = await parsePdf(dataBuffer);
         sourceTexts.push({ source: file, text: pdfData.text });
-        console.log(`  ✓ Loaded PDF: ${file} (${pdfData.text.length} chars)`);
+        logger.info(`  ✓ Loaded PDF: ${file} (${pdfData.text.length} chars)`);
       } catch (pdfErr) {
-        console.warn(`  ✗ Failed to parse PDF: ${file} — ${pdfErr.message}`);
+        logger.warn(`  ✗ Failed to parse PDF: ${file} — ${pdfErr.message}`);
       }
     }
 
@@ -411,9 +463,9 @@ async function loadAndIndexDocuments() {
       try {
         const text = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf-8');
         sourceTexts.push({ source: file, text });
-        console.log(`  ✓ Loaded TXT: ${file} (${text.length} chars)`);
+        logger.info(`  ✓ Loaded TXT: ${file} (${text.length} chars)`);
       } catch (txtErr) {
-        console.warn(`  ✗ Failed to read TXT: ${file} — ${txtErr.message}`);
+        logger.warn(`  ✗ Failed to read TXT: ${file} — ${txtErr.message}`);
       }
     }
 
@@ -422,9 +474,9 @@ async function loadAndIndexDocuments() {
       try {
         const text = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf-8');
         sourceTexts.push({ source: file, text });
-        console.log(`  ✓ Loaded MD: ${file} (${text.length} chars)`);
+        logger.info(`  ✓ Loaded MD: ${file} (${text.length} chars)`);
       } catch (mdErr) {
-        console.warn(`  ✗ Failed to read MD: ${file} — ${mdErr.message}`);
+        logger.warn(`  ✗ Failed to read MD: ${file} — ${mdErr.message}`);
       }
     }
 
@@ -443,12 +495,12 @@ async function loadAndIndexDocuments() {
           source: source
         });
       }
-      console.log(`  📦 Embedded ${rawChunks.length} chunks from ${source}`);
+      logger.info(`  📦 Embedded ${rawChunks.length} chunks from ${source}`);
     }
     
-    console.log(`✅ RAG Vector Database Loaded! Total chunks indexed: ${totalChunks}`);
+    logger.info(`✅ RAG Vector Database Loaded! Total chunks indexed: ${totalChunks}`);
   } catch (error) {
-    console.error('Error loading documents:', error);
+    logger.error('Error loading documents', { error });
   }
 }
 
@@ -533,7 +585,7 @@ app.post('/api/voice/process', async (req, res) => {
     
     // Check if Bhashini credentials are provided, otherwise enter Mock Mode
     if (!BHASHINI_API_KEY || !BHASHINI_USER_ID) {
-      console.log('⚠️ Bhashini Credentials missing. Running in MOCK MODE.');
+      logger.info('⚠️ Bhashini Credentials missing. Running in MOCK MODE.');
       
       if (task === 'asr') {
         // Mock transcription
@@ -629,8 +681,8 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error', { error: err });
+    res.status(500).json({ error: 'An error occurred processing the voice request.' });
   }
 });
 
@@ -698,8 +750,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error', { error });
+    res.status(500).json({ error: 'An error occurred during file upload.' });
   }
 });
 
@@ -728,7 +780,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  logger.info(`[ROUTE] Incoming POST /api/chat`, { bodyKeys: Object.keys(req.body || {}) });
   try {
     const { 
       messages, 
@@ -782,9 +834,9 @@ app.post('/api/chat', async (req, res) => {
         contextStr = "\n\nCRITICAL LEGAL PRECEDENTS (From Knowledge Base):\n" + 
                      topChunks.map(c => `[Source: ${c.source}] [Relevance: ${(c.score * 100).toFixed(1)}%]\n${c.content}`).join("\n\n---\n\n");
         
-        console.log(`  🔍 RAG retrieved top chunks from: ${retrievedSources.join(', ')}`);
+        logger.info(`  🔍 RAG retrieved top chunks from: ${retrievedSources.join(', ')}`);
       } catch (embedError) {
-        console.warn('Embedding failed, proceeding without RAG context:', embedError.message);
+        logger.warn('Embedding failed, proceeding without RAG context:', embedError.message);
       }
     }
 
@@ -821,7 +873,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info(`Routing query to Ollama`, { queryPreview: latestUserMessage.substring(0, 50) });
     
     try {
       if (stream) {
@@ -882,14 +934,14 @@ app.post('/api/chat', async (req, res) => {
         });
       }
     } catch (ollamaErr) {
-      console.warn(`⚠️ Ollama failure detected: ${ollamaErr.message}. Shifting to Gemini fallback...`);
+      logger.warn(`⚠️ Ollama failure detected: ${ollamaErr.message}. Shifting to Gemini fallback...`);
       
       let finalResult = null;
       let usedProvider = null;
       let errorChain = [`Ollama: ${ollamaErr.message}`];
 
       if (provider !== 'auto') {
-        console.log(`User-forced provider: ${provider}`);
+        logger.info(`User-forced provider: ${provider}`);
         if (provider === 'gemini') {
           finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
           usedProvider = 'Gemini (User Controlled)';
@@ -907,7 +959,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
             usedProvider = 'Gemini (Cloud Fallback)';
           } catch (geminiErr) {
-            console.warn(`⚠️ Gemini fallback failed: ${geminiErr.message}. Shifting to DeepSeek...`);
+            logger.warn(`⚠️ Gemini fallback failed: ${geminiErr.message}. Shifting to DeepSeek...`);
             errorChain.push(`Gemini: ${geminiErr.message}`);
           }
         }
@@ -918,7 +970,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
-            console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
+            logger.error(`❌ DeepSeek fallback failed`, { error: deepseekErr });
             errorChain.push(`DeepSeek: ${deepseekErr.message}`);
           }
         }
@@ -940,10 +992,9 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error("Chat Error", { error: err });
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'An internal server error occurred while processing the chat request.'
     });
   }
 });
@@ -963,16 +1014,16 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error("Embed Error", { error: err });
+    res.status(500).json({ error: 'An error occurred while generating embeddings.' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: 'Internal server error'
   });
 });
 
@@ -995,23 +1046,23 @@ app.use((req, res) => {
 setInterval(() => {}, 1000 * 60 * 60); // 1 hour tick
 
 app.listen(PORT, () => {
-  console.log(`\n⚖️  JusticeAI RAG Server running on port ${PORT}`);
-  console.log(`📡 API available at: http://localhost:${PORT}/api`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`\nMake sure Ollama is running:`);
-  console.log(`  ollama serve`);
-  console.log(`\nRequired models:`);
-  console.log(`  ollama pull ${EMBEDDING_MODEL}`);
-  console.log(`  ollama pull ${CHAT_MODEL}\n`);
+  logger.info(`\n⚖️  JusticeAI RAG Server running on port ${PORT}`);
+  logger.info(`📡 API available at: http://localhost:${PORT}/api`);
+  logger.info(`🏥 Health check: http://localhost:${PORT}/api/health`);
+  logger.info(`\nMake sure Ollama is running:`);
+  logger.info(`  ollama serve`);
+  logger.info(`\nRequired models:`);
+  logger.info(`  ollama pull ${EMBEDDING_MODEL}`);
+  logger.info(`  ollama pull ${CHAT_MODEL}\n`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
+  logger.info('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
