@@ -1,0 +1,6 @@
+## 2024-06-28 — Unprotected External API Calls
+**Failure point found:** Native HTTP `fetch` calls to third-party APIs (Gemini, DeepSeek, Bhashini) and the local backend (Ollama, RAG backend) had no retry logic. A transient 5xx error or 429 rate limit would cause immediate, hard failures for end-users without recovery.
+**Why it existed:** Initially implemented using standard `fetch` syntax without robust networking/error-handling considerations.
+**Recovery built:** Created `fetchWithRetry` wrapper employing an exponential backoff mechanism (3 max attempts) for both Node backend (`server.js`) and React frontend (`utils.ts`). It handles 429s, 5xx status codes, and raw network exceptions, gracefully backing off while preserving intentional manual `AbortError`s (like `AbortSignal.timeout`).
+**Blast radius before:** Any temporary API blip, database slowdown, or network partition resulted in a 100% failure rate for user requests relying on that service (affecting all active users interacting with AI chat or voice features).
+**Watch for:** Other areas of the codebase or newer third-party SDKs that bypass `fetchWithRetry` by directly using basic HTTP calls or their own unconfigured retry layers.
