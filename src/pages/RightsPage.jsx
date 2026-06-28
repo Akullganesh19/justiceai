@@ -53,8 +53,7 @@ const RIGHTS_DATA = [
     id: 2,
     category: 'consumer',
     title: 'Right to Redressal for Defective Goods',
-    summary:
-      'Provisions to return defective merchandise and claim a formal refund or replacement.',
+    summary: 'Provisions to return defective merchandise and claim a formal refund or replacement.',
     details:
       "Statutory provisions entitle consumers to a replacement, repair, or full consideration refund if a product exhibits manufacturing defects or fails to align with the seller's representations. Procedural filing at the Consumer Forum is streamlined and requires minimal oversight.",
     articles: ['Section 35 — Consumer Protection Act, 2019', 'Section 39 — Statutory Remedies'],
@@ -72,7 +71,10 @@ const RIGHTS_DATA = [
       'Legal safeguards against deceptive advertising, misleading representations, and predatory tactics.',
     details:
       'Unfair trade practices encompass false representations regarding quality, misleading digital advertisements, and bait-and-switch strategies. The Central Consumer Protection Authority (CCPA) is mandated to impose stringent penalties on such commercial violations.',
-    articles: ['Section 2(47) — Definition of Unfair Trade Practices', 'Section 18 — Statutory Powers of the CCPA'],
+    articles: [
+      'Section 2(47) — Definition of Unfair Trade Practices',
+      'Section 18 — Statutory Powers of the CCPA',
+    ],
     remedies: [
       'Submit a formal grievance to the CCPA through consumerhelpline.gov.in',
       'Initiate proceedings before the competent Consumer Forum',
@@ -98,7 +100,8 @@ const RIGHTS_DATA = [
     id: 5,
     category: 'tenant',
     title: 'Right Against Arbitrary Eviction',
-    summary: 'Procedural safeguards ensuring eviction proceeds only through valid legal grounds and due process.',
+    summary:
+      'Procedural safeguards ensuring eviction proceeds only through valid legal grounds and due process.',
     details:
       'Eviction requires the issuance of a formal notice and substantiation of valid legal grounds, such as non-payment or unauthorized subletting. Summary or self-help evictions, including utility disconnection, constitute a violation of tenant rights.',
     articles: [
@@ -139,7 +142,10 @@ const RIGHTS_DATA = [
       'Statutory entitlement to wages not below the floor limit established by the competent government authority.',
     details:
       'The Code on Wages, 2019, mandates a floor wage threshold. State governments are empowered to establish higher minimum remuneration limits. These provisions apply comprehensively to both scheduled and non-scheduled employment sectors.',
-    articles: ['Code on Wages, 2019 — Section 6', 'Article 43 — Directive Principle for Living Wages'],
+    articles: [
+      'Code on Wages, 2019 — Section 6',
+      'Article 43 — Directive Principle for Living Wages',
+    ],
     remedies: [
       'Submit a formal grievance to the jurisdictional Labour Commissioner',
       'Initiate a formal claim within the Labour Court',
@@ -168,7 +174,8 @@ const RIGHTS_DATA = [
     id: 9,
     category: 'employee',
     title: 'Right to Occupational Safety',
-    summary: 'Entitlement to a workplace environment free from recognized hazards and compliant with health standards.',
+    summary:
+      'Entitlement to a workplace environment free from recognized hazards and compliant with health standards.',
     details:
       'The Occupational Safety, Health and Working Conditions Code, 2020, stipulates rigorous standards for workplace environments. Employers are legally obligated to provide protective equipment, training, and regular health assessments. Non-compliance invites penal consequences.',
     articles: [
@@ -209,7 +216,7 @@ const RIGHTS_DATA = [
     summary:
       'Safeguards against physical, emotional, and economic abuse within domestic relationships.',
     details:
-      "The Protection of Women from Domestic Violence Act, 2005, provides comprehensive civil remedies, including protection and residence orders. These legal provisions are independent of matrimonial proceedings.",
+      'The Protection of Women from Domestic Violence Act, 2005, provides comprehensive civil remedies, including protection and residence orders. These legal provisions are independent of matrimonial proceedings.',
     articles: [
       'Domestic Violence Protection Act, 2005',
       'IPC Section 498A — Provisions regarding matrimonial cruelty',
@@ -226,7 +233,8 @@ const RIGHTS_DATA = [
     id: 12,
     category: 'women',
     title: 'Right to Equal Remuneration',
-    summary: 'Entitlement to parity in wages for work of identical or similar nature across all sectors.',
+    summary:
+      'Entitlement to parity in wages for work of identical or similar nature across all sectors.',
     details:
       'The Code on Wages, 2019, strictly prohibits gender-based discrimination in remuneration and recruitment processes for identical work. These statutory obligations apply universally across all employment establishments.',
     articles: [
@@ -371,7 +379,9 @@ function RightCard({ right, isExpanded, onToggle }) {
       className="bg-void rounded-sm border-2 border-white/5 overflow-hidden hover:border-gold/30 transition-all duration-300 shadow-hard group"
     >
       <button onClick={onToggle} className="w-full text-left p-8 flex items-start gap-6">
-        <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 mt-1 transition-all group-hover:border-gold shadow-hard">          <CategoryIcon className="w-7 h-7 text-white/40 group-hover:text-gold transition-all" />
+        <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 mt-1 transition-all group-hover:border-gold shadow-hard">
+          {' '}
+          <CategoryIcon className="w-7 h-7 text-white/40 group-hover:text-gold transition-all" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-3">
@@ -492,7 +502,8 @@ export default function RightsPage() {
             STATUTORY <span className="text-gold">PROTECTIONS</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] font-mono italic opacity-40">
-            EXPLORE YOUR FUNDAMENTAL AND STATUTORY PROTECTIONS UNDER THE INDIAN CONSTITUTION. EACH SECTION INCLUDES STATUTORY REFERENCES AND INSTITUTIONAL REMEDIES.
+            EXPLORE YOUR FUNDAMENTAL AND STATUTORY PROTECTIONS UNDER THE INDIAN CONSTITUTION. EACH
+            SECTION INCLUDES STATUTORY REFERENCES AND INSTITUTIONAL REMEDIES.
           </p>
         </div>
 
@@ -570,7 +581,8 @@ export default function RightsPage() {
                   No Results Found
                 </p>
                 <p className="text-xs text-text-tertiary/40 max-w-lg mx-auto leading-relaxed">
-                  No statutory records found matching your search. Try adjusting the filters or consult our AI advisor for specific clarification.
+                  No statutory records found matching your search. Try adjusting the filters or
+                  consult our AI advisor for specific clarification.
                 </p>
               </div>
 

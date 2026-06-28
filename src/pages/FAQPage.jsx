@@ -105,14 +105,15 @@ export default function FAQPage() {
             PROCEDURAL <span className="text-gold">FAQ</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.4em] italic opacity-60">
-            COMPREHENSIVE STATUTORY INTELLIGENCE FOR NAVIGATING THE JUSTICEAI CORE_SYSTEM_ARCHITECTURE.
+            COMPREHENSIVE STATUTORY INTELLIGENCE FOR NAVIGATING THE JUSTICEAI
+            CORE_SYSTEM_ARCHITECTURE.
           </p>
         </div>
 
         <div className="bg-void rounded-sm border-2 border-white/5 overflow-hidden shadow-hard relative">
           {/* Internal Statutory Accents */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gold/[0.02] border-l-2 border-b-2 border-gold/[0.05] pointer-events-none" />
-          
+
           {FAQ_DATA.map((item, i) => (
             <FAQItem
               key={i}
@@ -127,8 +128,10 @@ export default function FAQPage() {
         <div className="text-center p-16 bg-gold/[0.03] rounded-sm border-2 border-gold/15 space-y-10 shadow-hard relative overflow-hidden group">
           {/* Diagonal Stripe Background */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#D4AF37_10px,#D4AF37_11px)]" />
-          
-          <h2 className="text-3xl font-display font-bold text-white italic uppercase tracking-tighter relative z-10">INITIALIZE_LEGAL_STRATEGY?</h2>
+
+          <h2 className="text-3xl font-display font-bold text-white italic uppercase tracking-tighter relative z-10">
+            INITIALIZE_LEGAL_STRATEGY?
+          </h2>
           <motion.a
             href="/chat"
             whileHover={{ scale: 1.05 }}

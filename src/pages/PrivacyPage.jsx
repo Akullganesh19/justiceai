@@ -1,6 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Lock, Database, UserCheck, EyeOff, Scale, Server, Terminal, Zap } from 'lucide-react';
+import {
+  ShieldCheck,
+  Lock,
+  Database,
+  UserCheck,
+  EyeOff,
+  Scale,
+  Server,
+  Terminal,
+  Zap,
+} from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
 
@@ -10,7 +20,7 @@ export default function PrivacyPage() {
       icon: Database,
       title: 'LOCAL_FIRST_STORAGE_STREAMS',
       content:
-        "CASE_DATA AND GENERATED_DOCUMENTS STORED IN BROWSER_LOCAL_LAYER. COMPLETE SOVEREIGNTY OVER SENSITIVE LEGAL METADATA.",
+        'CASE_DATA AND GENERATED_DOCUMENTS STORED IN BROWSER_LOCAL_LAYER. COMPLETE SOVEREIGNTY OVER SENSITIVE LEGAL METADATA.',
     },
     {
       icon: ShieldCheck,
@@ -51,7 +61,8 @@ export default function PrivacyPage() {
               SHIELDING <span className="text-gold">SOVEREIGNTY</span>
             </h1>
             <p className="text-xs text-text-tertiary font-body uppercase tracking-[0.2em] max-w-2xl mx-auto italic opacity-60">
-              LEGAL INFORMATION IS THE MOST SENSITIVE VECTOR. WE DEPLOY SECURE STRATA TO PROTECT STRATEGY, IDENTITY, AND CITIZEN_RIGHTS.
+              LEGAL INFORMATION IS THE MOST SENSITIVE VECTOR. WE DEPLOY SECURE STRATA TO PROTECT
+              STRATEGY, IDENTITY, AND CITIZEN_RIGHTS.
             </p>
           </div>
 
@@ -68,7 +79,9 @@ export default function PrivacyPage() {
                   <section.icon className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-xl font-display font-extrabold text-white uppercase tracking-tight italic">{section.title}</h3>
+                  <h3 className="text-xl font-display font-extrabold text-white uppercase tracking-tight italic">
+                    {section.title}
+                  </h3>
                   <p className="text-sm text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic opacity-60">
                     {section.content}
                   </p>
@@ -79,19 +92,23 @@ export default function PrivacyPage() {
 
           {/* Secure Infrastructure Section */}
           <div className="p-12 rounded-sm bg-void border-2 border-gold/[0.15] relative overflow-hidden shadow-hard active:translate-y-[4px] transition-all group">
-             {/* Statutory Grid Background Overlay */}
+            {/* Statutory Grid Background Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
-            
+
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
               <Server className="w-48 h-48 text-white" />
             </div>
             <div className="relative z-10 space-y-6">
               <div className="flex items-center gap-4">
                 <Terminal className="w-6 h-6 text-gold" />
-                <h3 className="text-2xl font-display font-bold text-white uppercase italic tracking-tighter">TRUST_INFRASTRUCTURE_MODULE</h3>
+                <h3 className="text-2xl font-display font-bold text-white uppercase italic tracking-tighter">
+                  TRUST_INFRASTRUCTURE_MODULE
+                </h3>
               </div>
               <p className="text-sm text-text-tertiary leading-relaxed max-w-2xl font-body uppercase tracking-widest italic opacity-80">
-                PROMPT_FLOWS SERVED VIA DEDICATED VPC INSTANCES EXCLUSIVE TO AUTHORITY_NETWORK. ZERO EXTERNAL EXIT POINTS. FIREWALLED ANALYTICAL CYLES ENSURE 100% STRATEGY ENCAPSULATION. SOC2_TYPE_II PRINCIPLES ENFORCED.
+                PROMPT_FLOWS SERVED VIA DEDICATED VPC INSTANCES EXCLUSIVE TO AUTHORITY_NETWORK. ZERO
+                EXTERNAL EXIT POINTS. FIREWALLED ANALYTICAL CYLES ENSURE 100% STRATEGY
+                ENCAPSULATION. SOC2_TYPE_II PRINCIPLES ENFORCED.
               </p>
             </div>
           </div>

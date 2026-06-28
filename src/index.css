@@ -1195,7 +1195,6 @@
   }
 }
 
-
 /* ===== TUI TERMINAL EFFECTS ===== */
 .tui-crt {
   position: relative;
@@ -1203,7 +1202,7 @@
   background-color: #050505; /* Deep black */
 }
 .tui-crt::before {
-  content: " ";
+  content: ' ';
   display: block;
   position: absolute;
   top: 0;
@@ -1244,8 +1243,13 @@
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 .tui-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -1258,4 +1262,3 @@
   background: #3b82f6;
   border-radius: 4px;
 }
-

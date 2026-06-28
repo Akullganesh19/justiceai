@@ -1,7 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Home, Briefcase, LandPlot, Play, ArrowRight, Terminal, ShieldAlert } from 'lucide-react';
+import {
+  ShoppingBag,
+  Home,
+  Briefcase,
+  LandPlot,
+  Play,
+  ArrowRight,
+  Terminal,
+  ShieldAlert,
+} from 'lucide-react';
 import Header from '../components/ui/Header';
 
 const SAMPLES = [
@@ -82,9 +91,11 @@ export default function SamplesPage() {
                 <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-sm bg-gold/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center mb-10 group-hover:border-gold/40 group-hover:scale-110 transition-all shadow-hard relative">
-                   {/* ANALYZE BAR ANIMATION */}
-                   <div className="absolute inset-0 bg-gold/10 w-full h-1 group-hover:animate-analyze z-0" />
-                  <sample.icon className={`w-8 h-8 ${sample.color === 'text-red' ? 'text-gold' : sample.color === 'text-red-light' ? 'text-gold-light' : sample.color} relative z-10`} />
+                  {/* ANALYZE BAR ANIMATION */}
+                  <div className="absolute inset-0 bg-gold/10 w-full h-1 group-hover:animate-analyze z-0" />
+                  <sample.icon
+                    className={`w-8 h-8 ${sample.color === 'text-red' ? 'text-gold' : sample.color === 'text-red-light' ? 'text-gold-light' : sample.color} relative z-10`}
+                  />
                 </div>
 
                 <h3 className="text-xl font-display font-bold text-white mb-4 group-hover:text-gold transition-colors uppercase tracking-tight italic leading-tight">
@@ -107,29 +118,32 @@ export default function SamplesPage() {
         </div>
 
         <div className="mt-12 p-16 rounded-sm bg-void border-2 border-white/5 text-center space-y-10 shadow-hard relative overflow-hidden group hover:border-gold/20 transition-all">
-           {/* Background Decor */}
-           <div className="absolute bottom-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
-              <ShieldAlert className="w-48 h-48 text-white" />
-           </div>
-           
-           <div className="relative z-10 space-y-4">
-              <h2 className="text-4xl font-display font-bold text-white uppercase italic tracking-tighter">UNIQUE_CATEGORY_REQUIRED?</h2>
-              <p className="text-xs text-text-tertiary uppercase tracking-[0.2em] max-w-xl mx-auto italic opacity-60">
-                CUSTOM_MODEL_ENABLED. INITIALIZE A CUSTOM ANALYTICAL FLOW FOR NON-STANDARD LEGAL SCENARIOS.
-              </p>
-           </div>
-           
-           <div className="relative z-10 pt-4">
-              <motion.a
-                href="/chat"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-4 bg-gold border-2 border-gold-light/40 text-midnight px-14 py-6 rounded-sm font-extrabold text-[11px] uppercase tracking-[0.4em] transition-all shadow-hard-gold italic hover:bg-black hover:text-gold hover:shadow-hard active:shadow-none active:translate-y-[2px]"
-              >
-                <span>START_ANALYSIS</span>
-                <Play className="w-4 h-4 fill-current" />
-              </motion.a>
-           </div>
+          {/* Background Decor */}
+          <div className="absolute bottom-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+            <ShieldAlert className="w-48 h-48 text-white" />
+          </div>
+
+          <div className="relative z-10 space-y-4">
+            <h2 className="text-4xl font-display font-bold text-white uppercase italic tracking-tighter">
+              UNIQUE_CATEGORY_REQUIRED?
+            </h2>
+            <p className="text-xs text-text-tertiary uppercase tracking-[0.2em] max-w-xl mx-auto italic opacity-60">
+              CUSTOM_MODEL_ENABLED. INITIALIZE A CUSTOM ANALYTICAL FLOW FOR NON-STANDARD LEGAL
+              SCENARIOS.
+            </p>
+          </div>
+
+          <div className="relative z-10 pt-4">
+            <motion.a
+              href="/chat"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-4 bg-gold border-2 border-gold-light/40 text-midnight px-14 py-6 rounded-sm font-extrabold text-[11px] uppercase tracking-[0.4em] transition-all shadow-hard-gold italic hover:bg-black hover:text-gold hover:shadow-hard active:shadow-none active:translate-y-[2px]"
+            >
+              <span>START_ANALYSIS</span>
+              <Play className="w-4 h-4 fill-current" />
+            </motion.a>
+          </div>
         </div>
       </main>
     </div>

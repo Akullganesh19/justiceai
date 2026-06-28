@@ -232,7 +232,9 @@ function LawyerCard({ lawyer, index }) {
               {lawyer.name.split(' ').pop()[0]}
             </div>
             <div>
-              <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
+              <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">
+                {lawyer.name}
+              </h3>
               <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60">
                 {lawyer.court} // BCI ID: {lawyer.regNo}
               </p>
@@ -283,7 +285,7 @@ function LawyerCard({ lawyer, index }) {
             </div>
           </div>
           <div className="text-[10px] uppercase font-mono font-bold tracking-widest text-gold opacity-60">
-             {lawyer.languages.join(' • ').toUpperCase()}
+            {lawyer.languages.join(' • ').toUpperCase()}
           </div>
         </div>
 
@@ -381,7 +383,8 @@ export default function LawyerFinderPage() {
               ADVOCATE <span className="text-gold">REGISTRY</span>
             </h1>
             <p className="text-xs text-text-tertiary leading-relaxed max-w-xl mx-auto md:mx-0 opacity-40 uppercase tracking-[0.2em] italic">
-              ACCESS THE VALIDATED REGISTRY OF INDIAN STATUTORY ADVOCATES. FILTER BY JURISDICTION, SPECIALIZATION, AND PROCEDURAL CATEGORY.
+              ACCESS THE VALIDATED REGISTRY OF INDIAN STATUTORY ADVOCATES. FILTER BY JURISDICTION,
+              SPECIALIZATION, AND PROCEDURAL CATEGORY.
             </p>
           </div>
 
@@ -408,8 +411,11 @@ export default function LawyerFinderPage() {
 
         <div className="bg-void border-2 border-gold/20 rounded-sm px-6 py-4 flex items-center justify-center text-center -mt-4 shadow-inner italic">
           <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-[0.3em] font-extrabold">
-            <span className="text-gold mr-3 underline decoration-dotted">// INSTITUTIONAL_NOTICE:</span>
-            ADVOCATE PROFILES ARE FOR INFORMATIONAL PURPOSES. SYSTEM DOES NOT OFFICIALLY ENDORSE SPECIFIC COUNSEL.
+            <span className="text-gold mr-3 underline decoration-dotted">
+              // INSTITUTIONAL_NOTICE:
+            </span>
+            ADVOCATE PROFILES ARE FOR INFORMATIONAL PURPOSES. SYSTEM DOES NOT OFFICIALLY ENDORSE
+            SPECIFIC COUNSEL.
           </p>
         </div>
 
@@ -436,7 +442,7 @@ export default function LawyerFinderPage() {
                 </option>
               ))}
             </select>
-             <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-gold transition-colors" />
+            <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none group-hover:text-gold transition-colors" />
           </div>
           <div className="relative group">
             <select
@@ -458,7 +464,8 @@ export default function LawyerFinderPage() {
           <div className="flex items-center gap-4">
             <div className="w-3 h-3 bg-gold animate-pulse rounded-sm shadow-hard" />
             <p className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary">
-              <span className="text-gold font-bold">{filteredLawyers.length}</span> Verified Lawyers Available
+              <span className="text-gold font-bold">{filteredLawyers.length}</span> Verified Lawyers
+              Available
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -485,9 +492,11 @@ export default function LawyerFinderPage() {
           <div className="text-center py-32 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-hard space-y-10">
             <Search className="w-20 h-20 text-white/10 mx-auto" />
             <div className="space-y-4">
-              <p className="text-3xl font-display font-bold text-white uppercase tracking-tight leading-none">No Lawyers Found</p>
+              <p className="text-3xl font-display font-bold text-white uppercase tracking-tight leading-none">
+                No Lawyers Found
+              </p>
               <p className="text-[10px] text-text-tertiary uppercase tracking-widest opacity-40 max-w-lg mx-auto">
-                 We couldn't find any lawyers matching your current search parameters.
+                We couldn't find any lawyers matching your current search parameters.
               </p>
             </div>
             <button
@@ -506,34 +515,37 @@ export default function LawyerFinderPage() {
         <div className="p-10 bg-void border-2 border-gold/[0.15] rounded-sm shadow-hard relative overflow-hidden group/disclaimer hover:border-gold/40 transition-all italic">
           {/* Statutory Grid Background Overlay */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
-          
+
           <div className="absolute top-0 right-0 w-48 h-48 bg-gold/5 -mr-24 -mt-24 rotate-45 group-hover/disclaimer:bg-gold/10 transition-all pointer-events-none border border-gold/10" />
           <div className="flex items-start gap-6 mb-8 relative z-10">
-             <AlertCircle className="w-8 h-8 text-gold mt-1" />
-             <div className="space-y-2">
-               <p className="text-[14px] text-gold font-bold uppercase tracking-widest font-display">
+            <AlertCircle className="w-8 h-8 text-gold mt-1" />
+            <div className="space-y-2">
+              <p className="text-[14px] text-gold font-bold uppercase tracking-widest font-display">
                 Directory Disclaimer & Compliance Notice
               </p>
               <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-medium opacity-40">
                 Compliance Reference: BCI-ALPHA-4.2
               </p>
-             </div>
+            </div>
           </div>
           <div className="space-y-6 relative z-10">
             <p className="text-xs text-text-tertiary font-body leading-relaxed opacity-80 border-l-2 border-gold/20 pl-6">
-              Advocate profiles are indicative only. Mandatory credential verification is required via Bar Council protocols. Do not initialize any formal engagement without independent verification.
+              Advocate profiles are indicative only. Mandatory credential verification is required
+              via Bar Council protocols. Do not initialize any formal engagement without independent
+              verification.
             </p>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 pt-10 border-t border-white/5">
               <p className="text-[10px] text-text-tertiary/40 font-body uppercase tracking-widest leading-loose max-w-2xl">
-                The data displayed is part of JusticeAI's verified indexing service. Future updates will include deep-tier API integration with state bar councils.
+                The data displayed is part of JusticeAI's verified indexing service. Future updates
+                will include deep-tier API integration with state bar councils.
               </p>
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <p className="text-[10px] text-white/10 uppercase tracking-widest font-bold">
                   Registry Index v4.2.0
                 </p>
                 <div className="flex items-center gap-3">
-                   <div className="w-2 h-2 rounded-sm bg-gold shadow-hard" />
-                   <p className="text-[11px] text-gold font-bold uppercase tracking-widest">
+                  <div className="w-2 h-2 rounded-sm bg-gold shadow-hard" />
+                  <p className="text-[11px] text-gold font-bold uppercase tracking-widest">
                     Last Audit: April 2026
                   </p>
                 </div>

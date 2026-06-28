@@ -25,7 +25,7 @@ function TypewriterEffect({ text, speed = 8, onComplete }) {
 export default function AIChatPage() {
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
-  
+
   const [messages, setMessages] = useState(() => {
     try {
       const saved = localStorage.getItem('justice_ai_simple_chat');
@@ -121,18 +121,15 @@ How may I assist you with your legal matters today?`,
   };
 
   const handleTypingComplete = (id) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isTyping: false } : m))
-    );
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, isTyping: false } : m)));
   };
 
   return (
     <div className="min-h-screen bg-void flex flex-col font-mono text-slate-200">
-      
       {/* Statutory Header */}
       <header className="w-full px-8 py-6 border-b border-white/5 bg-void/80 backdrop-blur-md sticky top-0 flex items-center justify-between z-10 shadow-luxe">
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className="p-3 rounded-sm hover:bg-white/5 text-text-tertiary hover:text-gold transition-all border border-transparent hover:border-gold/20 shadow-hard"
           >
@@ -143,7 +140,9 @@ How may I assist you with your legal matters today?`,
               <Scale className="w-6 h-6 text-gold" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-extrabold tracking-widest text-white uppercase italic">JUSTICE_AI</h1>
+              <h1 className="text-xl font-display font-extrabold tracking-widest text-white uppercase italic">
+                JUSTICE_AI
+              </h1>
               <div className="flex items-center gap-1.5 text-[10px] text-gold font-extrabold uppercase tracking-widest opacity-60">
                 <Cpu className="w-3.5 h-3.5" />
                 <span>STATUTORY_SUBSYSTEM_V4.0</span>
@@ -163,19 +162,21 @@ How may I assist you with your legal matters today?`,
         <AnimatePresence>
           {messages.map((message) => {
             const isUser = message.role === 'user';
-            
+
             return (
-              <motion.div 
+              <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[85%] md:max-w-[75%] rounded-sm px-5 py-4 border-2 shadow-hard ${isUser ? 'bg-gold text-midnight border-gold-light/20' : 'bg-void border-white/5 text-text-tertiary shadow-inner italic font-mono'}`}>
+                <div
+                  className={`max-w-[85%] md:max-w-[75%] rounded-sm px-5 py-4 border-2 shadow-hard ${isUser ? 'bg-gold text-midnight border-gold-light/20' : 'bg-void border-white/5 text-text-tertiary shadow-inner italic font-mono'}`}
+                >
                   <div className="whitespace-pre-wrap leading-relaxed text-[15px]">
                     {!isUser && message.isTyping ? (
-                      <TypewriterEffect 
-                        text={message.content} 
+                      <TypewriterEffect
+                        text={message.content}
                         speed={8}
                         onComplete={() => handleTypingComplete(message.id)}
                       />
@@ -183,7 +184,7 @@ How may I assist you with your legal matters today?`,
                       message.content
                     )}
                   </div>
-                  
+
                   {!isUser && (
                     <div className="mt-4 flex items-center gap-2 text-[9px] text-gold font-extrabold uppercase tracking-[0.3em] opacity-40">
                       <Sparkles className="w-3 h-3" />
@@ -195,13 +196,23 @@ How may I assist you with your legal matters today?`,
             );
           })}
         </AnimatePresence>
-        
+
         {isLoading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-start"
+          >
             <div className="bg-void border-2 border-white/5 rounded-sm px-5 py-4 shadow-hard flex gap-1.5 items-center">
-               <div className="w-2 h-2 rounded-sm bg-white/10 animate-bounce shadow-hard" />
-               <div className="w-2 h-2 rounded-sm bg-gold/40 animate-bounce shadow-hard" style={{ animationDelay: '150ms' }} />
-               <div className="w-2 h-2 rounded-sm bg-gold animate-bounce shadow-hard" style={{ animationDelay: '300ms' }} />
+              <div className="w-2 h-2 rounded-sm bg-white/10 animate-bounce shadow-hard" />
+              <div
+                className="w-2 h-2 rounded-sm bg-gold/40 animate-bounce shadow-hard"
+                style={{ animationDelay: '150ms' }}
+              />
+              <div
+                className="w-2 h-2 rounded-sm bg-gold animate-bounce shadow-hard"
+                style={{ animationDelay: '300ms' }}
+              />
             </div>
           </motion.div>
         )}
@@ -219,7 +230,7 @@ How may I assist you with your legal matters today?`,
             placeholder="ENTER_STATUTORY_QUERY_HERE..."
             className="w-full bg-transparent px-8 py-5 outline-none text-text-primary placeholder:text-white/10 text-[14px] font-mono italic"
           />
-          <button 
+          <button
             onClick={() => sendMessage(inputValue)}
             disabled={!inputValue.trim() || isLoading}
             className="absolute right-3 p-3 rounded-sm bg-gold text-midnight disabled:opacity-20 disabled:cursor-not-allowed hover:bg-gold-light transition-all shadow-hard active:translate-y-[2px]"
@@ -231,7 +242,6 @@ How may I assist you with your legal matters today?`,
           INTELLIGENCE_RUNS_LOCALLY. TRANSACTION_SECURED. NOT_FORMAL_COUNSEL.
         </p>
       </footer>
-
     </div>
   );
 }

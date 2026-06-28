@@ -19,7 +19,7 @@ export default function AboutPage() {
       icon: Target,
       title: 'STRATEGIC_MANDATE',
       description:
-        "TO DEMOCRATIZE LEGAL SOVEREIGNTY. JUSTICE_STREAMS ARE THE REMEDY OF THE CITIZEN, NOT THE PRIVILEGE OF THE ELITE.",
+        'TO DEMOCRATIZE LEGAL SOVEREIGNTY. JUSTICE_STREAMS ARE THE REMEDY OF THE CITIZEN, NOT THE PRIVILEGE OF THE ELITE.',
     },
     {
       icon: Users,
@@ -63,7 +63,8 @@ export default function AboutPage() {
             variants={itemVariants}
             className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.4em] italic opacity-60"
           >
-            // JUSTICE_AI_SYSTEM_CORE_V4 // ESTABLISHED_TO_BRIDGE_THE_GAP_BETWEEN_COMPLEX_PROCEDURAL_JARGON_AND_CITIZEN_SOVEREIGNTY.
+            // JUSTICE_AI_SYSTEM_CORE_V4 //
+            ESTABLISHED_TO_BRIDGE_THE_GAP_BETWEEN_COMPLEX_PROCEDURAL_JARGON_AND_CITIZEN_SOVEREIGNTY.
           </motion.p>
         </motion.div>
 
@@ -82,11 +83,13 @@ export default function AboutPage() {
             >
               {/* STATUTORY_CORNER_ACCENT */}
               <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-gold/0 group-hover:border-gold/40 transition-all" />
-              
+
               <div className="w-14 h-14 rounded-sm bg-void flex items-center justify-center border-2 border-white/10 group-hover:border-gold/40 transition-colors shadow-inner">
                 <feature.icon className="w-7 h-7 text-gold" />
               </div>
-              <h3 className="text-sm font-display font-bold text-white uppercase tracking-widest italic">{feature.title}</h3>
+              <h3 className="text-sm font-display font-bold text-white uppercase tracking-widest italic">
+                {feature.title}
+              </h3>
               <p className="text-[10px] text-text-tertiary leading-loose uppercase tracking-widest italic opacity-60">
                 {feature.description}
               </p>
@@ -101,33 +104,40 @@ export default function AboutPage() {
           viewport={{ once: true }}
           className="p-12 rounded-sm bg-void border-2 border-gold/15 space-y-10 shadow-hard relative"
         >
-           {/* Scanning Bar Animation */}
-           <div className="absolute top-0 left-0 w-full h-[2px] bg-gold/20 overflow-hidden">
-            <motion.div 
-               animate={{ x: ['-100%', '100%'] }} 
-               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-               className="w-1/3 h-full bg-gold shadow-[0_0_15px_rgba(212,175,55,0.8)]" 
+          {/* Scanning Bar Animation */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gold/20 overflow-hidden">
+            <motion.div
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+              className="w-1/3 h-full bg-gold shadow-[0_0_15px_rgba(212,175,55,0.8)]"
             />
           </div>
 
           <div className="flex items-center gap-6 border-b-2 border-white/5 pb-8">
             <Shield className="w-8 h-8 text-gold" />
-            <h2 className="text-3xl font-display font-bold text-white uppercase tracking-tighter italic">MANDATORY_DISCLOSURE</h2>
+            <h2 className="text-3xl font-display font-bold text-white uppercase tracking-tighter italic">
+              MANDATORY_DISCLOSURE
+            </h2>
           </div>
           <div className="space-y-6 text-[10px] text-text-tertiary leading-loose uppercase tracking-[0.2em] italic">
             <p className="opacity-80">
-              JUSTICE_AI IS AN ANALYTICAL INFORMATION VECTOR POWERED BY ARTIFICIAL_INTELLIGENCE. IT IS DESIGNED FOR
-              INFORMATIONAL PURPOSES ONLY. <strong className="text-gold font-extrabold underline decoration-dotted">JUSTICE_AI IS NOT A LICENSED ADVOCATE AND DOES NOT PROVIDE BINDING LEGAL COUNSEL_MANDATES.</strong>
+              JUSTICE_AI IS AN ANALYTICAL INFORMATION VECTOR POWERED BY ARTIFICIAL_INTELLIGENCE. IT
+              IS DESIGNED FOR INFORMATIONAL PURPOSES ONLY.{' '}
+              <strong className="text-gold font-extrabold underline decoration-dotted">
+                JUSTICE_AI IS NOT A LICENSED ADVOCATE AND DOES NOT PROVIDE BINDING LEGAL
+                COUNSEL_MANDATES.
+              </strong>
             </p>
             <p className="opacity-60">
-              WHILE WE STRIVE TO PROVIDE ACCURATE LEGAL ANALYTICS BASED ON INDIAN STATUTES, LAWS
-              AND INTERPRETATIONS ARE SUBJECT TO REGULATORY CYCLES. THE PREDICTIONS AND STRATEGIES PROVIDED ARE ESTIMATES
-              BY THE AI_CORE_LOGIC AND SHOULD NOT BE CONSIDERED AS A GUARANTEE OF ANY JURIDICAL OUTCOME.
+              WHILE WE STRIVE TO PROVIDE ACCURATE LEGAL ANALYTICS BASED ON INDIAN STATUTES, LAWS AND
+              INTERPRETATIONS ARE SUBJECT TO REGULATORY CYCLES. THE PREDICTIONS AND STRATEGIES
+              PROVIDED ARE ESTIMATES BY THE AI_CORE_LOGIC AND SHOULD NOT BE CONSIDERED AS A
+              GUARANTEE OF ANY JURIDICAL OUTCOME.
             </p>
             <p className="opacity-60 border-l-4 border-gold/20 pl-8">
-              ALWAYS CONSULT WITH A QUALIFIED STATUTORY_ADVOCATE OR LEGAL PROFESSIONAL BEFORE TAKING ANY
-              FORMAL LEGAL STEPS, FILING CASES, OR EXECUTING LEGAL INSTRUMENTS. YOUR USE OF THIS TERMINAL
-              ACKNOWLEDGES THAT YOU COMPREHEND THESE SYSTEM_LIMITATIONS.
+              ALWAYS CONSULT WITH A QUALIFIED STATUTORY_ADVOCATE OR LEGAL PROFESSIONAL BEFORE TAKING
+              ANY FORMAL LEGAL STEPS, FILING CASES, OR EXECUTING LEGAL INSTRUMENTS. YOUR USE OF THIS
+              TERMINAL ACKNOWLEDGES THAT YOU COMPREHEND THESE SYSTEM_LIMITATIONS.
             </p>
           </div>
         </motion.div>
@@ -135,4 +145,3 @@ export default function AboutPage() {
     </div>
   );
 }
-

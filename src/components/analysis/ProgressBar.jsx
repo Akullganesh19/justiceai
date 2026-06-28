@@ -31,9 +31,9 @@ export function ProgressBar({ progress = 0 }) {
           className="absolute h-full bg-gold shadow-hard"
         />
         {/* Subtle Shimmer Overlay */}
-        <motion.div 
+        <motion.div
           animate={{ x: ['-100%', '200%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent w-1/2 pointer-events-none"
         />
       </div>
