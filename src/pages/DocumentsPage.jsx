@@ -102,7 +102,10 @@ function FormWizard({ template, onBack, onGenerate }) {
       {/* Progress Bar */}
       <div className="flex gap-2 mb-10">
         {Array.from({ length: totalSteps }).map((_, i) => (
-          <div key={i} className="flex-1 h-2 rounded-sm overflow-hidden bg-void border border-white/5 shadow-inner">
+          <div
+            key={i}
+            className="flex-1 h-2 rounded-sm overflow-hidden bg-void border border-white/5 shadow-inner"
+          >
             <motion.div
               className={`h-full ${i <= currentStep ? 'bg-gold shadow-hard' : 'bg-white/10'}`}
               initial={{ width: 0 }}
@@ -325,11 +328,7 @@ function DocumentPreview({ document, template, onBack }) {
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
           >
-            {copied ? (
-              <Check className="w-4 h-4 text-gold" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
+            {copied ? <Check className="w-4 h-4 text-gold" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
           <button
@@ -363,8 +362,8 @@ function DocumentPreview({ document, template, onBack }) {
       {/* Action Footer */}
       <div className="mt-8 p-6 bg-gold/5 border-2 border-gold/20 rounded-sm italic shadow-hard">
         <p className="text-[10px] text-gold/80 leading-relaxed font-mono uppercase tracking-widest">
-          <strong>⚠️ STATUTORY_NOTICE:</strong> This document is auto-generated for informational purposes
-          only. It must be reviewed by a licensed advocate before formal submission.
+          <strong>⚠️ STATUTORY_NOTICE:</strong> This document is auto-generated for informational
+          purposes only. It must be reviewed by a licensed advocate before formal submission.
           Jurisdictional variance may apply.
         </p>
       </div>

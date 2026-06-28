@@ -26,7 +26,7 @@ export default function LoadingSpinner() {
             <Scale className="w-12 h-12 text-gold" />
           </motion.div>
           <div className="absolute -top-3 -right-3">
-             <Shield className="w-6 h-6 text-gold animate-pulse" />
+            <Shield className="w-6 h-6 text-gold animate-pulse" />
           </div>
         </div>
 

@@ -71,7 +71,9 @@ export default function MobileNav({ isOpen, onClose }) {
                 <div className="w-8 h-8 rounded-sm bg-gold/10 flex items-center justify-center border-2 border-gold/20 shadow-luxe">
                   <Scale className="w-4 h-4 text-gold" />
                 </div>
-                <span className="font-display text-lg text-white font-bold uppercase tracking-tighter italic">JUSTICE<span className="text-gold">AI</span></span>
+                <span className="font-display text-lg text-white font-bold uppercase tracking-tighter italic">
+                  JUSTICE<span className="text-gold">AI</span>
+                </span>
               </div>
               <button
                 onClick={onClose}
@@ -93,19 +95,19 @@ export default function MobileNav({ isOpen, onClose }) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
                   >
-                  <Link
-                    to={item.path}
-                    onClick={onClose}
-                    className={`flex items-center gap-4 px-6 py-4 rounded-sm text-[10px] uppercase font-extrabold tracking-widest transition-all italic border-2 ${
-                      isActive
-                        ? 'bg-gold border-gold text-midnight shadow-luxe'
-                        : 'text-text-secondary hover:bg-white/5 hover:text-white border-transparent'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                    {isActive && <div className="ml-auto w-1.5 h-1.5 bg-midnight" />}
-                  </Link>
+                    <Link
+                      to={item.path}
+                      onClick={onClose}
+                      className={`flex items-center gap-4 px-6 py-4 rounded-sm text-[10px] uppercase font-extrabold tracking-widest transition-all italic border-2 ${
+                        isActive
+                          ? 'bg-gold border-gold text-midnight shadow-luxe'
+                          : 'text-text-secondary hover:bg-white/5 hover:text-white border-transparent'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                      {isActive && <div className="ml-auto w-1.5 h-1.5 bg-midnight" />}
+                    </Link>
                   </motion.div>
                 );
               })}

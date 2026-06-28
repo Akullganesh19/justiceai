@@ -176,7 +176,8 @@ export default function GlossaryPage() {
             LEGAL <span className="text-gold">LEXICON</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
-            A COMPREHENSIVE REPOSITORY OF {GLOSSARY_TERMS.length}+ ESSENTIAL LEGAL TERMS. PROVIDING CLARITY ON INDIAN STATUTORY PROVISIONS AND PROCEDURAL STANDARDS.
+            A COMPREHENSIVE REPOSITORY OF {GLOSSARY_TERMS.length}+ ESSENTIAL LEGAL TERMS. PROVIDING
+            CLARITY ON INDIAN STATUTORY PROVISIONS AND PROCEDURAL STANDARDS.
           </p>
         </div>
 
@@ -284,7 +285,8 @@ export default function GlossaryPage() {
                   No Results Found
                 </p>
                 <p className="text-xs text-text-tertiary/40 max-w-lg mx-auto leading-relaxed">
-                  The term you are looking for is not in our current statutory records. Try adjusting your search query or consult our AI.
+                  The term you are looking for is not in our current statutory records. Try
+                  adjusting your search query or consult our AI.
                 </p>
               </div>
 

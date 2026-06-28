@@ -24,7 +24,7 @@ export async function sendMessage(conversationHistory, userMessage, options = {}
         jurisdiction: jurisdiction,
         basePrompt: SYSTEM_PROMPT,
         provider: localStorage.getItem('justice_ai_provider') || 'ollama',
-        apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}')
+        apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}'),
       }),
     });
 

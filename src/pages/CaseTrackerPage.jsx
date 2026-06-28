@@ -157,7 +157,12 @@ const CASE_TEMPLATES = {
         description: 'Procedural final arguments by both side councils',
         completed: false,
       },
-      { id: 11, label: 'FINAL_ADJUDICATION', description: 'Judicial pronouncement of verdict', completed: false },
+      {
+        id: 11,
+        label: 'FINAL_ADJUDICATION',
+        description: 'Judicial pronouncement of verdict',
+        completed: false,
+      },
       {
         id: 12,
         label: 'SENTENCING_PROTOCOL',
@@ -230,7 +235,12 @@ const CASE_TEMPLATES = {
         description: 'Procedural final arguments based on framed trial issues',
         completed: false,
       },
-      { id: 11, label: 'FINAL_ADJUDICATION', description: 'Judicial pronouncement of judgment', completed: false },
+      {
+        id: 11,
+        label: 'FINAL_ADJUDICATION',
+        description: 'Judicial pronouncement of judgment',
+        completed: false,
+      },
       {
         id: 12,
         label: 'EXECUTION_PROTOCOL',
@@ -262,7 +272,12 @@ const CASE_TEMPLATES = {
         description: 'Formal submission of complaint at the State RERA Authority portal',
         completed: false,
       },
-      { id: 4, label: 'FILING_FEE_SETTLEMENT', description: 'Settlement of mandated Rs. 5,000 regulatory fee', completed: false },
+      {
+        id: 4,
+        label: 'FILING_FEE_SETTLEMENT',
+        description: 'Settlement of mandated Rs. 5,000 regulatory fee',
+        completed: false,
+      },
       {
         id: 5,
         label: 'ADMISSION_HEARING',
@@ -337,8 +352,18 @@ const CASE_TEMPLATES = {
         description: 'Submission of original memo, notice, and service proof',
         completed: false,
       },
-      { id: 8, label: 'FINAL_ARGUMENTS', description: 'Submission of arguments for conviction', completed: false },
-      { id: 9, label: 'FINAL_ADJUDICATION', description: 'Judicial pronouncement of verdict', completed: false },
+      {
+        id: 8,
+        label: 'FINAL_ARGUMENTS',
+        description: 'Submission of arguments for conviction',
+        completed: false,
+      },
+      {
+        id: 9,
+        label: 'FINAL_ADJUDICATION',
+        description: 'Judicial pronouncement of verdict',
+        completed: false,
+      },
       {
         id: 10,
         label: 'COMPENSATION_EXECUTION',
@@ -574,7 +599,7 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
                 <div className="mt-8 pt-8 border-t border-white/5 space-y-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                       <input
+                      <input
                         type="date"
                         value={step.expectedDate || ''}
                         onChange={(e) => onUpdateStep(step.id, { expectedDate: e.target.value })}
@@ -726,7 +751,10 @@ export default function CaseTrackerPage() {
       ],
     }));
     setNewStepLabel('');
-    success({ title: 'Stage Added', message: `"${newStepLabel}" has been added to the case timeline.` });
+    success({
+      title: 'Stage Added',
+      message: `"${newStepLabel}" has been added to the case timeline.`,
+    });
   };
 
   const createNewCase = () => {
@@ -751,7 +779,10 @@ export default function CaseTrackerPage() {
     setActiveCaseId(newCase.id);
     setShowNewCaseModal(false);
     setNewCaseName('');
-    success({ title: 'Case Created', message: `${template.name} has been initialized successfully.` });
+    success({
+      title: 'Case Created',
+      message: `${template.name} has been initialized successfully.`,
+    });
   };
 
   const deleteCase = (caseId) => {
@@ -801,7 +832,8 @@ export default function CaseTrackerPage() {
             PROCEDURAL <span className="text-gold">TRACKER</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
-            MONITOR PROCEDURAL LIFECYCLE AND STATUTORY MILESTONES. ARCHIVE ESSENTIAL DOCUMENTATION FOR BNS, BNSS, AND CIVIL LITIGATION FLOWS.
+            MONITOR PROCEDURAL LIFECYCLE AND STATUTORY MILESTONES. ARCHIVE ESSENTIAL DOCUMENTATION
+            FOR BNS, BNSS, AND CIVIL LITIGATION FLOWS.
           </p>
         </div>
 
@@ -830,14 +862,16 @@ export default function CaseTrackerPage() {
                   ACTIVE_LIFECYCLES
                 </label>
               </div>
-              
+
               {cases.length === 0 ? (
                 <div className="p-16 text-center bg-void rounded border-2 border-white/5 shadow-inner space-y-6">
                   <div className="w-20 h-20 rounded bg-void border-2 border-white/5 flex items-center justify-center mx-auto text-white/5 shadow-luxe">
                     <Milestone className="w-10 h-10" />
                   </div>
                   <p className="text-[10px] text-text-tertiary leading-relaxed font-extrabold uppercase tracking-[0.3em] opacity-40 italic">
-                    NO_CONSULTATION_RECORDS_FOUND.<br/>INITIALIZE_LIFECYCLE_TO_BEGIN.
+                    NO_CONSULTATION_RECORDS_FOUND.
+                    <br />
+                    INITIALIZE_LIFECYCLE_TO_BEGIN.
                   </p>
                 </div>
               ) : (
@@ -944,7 +978,7 @@ export default function CaseTrackerPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-col items-end gap-4 bg-white/10 p-10 rounded-sm border-2 border-white/20 backdrop-blur-md shadow-hard min-w-[240px] italic">
                       <span className="text-[10px] font-extrabold tracking-widest opacity-60 uppercase text-midnight">
                         EFFICIENCY_PRECISION_INDEX
@@ -1013,7 +1047,7 @@ export default function CaseTrackerPage() {
                           Timeline Progression
                         </label>
                       </div>
-                      
+
                       <div className="space-y-4">
                         <AnimatePresence mode="popLayout">
                           {activeCase.steps.map((step, idx) => (
@@ -1055,13 +1089,15 @@ export default function CaseTrackerPage() {
                   <div className="space-y-12">
                     <div className="p-10 rounded-sm bg-void border-2 border-white/10 space-y-12 shadow-hard relative overflow-hidden group/details">
                       <div className="absolute top-0 right-0 w-56 h-56 bg-gold/5 blur-[100px] rounded-sm group-hover/details:bg-gold/10 transition-all pointer-events-none" />
-                      
+
                       <div className="flex items-center gap-4 relative z-10">
                         <div className="w-12 h-12 rounded-sm bg-void border-2 border-gold/20 flex items-center justify-center text-gold shadow-hard">
                           <Building className="w-6 h-6" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[9px] text-gold font-extrabold uppercase tracking-[0.3em] opacity-60 italic">ENTITY_MANAGEMENT_NODE</p>
+                          <p className="text-[9px] text-gold font-extrabold uppercase tracking-[0.3em] opacity-60 italic">
+                            ENTITY_MANAGEMENT_NODE
+                          </p>
                           <label className="text-xl font-display font-bold text-white uppercase tracking-tight italic">
                             INSTITUTION_DETAILS
                           </label>
@@ -1129,7 +1165,9 @@ export default function CaseTrackerPage() {
                     START_PROGRESS_TRACING
                   </h3>
                   <p className="text-[10px] text-text-tertiary leading-relaxed max-w-[480px] mx-auto opacity-40 font-extrabold uppercase tracking-[0.3em] italic">
-                    NO_ACTIVE_CASE_SESSIONS_FORMULATED.<br/>INITIALIZE_LIFECYCLE_MANDATE_TO_PROCEED.
+                    NO_ACTIVE_CASE_SESSIONS_FORMULATED.
+                    <br />
+                    INITIALIZE_LIFECYCLE_MANDATE_TO_PROCEED.
                   </p>
                   <button
                     onClick={() => setShowNewCaseModal(true)}
@@ -1163,7 +1201,8 @@ export default function CaseTrackerPage() {
                   </h2>
                 </div>
                 <p className="text-sm text-text-tertiary/60 font-medium tracking-wide italic">
-                  Select a template to generate a professional case timeline and begin strategic tracking.
+                  Select a template to generate a professional case timeline and begin strategic
+                  tracking.
                 </p>
               </div>
 
@@ -1184,7 +1223,9 @@ export default function CaseTrackerPage() {
                         >
                           {type.name}
                         </p>
-                        <p className={`text-[10px] font-body italic opacity-70 leading-relaxed uppercase tracking-wider ${selectedCaseType === type.id ? 'text-midnight' : 'text-text-tertiary'}`}>
+                        <p
+                          className={`text-[10px] font-body italic opacity-70 leading-relaxed uppercase tracking-wider ${selectedCaseType === type.id ? 'text-midnight' : 'text-text-tertiary'}`}
+                        >
                           {type.description}
                         </p>
                       </button>
@@ -1244,7 +1285,8 @@ export default function CaseTrackerPage() {
                   </h2>
                 </div>
                 <p className="text-sm text-text-tertiary/60 font-medium tracking-wide italic">
-                  Synchronize your local case data with the official judicial repository for real-time status updates.
+                  Synchronize your local case data with the official judicial repository for
+                  real-time status updates.
                 </p>
               </div>
 
@@ -1265,7 +1307,8 @@ export default function CaseTrackerPage() {
                 <div className="bg-gold/5 border-2 border-gold/20 rounded-sm p-8 shadow-hard flex items-start gap-5">
                   <AlertCircle className="w-6 h-6 text-gold shrink-0 mt-0.5" />
                   <p className="text-[9px] text-gold font-extrabold tracking-[0.2em] uppercase leading-relaxed opacity-80 italic">
-                    GOVERNMENT_API_INTEGRATION_STANDBY. CNR_SYNCHRONIZATION_PENDING_PRODUCTION_HANDSHAKE_VERIFICATION.
+                    GOVERNMENT_API_INTEGRATION_STANDBY.
+                    CNR_SYNCHRONIZATION_PENDING_PRODUCTION_HANDSHAKE_VERIFICATION.
                   </p>
                 </div>
               </div>

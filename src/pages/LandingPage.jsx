@@ -104,7 +104,7 @@ const TESTIMONIALS = [
     name: 'Amitav Ghosh',
     city: 'Kolkata',
     quote:
-      'The Limitation Calculator alerted me that I only had a few days left to file my claim. It ensured my case wasn\'t time-barred.',
+      "The Limitation Calculator alerted me that I only had a few days left to file my claim. It ensured my case wasn't time-barred.",
     caseType: 'MACT',
     rating: 5,
   },
@@ -147,11 +147,11 @@ function TestimonialCard({ testimonial }) {
             {testimonial.name}
           </p>
           <p className="text-[10px] text-gold font-body uppercase tracking-widest font-bold mt-1 opacity-60">
-             {testimonial.city}
+            {testimonial.city}
           </p>
         </div>
         <span className="text-[10px] uppercase font-extrabold tracking-widest text-midnight px-4 py-1.5 bg-gold border-2 border-gold/20 rounded-sm shadow-hard font-display italic">
-           {testimonial.caseType}
+          {testimonial.caseType}
         </span>
       </div>
     </div>
@@ -184,7 +184,7 @@ function NewsTicker() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
             className="flex items-center gap-4 min-w-0"
           >
             <span className="text-[9px] uppercase font-extrabold tracking-widest text-white/40 px-3 py-1 bg-white/5 rounded-sm flex-shrink-0 italic">
@@ -318,7 +318,7 @@ export default function LandingPage() {
     <div className="relative min-h-screen overflow-hidden bg-void font-mono">
       {/* Motion Graphics Canvas */}
       <MotionGraphics />
-      
+
       {/* Background Effects */}
       <div className="aurora-effect">
         <div className="aurora-blob bg-gold/5 opacity-20"></div>
@@ -360,7 +360,8 @@ export default function LandingPage() {
                 <span className="text-gold">JUSTICE.</span>
               </h1>
               <p className="text-xs md:text-sm text-text-tertiary font-mono max-w-xl leading-relaxed border-l-2 border-gold/40 pl-8 mx-auto lg:mx-0 opacity-60 uppercase tracking-[0.2em] italic">
-                EMPOWERING CITIZENS WITH ADVANCED STATUTORY ANALYTICS. DECODE COMPLEX PROTOCOLS AND NAVIGATE THE INDIAN INSTITUTIONAL SYSTEM WITH ABSOLUTE CLARITY.
+                EMPOWERING CITIZENS WITH ADVANCED STATUTORY ANALYTICS. DECODE COMPLEX PROTOCOLS AND
+                NAVIGATE THE INDIAN INSTITUTIONAL SYSTEM WITH ABSOLUTE CLARITY.
               </p>
             </motion.div>
 
@@ -379,7 +380,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 px-8 py-5 rounded-sm border-2 border-white/5 bg-void shadow-hard">
                 <ShieldCheck className="w-5 h-5 text-gold" />
                 <span className="text-[10px] font-extrabold text-text-tertiary uppercase tracking-[0.4em] opacity-40 italic">
-                   BNS_2023_COMPLIANT
+                  BNS_2023_COMPLIANT
                 </span>
               </div>
             </motion.div>
@@ -401,7 +402,7 @@ export default function LandingPage() {
                   24/7
                 </span>
                 <p className="text-[9px] uppercase tracking-widest text-text-tertiary font-bold opacity-40">
-                   System Uptime
+                  System Uptime
                 </p>
               </div>
               <div className="space-y-2 text-center lg:text-left">
@@ -419,9 +420,9 @@ export default function LandingPage() {
           <motion.div variants={itemVariants} className="hidden lg:block relative">
             <div className="absolute inset-0 bg-gold/10 blur-[150px] rounded-sm opacity-20" />
             <div className="relative bg-void border-2 border-white/5 rounded-sm p-12 shadow-hard space-y-10 group overflow-hidden">
-               {/* Internal Animation Accent */}
+              {/* Internal Animation Accent */}
               <div className="absolute top-0 right-0 w-full h-[1px] bg-gold/20 group-hover:bg-gold/40 transition-colors" />
-              
+
               <div className="flex items-center gap-6 border-b border-white/5 pb-10">
                 <div className="w-16 h-16 rounded-sm bg-void border-2 border-gold/20 flex items-center justify-center shadow-hard group-hover:border-gold transition-all">
                   <FileText className="w-8 h-8 text-gold" />
@@ -446,7 +447,7 @@ export default function LandingPage() {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: '98.4%' }}
-                      transition={{ delay: 1, duration: 1.5, ease: "easeOut" }}
+                      transition={{ delay: 1, duration: 1.5, ease: 'easeOut' }}
                       className="h-full bg-gold shadow-luxe"
                     />
                   </div>
@@ -455,16 +456,18 @@ export default function LandingPage() {
                 <div className="space-y-6 pt-2">
                   <div className="p-8 rounded-sm bg-void border-2 border-white/5 text-[12px] text-text-tertiary leading-relaxed font-body shadow-hard border-l-4 border-l-gold relative italic">
                     <span className="text-white font-bold block mb-2 uppercase tracking-widest text-[10px]">
-                       // Strategic Assessment:
+                      // Strategic Assessment:
                     </span>
-                    Identification of key protections under <strong className="text-gold">BNS Section 35</strong> completes. Recommendation: Proceed with formal consumer notice drafting.
+                    Identification of key protections under{' '}
+                    <strong className="text-gold">BNS Section 35</strong> completes. Recommendation:
+                    Proceed with formal consumer notice drafting.
                   </div>
                   <div className="flex gap-4">
                     <span className="px-6 py-2 rounded-sm border-2 border-gold/30 text-[9px] text-gold font-extrabold uppercase tracking-widest italic shadow-hard">
-                       Deep Insights
+                      Deep Insights
                     </span>
                     <span className="px-6 py-2 rounded-sm border-2 border-white/10 text-[9px] text-text-tertiary uppercase font-extrabold tracking-widest italic shadow-hard">
-                       Verify Case
+                      Verify Case
                     </span>
                   </div>
                 </div>
@@ -486,7 +489,8 @@ export default function LandingPage() {
               STATUTORY <span className="text-gold">SUITE</span>
             </h2>
             <p className="text-xs text-text-tertiary font-mono max-w-2xl mx-auto uppercase tracking-[0.3em] opacity-40 italic">
-              A COMPREHENSIVE SUITE FOR SECURING PROCEDURAL OUTCOMES THROUGH ADVANCED ANALYTICAL LOGIC.
+              A COMPREHENSIVE SUITE FOR SECURING PROCEDURAL OUTCOMES THROUGH ADVANCED ANALYTICAL
+              LOGIC.
             </p>
           </motion.div>
 
@@ -530,7 +534,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gold/5 blur-[150px] opacity-10" />
           <motion.div variants={itemVariants} className="text-center space-y-10 relative z-10">
             <h2 className="text-6xl md:text-9xl font-display font-bold uppercase tracking-tight text-white leading-none italic pb-4">
-               CORE <span className="text-gold">VALUES</span>
+              CORE <span className="text-gold">VALUES</span>
             </h2>
           </motion.div>
 
@@ -552,11 +556,11 @@ export default function LandingPage() {
         >
           <div className="text-center space-y-10">
             <div className="inline-flex items-center gap-4 px-5 py-2 bg-void text-gold text-[10px] uppercase font-extrabold tracking-widest rounded-sm border-2 border-gold/20 shadow-hard italic">
-                <Star className="w-4 h-4" />
-                <span>Verified User Impact</span>
-              </div>
+              <Star className="w-4 h-4" />
+              <span>Verified User Impact</span>
+            </div>
             <h2 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tight text-white leading-none italic">
-               STATUTORY <span className="text-gold">TESTIMONIES</span>
+              STATUTORY <span className="text-gold">TESTIMONIES</span>
             </h2>
           </div>
 
@@ -585,8 +589,9 @@ export default function LandingPage() {
             <h2 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tight text-white leading-none">
               Strategic <span className="text-gold">Pathway</span>
             </h2>
-             <p className="text-lg text-text-tertiary font-body max-w-2xl mx-auto opacity-60 leading-relaxed">
-               A refined methodology for securing institutional legal outcomes through AI intelligence.
+            <p className="text-lg text-text-tertiary font-body max-w-2xl mx-auto opacity-60 leading-relaxed">
+              A refined methodology for securing institutional legal outcomes through AI
+              intelligence.
             </p>
           </motion.div>
 
@@ -653,9 +658,9 @@ export default function LandingPage() {
           className="mt-64 pb-32"
         >
           <div className="relative overflow-hidden rounded-sm p-24 md:p-32 text-center space-y-16 bg-void border-2 border-gold/20 shadow-hard group">
-             {/* Subtle Texture Overlay */}
-             <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#d4af37_10px,#d4af37_11px)]" />
-             
+            {/* Subtle Texture Overlay */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#d4af37_10px,#d4af37_11px)]" />
+
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold/10 blur-[150px] rounded-full" />
 
             <Scale className="w-24 h-24 text-gold mx-auto relative z-10 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)] animate-pulse" />
@@ -666,7 +671,8 @@ export default function LandingPage() {
                 <span className="text-gold">Legal Clarity.</span>
               </h2>
               <p className="text-lg md:text-xl text-text-tertiary font-body max-w-2xl mx-auto leading-relaxed border-y border-white/5 py-12 uppercase tracking-widest opacity-80">
-                Begin your consultation today. Justice is no longer an obstacle — it is an accessible fundamental right.
+                Begin your consultation today. Justice is no longer an obstacle — it is an
+                accessible fundamental right.
               </p>
             </div>
 

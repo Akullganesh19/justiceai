@@ -1,6 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, FileText, Send, Download, Scale, Milestone, Info } from 'lucide-react';
+import {
+  CheckCircle2,
+  XCircle,
+  FileText,
+  Send,
+  Download,
+  Scale,
+  Milestone,
+  Info,
+} from 'lucide-react';
 import { VerdictCard } from './VerdictCard';
 import { StrategyList, LawsList } from './Lists';
 import { Timeline } from './Timeline';
@@ -112,7 +121,8 @@ export default function AnalysisPanel({
               Awaiting Consultation
             </h3>
             <p className="text-xs text-text-tertiary max-w-[320px] leading-relaxed mx-auto font-body opacity-60">
-              Provide your case details or upload a document to begin generating your strategic legal assessment.
+              Provide your case details or upload a document to begin generating your strategic
+              legal assessment.
             </p>
           </div>
         </div>

@@ -1,6 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Globe, X, Send, Play, Square, Loader2, Zap, AlertTriangle } from 'lucide-react';
+import { useTranscription } from '../../contexts/TranscriptionContext';
+import {
+  Mic,
+  MicOff,
+  Globe,
+  X,
+  Send,
+  Play,
+  Square,
+  Loader2,
+  Zap,
+  AlertTriangle,
+} from 'lucide-react';
 
 const BHASHINI_LANGUAGES = [
   { code: 'hi', name: 'Hindi' },
@@ -57,8 +69,9 @@ const WEB_SPEECH_LANGUAGES = [
   { code: 'ur-IN', name: 'Urdu' },
 ];
 
-export default function FloatingVoiceButton({ onTranscription }) {
+export default function FloatingVoiceButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const { addTranscription } = useTranscription();
   const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState('en');
   const [transcription, setTranscription] = useState('');
@@ -241,7 +254,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
 
         // Set language based on selection
         recognition.lang = getWebSpeechLanguageCode(language);
-        
+
         recognition.start();
         setIsRecording(true);
         setTranscription('');
@@ -255,11 +268,13 @@ export default function FloatingVoiceButton({ onTranscription }) {
       setIsRecording(true);
       setTranscription('');
       setErrorMsg('');
-      
+
       // Simulate recording delay
       setTimeout(() => {
         setIsRecording(false);
-        setTranscription('[Mock Mode] Configure Bhashini API keys for real transcription, or use Web Speech API (Chrome/Edge).');
+        setTranscription(
+          '[Mock Mode] Configure Bhashini API keys for real transcription, or use Web Speech API (Chrome/Edge).',
+        );
       }, 2000);
     }
   };
@@ -321,8 +336,8 @@ export default function FloatingVoiceButton({ onTranscription }) {
   };
 
   const handleConfirm = () => {
-    if (transcription && onTranscription) {
-      onTranscription(transcription);
+    if (transcription) {
+      addTranscription(transcription);
       setTranscription('');
       setIsOpen(false);
     }
@@ -332,13 +347,33 @@ export default function FloatingVoiceButton({ onTranscription }) {
   const getModeInfo = () => {
     switch (recognitionMode) {
       case 'bhashini':
-        return { label: 'BHASHINI', color: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30' };
+        return {
+          label: 'BHASHINI',
+          color: 'text-green-400',
+          bg: 'bg-green-400/10',
+          border: 'border-green-400/30',
+        };
       case 'webspeech':
-        return { label: 'SYSTEM_SPEECH_DRIVER', color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/30' };
+        return {
+          label: 'SYSTEM_SPEECH_DRIVER',
+          color: 'text-blue-400',
+          bg: 'bg-blue-400/10',
+          border: 'border-blue-400/30',
+        };
       case 'mock':
-        return { label: 'DEMO_BYPASS_MODE', color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' };
+        return {
+          label: 'DEMO_BYPASS_MODE',
+          color: 'text-yellow-400',
+          bg: 'bg-yellow-400/10',
+          border: 'border-yellow-400/30',
+        };
       default:
-        return { label: 'VALIDATING...', color: 'text-text-tertiary', bg: 'bg-white/5', border: 'border-white/10' };
+        return {
+          label: 'VALIDATING...',
+          color: 'text-text-tertiary',
+          bg: 'bg-white/5',
+          border: 'border-white/10',
+        };
     }
   };
 
@@ -362,10 +397,12 @@ export default function FloatingVoiceButton({ onTranscription }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {/* Recognition Mode Badge */}
-                  <div className={`px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.3em] border rounded ${modeInfo.bg} ${modeInfo.color} ${modeInfo.border}`}>
+                  <div
+                    className={`px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.3em] border rounded ${modeInfo.bg} ${modeInfo.color} ${modeInfo.border}`}
+                  >
                     {modeInfo.label}
                   </div>
-                  
+
                   {/* Language Selector */}
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-void border border-white/10 rounded">
                     <Globe className="w-3.5 h-3.5 text-text-tertiary" />
@@ -374,18 +411,25 @@ export default function FloatingVoiceButton({ onTranscription }) {
                       onChange={(e) => setLanguage(e.target.value)}
                       className="bg-transparent text-[9px] font-display font-extrabold text-white uppercase tracking-[0.15em] border-none focus:ring-0 cursor-pointer appearance-none italic"
                     >
-                      {recognitionMode === 'webspeech' 
+                      {recognitionMode === 'webspeech'
                         ? WEB_SPEECH_LANGUAGES.map((lang) => (
-                            <option key={lang.code} value={lang.code} className="bg-void text-white">
+                            <option
+                              key={lang.code}
+                              value={lang.code}
+                              className="bg-void text-white"
+                            >
                               {lang.name.toUpperCase()}
                             </option>
                           ))
                         : BHASHINI_LANGUAGES.map((lang) => (
-                            <option key={lang.code} value={lang.code} className="bg-void text-white">
+                            <option
+                              key={lang.code}
+                              value={lang.code}
+                              className="bg-void text-white"
+                            >
                               {lang.name.toUpperCase()}
                             </option>
-                          ))
-                      }
+                          ))}
                     </select>
                   </div>
                 </div>
@@ -443,7 +487,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
                   <div className="absolute top-0 right-0 p-2 opacity-20">
                     <Zap className="w-3 h-3 text-red" />
                   </div>
-                  
+
                   <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
                     {isProcessing ? (
                       <div className="flex flex-col items-center gap-3">
@@ -454,7 +498,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
                       </div>
                     ) : errorMsg ? (
                       <p className="text-[11px] text-red font-extrabold uppercase tracking-widest leading-relaxed italic animate-pulse">
-                         {errorMsg} 
+                        {errorMsg}
                       </p>
                     ) : transcription ? (
                       <p className="text-sm text-white leading-relaxed font-mono font-bold italic uppercase tracking-tight">
@@ -463,8 +507,8 @@ export default function FloatingVoiceButton({ onTranscription }) {
                     ) : (
                       <p className="text-[10px] text-text-tertiary font-extrabold uppercase tracking-[0.4em] italic opacity-60">
                         {isRecording
-                          ? recognitionMode === 'webspeech' 
-                            ? 'COLLECTING...' 
+                          ? recognitionMode === 'webspeech'
+                            ? 'COLLECTING...'
                             : 'RECORDING...'
                           : `PRESS MIC TO START [${getLanguageName(language).toUpperCase()}]`}
                       </p>
@@ -505,9 +549,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-20 h-20 rounded-sm flex items-center justify-center shadow-hard transition-all relative overflow-hidden group border-2 ${
-          isOpen
-            ? 'bg-void border-gold text-gold'
-            : 'bg-gold border-gold-light/30 text-midnight'
+          isOpen ? 'bg-void border-gold text-gold' : 'bg-gold border-gold-light/30 text-midnight'
         }`}
       >
         <div className="absolute inset-0 bg-void/10 opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -96,7 +96,9 @@ function QuickActionCard({ icon: Icon, title, description, path, accent }) {
         <h3 className="text-xl font-display font-bold text-white uppercase tracking-tight group-hover:text-gold transition-colors">
           {title}
         </h3>
-        <p className="text-xs text-text-tertiary font-body mt-1 leading-relaxed opacity-70">{description}</p>
+        <p className="text-xs text-text-tertiary font-body mt-1 leading-relaxed opacity-70">
+          {description}
+        </p>
       </div>
       <div className="w-10 h-10 rounded-sm bg-void flex items-center justify-center border-2 border-white/10 group-hover:bg-gold group-hover:border-gold transition-all group-hover:shadow-luxe">
         <ChevronRight className="w-5 h-5 text-text-tertiary group-hover:text-midnight" />
@@ -134,10 +136,10 @@ function RecentCaseCard({ caseData }) {
             </span>
           </div>
         </div>
-          <div className="flex items-center gap-1.5 text-[9px] uppercase font-extrabold tracking-widest text-emerald-400 bg-emerald-400/5 px-2.5 py-1 rounded-sm border-2 border-emerald-400/20 shadow-hard">
-            <div className="w-1.5 h-1.5 rounded-sm bg-emerald-400 animate-pulse" />
-            Analyzed
-          </div>
+        <div className="flex items-center gap-1.5 text-[9px] uppercase font-extrabold tracking-widest text-emerald-400 bg-emerald-400/5 px-2.5 py-1 rounded-sm border-2 border-emerald-400/20 shadow-hard">
+          <div className="w-1.5 h-1.5 rounded-sm bg-emerald-400 animate-pulse" />
+          Analyzed
+        </div>
       </div>
     </button>
   );
@@ -249,12 +251,15 @@ export default function DashboardPage() {
                     System Verified
                   </span>
                   <h1 className="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter text-white leading-none italic">
-                    {greeting === 'Welcome Back' ? 'SYSTEM_REINIT' : greeting.toUpperCase().replace(' ', '_')}
+                    {greeting === 'Welcome Back'
+                      ? 'SYSTEM_REINIT'
+                      : greeting.toUpperCase().replace(' ', '_')}
                   </h1>
                 </div>
               </div>
               <p className="text-text-tertiary font-body text-lg max-w-xl border-l-2 border-gold/20 pl-8 mx-auto md:mx-0 opacity-80">
-                Welcome to your comprehensive legal dashboard. Access intelligence modules, manage active cases, and explore your statutory rights.
+                Welcome to your comprehensive legal dashboard. Access intelligence modules, manage
+                active cases, and explore your statutory rights.
               </p>
             </div>
 
@@ -369,7 +374,9 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <p className="text-sm text-text-tertiary font-body leading-relaxed border-l-4 border-gold/30 pl-6 py-2 opacity-80 italic">
-                    Under <strong className="text-white">Section 12 (CP Act 2019)</strong>, e-filing is mandated for disputes above ₹50 Lakhs. Consult official portals for direct submission guidance.
+                    Under <strong className="text-white">Section 12 (CP Act 2019)</strong>, e-filing
+                    is mandated for disputes above ₹50 Lakhs. Consult official portals for direct
+                    submission guidance.
                   </p>
                 </div>
               </div>

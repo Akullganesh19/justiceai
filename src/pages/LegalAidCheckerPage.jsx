@@ -197,8 +197,8 @@ export default function LegalAidCheckerPage() {
             Legal Aid <span className="text-gold">Eligibility</span>
           </h1>
           <p className="text-lg text-text-tertiary leading-relaxed max-w-2xl mx-auto font-body uppercase tracking-wider italic">
-            Verified under Section 12 of the LSA Act. Mandated state representation for
-            eligible applicants. Check your eligibility in 60s.
+            Verified under Section 12 of the LSA Act. Mandated state representation for eligible
+            applicants. Check your eligibility in 60s.
           </p>
         </div>
 

@@ -15,7 +15,7 @@ import {
   HeartHandshake,
   Milestone,
   MessageSquare,
-  Settings2
+  Settings2,
 } from 'lucide-react';
 import MobileNav from './MobileNav.jsx';
 import CommandPalette from './CommandPalette.jsx';
