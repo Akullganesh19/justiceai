@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranscription } from '../../contexts/TranscriptionContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Globe, X, Send, Play, Square, Loader2, Zap, AlertTriangle } from 'lucide-react';
 
@@ -57,7 +58,7 @@ const WEB_SPEECH_LANGUAGES = [
   { code: 'ur-IN', name: 'Urdu' },
 ];
 
-export default function FloatingVoiceButton({ onTranscription }) {
+export default function FloatingVoiceButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -67,6 +68,7 @@ export default function FloatingVoiceButton({ onTranscription }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [recognitionMode, setRecognitionMode] = useState('checking'); // 'checking', 'bhashini', 'webspeech', 'mock'
   const [webSpeechSupported, setWebSpeechSupported] = useState(false);
+  const { setGlobalTranscription } = useTranscription();
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -321,8 +323,8 @@ export default function FloatingVoiceButton({ onTranscription }) {
   };
 
   const handleConfirm = () => {
-    if (transcription && onTranscription) {
-      onTranscription(transcription);
+    if (transcription) {
+      setGlobalTranscription(transcription);
       setTranscription('');
       setIsOpen(false);
     }
