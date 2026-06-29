@@ -178,10 +178,44 @@ function ResultCard({ icon: Icon, label, value, sublabel, color = 'gold' }) {
 }
 
 export default function EstimatorPage() {
-  const [caseType, setCaseType] = useState(null);
+  // 🛸 ORACLE INTELLIGENT DEFAULTS
+  // Peek at recent history to guess the user's case type and complexity.
+  const getIntelligentDefaults = () => {
+    try {
+      const stored = localStorage.getItem('justice_ai_history');
+      if (stored) {
+        const history = JSON.parse(stored);
+        if (history.length > 0) {
+          const recent = history[0];
+          // Simple heuristics based on keywords in recent case title/analysis
+          const text = (recent.title + " " + JSON.stringify(recent.analysis || {})).toLowerCase();
+
+          let predictedType = null;
+          if (text.includes('consumer') || text.includes('product') || text.includes('service')) predictedType = 'consumer';
+          else if (text.includes('rent') || text.includes('tenant') || text.includes('landlord')) predictedType = 'rent';
+          else if (text.includes('property') || text.includes('land')) predictedType = 'property';
+          else if (text.includes('criminal') || text.includes('police') || text.includes('fir')) predictedType = 'criminal';
+          else if (text.includes('family') || text.includes('divorce')) predictedType = 'family';
+
+          let predictedComp = 'simple';
+          if (text.includes('high court') || text.includes('appeal')) predictedComp = 'complex';
+          else if (text.includes('multiple') || text.includes('fraud')) predictedComp = 'moderate';
+
+          return { type: predictedType, comp: predictedComp };
+        }
+      }
+    } catch (e) {
+      console.warn("Oracle: Could not load history for defaults");
+    }
+    return { type: null, comp: 'simple' };
+  };
+
+  const defaults = React.useMemo(() => getIntelligentDefaults(), []);
+
+  const [caseType, setCaseType] = useState(defaults.type);
   const [courtLevel, setCourtLevel] = useState('district');
   const [cityTier, setCityTier] = useState('tier2');
-  const [complexity, setComplexity] = useState('simple');
+  const [complexity, setComplexity] = useState(defaults.comp);
   const [claimAmount, setClaimAmount] = useState('');
 
   const estimate = useMemo(() => {

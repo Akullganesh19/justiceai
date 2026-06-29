@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import {
@@ -32,6 +32,15 @@ import Footer from '../components/ui/Footer';
 
 // Document templates
 const DOCUMENT_TEMPLATES = {
+  oracle_draft: {
+    id: 'oracle_draft',
+    name: 'ORACLE_PRECOMPUTED_DRAFT',
+    description: 'Instantly generated based on your recent consultation.',
+    icon: FileText,
+    category: 'Oracle Intelligence',
+    fields: [], // No fields needed, the draft is already complete
+    generate: (data) => data.oracle_content || 'Draft not available.',
+  },
   legal_notice: {
     id: 'legal_notice',
     name: 'STATUTORY_DEMAND_NOTICE',
@@ -168,7 +177,38 @@ export default function DocumentGeneratorPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [formData, setFormData] = useState({});
   const [generatedDoc, setGeneratedDoc] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(false);
+  const [oraclePrediction, setOraclePrediction] = useState(null);
+
+  // 🛸 ORACLE PREDICTION
+  // Check if Oracle pre-computed a draft for the user recently
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('justice_ai_oracle_doc');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Only show prediction if it was generated in the last 15 minutes
+        if (Date.now() - parsed.timestamp < 15 * 60 * 1000) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setOraclePrediction(parsed);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleUseOracleDraft = () => {
+    if (!oraclePrediction) return;
+    const template = DOCUMENT_TEMPLATES.oracle_draft;
+    setSelectedTemplate(template);
+    setFormData({ oracle_content: oraclePrediction.draft });
+    setGeneratedDoc(oraclePrediction.draft);
+
+    // Clear prediction so it doesn't stay forever
+    localStorage.removeItem('justice_ai_oracle_doc');
+    setOraclePrediction(null);
+  };
 
   const handleFieldChange = (id, value) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -240,6 +280,38 @@ export default function DocumentGeneratorPage() {
           </p>
         </div>
 
+        {!selectedTemplate && oraclePrediction && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-12 p-8 rounded-sm bg-gold/5 border-2 border-gold/40 relative overflow-hidden shadow-luxe"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-3xl rounded-full opacity-50" />
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-gold animate-pulse flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-gold inline-block" />
+                    🛸 ORACLE PREDICTION
+                  </span>
+                </div>
+                <h3 className="text-xl font-display font-bold text-white tracking-widest uppercase italic">
+                  Drafting Legal Notice for "{oraclePrediction.caseTitle}"
+                </h3>
+                <p className="text-sm text-text-tertiary font-body italic">
+                  Based on your recent consultation, a draft has been pre-computed and is ready for review.
+                </p>
+              </div>
+              <button
+                onClick={handleUseOracleDraft}
+                className="bg-gold text-midnight px-8 py-4 rounded-sm font-extrabold uppercase tracking-widest hover:bg-gold-light transition-all shadow-hard whitespace-nowrap italic border-2 border-gold-light/20"
+              >
+                View Draft
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {!selectedTemplate ? (
           /* Template Selection */
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -297,6 +369,15 @@ export default function DocumentGeneratorPage() {
                 </div>
 
                 <div className="grid gap-8 relative z-10">
+                  {selectedTemplate.fields.length === 0 && (
+                    <div className="text-center py-12 space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-6">
+                        <FileText className="w-8 h-8 text-gold" />
+                      </div>
+                      <h4 className="text-xl font-display font-bold text-white tracking-widest uppercase italic">Draft Ready</h4>
+                      <p className="text-sm text-text-tertiary italic">Click generate to view the Oracle pre-computed draft.</p>
+                    </div>
+                  )}
                   {selectedTemplate.fields.map((field) => (
                     <div key={field.id} className="space-y-3">
                       <label className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary opacity-40 ml-2">
