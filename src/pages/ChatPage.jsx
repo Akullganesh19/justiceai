@@ -241,6 +241,33 @@ export default function ChatPage() {
         const filtered = prev.filter((c) => c.id !== activeCaseId);
         return [caseData, ...filtered];
       });
+
+      // 🛸 ORACLE PRE-COMPUTATION
+      // If we just got a robust analysis, user will likely want to draft a document next.
+      // Pre-compute a legal notice in the background using the facts we just gathered.
+      if (newAnalysis && newAnalysis.verdict !== 'Information Needed') {
+        setTimeout(async () => {
+          try {
+            console.log("🛸 Oracle: Pre-computing legal document draft in background...");
+            const oraclePrompt = [
+              { role: 'system', content: 'You are an Oracle. Draft a concise but formal Legal Notice based on the following case facts and analysis. Output ONLY the raw document text. No markdown formatting, no explanations, no chat.' },
+              { role: 'user', content: `Case Facts: ${JSON.stringify(finaleMsgs.map(m => m.content))}\n\nAnalysis: ${JSON.stringify(newAnalysis)}` }
+            ];
+
+            const draft = await sendMessage(oraclePrompt, '', { mode: 'copilot' });
+
+            localStorage.setItem('justice_ai_oracle_doc', JSON.stringify({
+              timestamp: Date.now(),
+              caseTitle: title,
+              caseType: newAnalysis.caseType || 'General Case',
+              draft: draft.trim()
+            }));
+            console.log("🛸 Oracle: Pre-computed draft saved to localStorage.");
+          } catch (err) {
+            console.warn("🛸 Oracle Background Pre-computation Failed:", err);
+          }
+        }, 1000); // 1s delay to let UI render main response first
+      }
     } catch (error) {
       console.error('Chat Error:', error);
       const errorMsg = {
