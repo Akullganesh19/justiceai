@@ -9,6 +9,54 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+
+// Synapse Event Bridge: AI Chat ↔ Case Tracker
+// Listens for substantive chat sessions and auto-creates a case tracker node.
+window.addEventListener('justice.chat.caseUpdated', (e) => {
+  const { id, title, analysis } = e.detail;
+
+  if (!id || !title) return;
+
+  try {
+    const STORAGE_KEY = 'justice_ai_case_tracker_v2';
+    const saved = localStorage.getItem(STORAGE_KEY);
+    let cases = saved ? JSON.parse(saved) : [];
+
+    // Check if it already exists
+    const existingIndex = cases.findIndex(c => c.id === id);
+    if (existingIndex === -1) {
+      // Create new tracker node from chat
+      const newCase = {
+        id: id,
+        name: title,
+        caseType: 'general_litigation', // Default fallback
+        steps: [
+          { id: '1', title: 'Initial AI Consultation', status: 'completed', description: 'Consultation conducted via JusticeAI.', isLocked: false },
+          { id: '2', title: 'Legal Strategy Review', status: 'pending', description: 'Review AI-generated strategy and prepare next steps.', isLocked: false },
+          { id: '3', title: 'Notice / Pleading Draft', status: 'pending', description: 'Draft initial legal documents.', isLocked: true }
+        ],
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: '',
+          courtName: '',
+          bench: '',
+          advocateName: '',
+          advocatePhone: '',
+          oppositeParty: '',
+          nextHearing: ''
+        },
+        aiAnalysisSummary: analysis ? (analysis.strengths?.[0] || 'Pending analysis') : ''
+      };
+
+      cases.push(newCase);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+      console.log('🧠 Synapse: Auto-initialized Case Tracker node from Chat system', id);
+    }
+  } catch (err) {
+    console.error('Synapse Event Bridge Error:', err);
+  }
+});
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
