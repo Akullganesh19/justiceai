@@ -119,6 +119,21 @@ export default function ChatPage() {
       const filtered = prev.filter((c) => c.id !== activeCaseId);
       return [caseData, ...filtered];
     });
+
+    // Synapse: Emit event for Case Tracker bridge
+    if (messages.length > 2) {
+      console.log('🧠 Synapse: Emitting Chat state to Case Tracker Event Bridge (saveCurrentToHistory)');
+      window.dispatchEvent(
+        new CustomEvent('justice.chat.caseUpdated', {
+          detail: {
+            id: activeCaseId,
+            title,
+            analysis,
+            messagesLength: messages.length
+          }
+        })
+      );
+    }
   };
 
   const loadCase = (id) => {
@@ -241,6 +256,21 @@ export default function ChatPage() {
         const filtered = prev.filter((c) => c.id !== activeCaseId);
         return [caseData, ...filtered];
       });
+
+      // Synapse: Emit event for Case Tracker bridge
+      if (finaleMsgs.length > 2) {
+        console.log('🧠 Synapse: Emitting Chat state to Case Tracker Event Bridge (handleSend)');
+        window.dispatchEvent(
+          new CustomEvent('justice.chat.caseUpdated', {
+            detail: {
+              id: activeCaseId,
+              title,
+              analysis: newAnalysis || analysis,
+              messagesLength: finaleMsgs.length
+            }
+          })
+        );
+      }
     } catch (error) {
       console.error('Chat Error:', error);
       const errorMsg = {
