@@ -1,0 +1,8 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated global transcription state from DOM `CustomEvent`s (`window.dispatchEvent`) to React Context API.
+**Risk it eliminates:** The legacy "Event Bridge" pattern relies on loosely coupled, global DOM events that lack type safety, break idiomatic React dependency injection, make state flows completely opaque, and frequently cause subtle replay or remount bugs.
+**Why now:** As the codebase continues to scale, adding new AI voice inputs and cross-component signaling will make maintaining raw global events exponentially harder to debug.
+**Migration approach:** Created `TranscriptionContext.jsx` with a custom `useTranscription` hook. Wrapped the app in `TranscriptionProvider` in `src/main.jsx`. Updated `FloatingVoiceButton` and `ChatInput` to use this new context explicitly. In `ChatInput`, added a `useRef` based on the context's timestamp to prevent old transcriptions from re-triggering upon component remount.
+**Remaining:** Migrate other `localStorage` or CustomEvent-driven global state (if beyond navigation bindings) to React Context or dedicated state management libraries.
+**Next session:** Investigate other loosely-coupled state logic utilizing `localStorage` to identify the next highest-risk migration target.
