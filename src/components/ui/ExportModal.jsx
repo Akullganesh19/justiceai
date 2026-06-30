@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Download, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 export default function ExportModal({ isOpen, onClose, summary }) {
   const [copied, setCopied] = useState(false);
@@ -71,10 +72,59 @@ export default function ExportModal({ isOpen, onClose, summary }) {
                   link.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="flex items-center justify-center gap-3 px-8 py-4 rounded-sm bg-void text-text-primary hover:bg-white/5 border-2 border-white/10 transition-all font-extrabold uppercase text-[11px] tracking-[0.2em] italic shadow-hard active:translate-y-[2px]"
+                className="flex items-center justify-center gap-3 px-4 py-4 rounded-sm bg-void text-text-primary hover:bg-white/5 border-2 border-white/10 transition-all font-extrabold uppercase text-[11px] tracking-[0.2em] italic shadow-hard active:translate-y-[2px]"
               >
                 <Download className="w-5 h-5" />
                 <span>SAVE_AS_TEXT</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const doc = new jsPDF();
+
+                  // Add styling to PDF
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(22);
+                  doc.setTextColor(212, 175, 55); // Gold color
+                  doc.text('JUSTICE AI', 20, 20);
+
+                  doc.setFontSize(14);
+                  doc.setTextColor(50, 50, 50);
+                  doc.text('LEGAL CONSULTATION BRIEF', 20, 30);
+
+                  doc.setFontSize(10);
+                  doc.setTextColor(100, 100, 100);
+                  doc.setFont('helvetica', 'normal');
+                  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 38);
+
+                  // Line separator
+                  doc.setDrawColor(200, 200, 200);
+                  doc.line(20, 42, 190, 42);
+
+                  // Content
+                  doc.setFontSize(11);
+                  doc.setTextColor(30, 30, 30);
+
+                  const splitText = doc.splitTextToSize(summary || 'No summary provided.', 170);
+
+                  let yPos = 52;
+                  const pageHeight = doc.internal.pageSize.getHeight();
+
+                  for (let i = 0; i < splitText.length; i++) {
+                    if (yPos > pageHeight - 20) {
+                      doc.addPage();
+                      yPos = 20; // reset y for new page
+                    }
+                    doc.text(splitText[i], 20, yPos);
+                    yPos += 7; // line height
+                  }
+
+                  doc.save(`justiceai-client-brief-${new Date().getTime()}.pdf`);
+                }}
+                className="flex items-center justify-center gap-3 px-4 py-4 rounded-sm bg-void text-text-primary hover:bg-white/5 border-2 border-white/10 transition-all font-extrabold uppercase text-[11px] tracking-[0.2em] italic shadow-hard active:translate-y-[2px]"
+              >
+                <FileText className="w-5 h-5" />
+                <span>SAVE_AS_PDF</span>
               </button>
             </div>
           </motion.div>
