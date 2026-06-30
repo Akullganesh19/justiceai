@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** Closed active exposure of PII in Express Error Logs
+**Data classification:** Personally Identifiable Information (emails, phone numbers, SSNs, credit cards)
+**Exposure before:** Express unhandled error handlers and specific endpoint catch blocks (like `/api/chat` and `/api/upload`) were using `console.error` to log raw `err` objects. These error objects could contain un-redacted PII from user inputs, leaking into server logs (like `combined.log` and stdout).
+**Fix:** Created an irreversible regex-based log redaction format using `winston` and replaced vulnerable `console.error` calls with `logger.error` using deep cloning to prevent reference modification of live states.
+**Verified:** Verified `server.js` modifications, checked that all error blocks route through the redacted winston logger, and ran standard backend test suite (`npm test`).
+**Remaining gaps:** The current redaction is server-side and specific to known regex patterns. User data saved in frontend client history (`localStorage`) is not redacted. File exports initiated by the user may also contain unredacted original text. Access to the raw PDF/TXT files inside `/public/documents/` has no audit trail.
