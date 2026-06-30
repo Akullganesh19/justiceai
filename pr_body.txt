@@ -1,0 +1,13 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Implemented a robust `fetchWithRetry` utility wrapped around `fetch` for all external third-party API dependencies (Gemini, DeepSeek, and Bhashini Voice).
+**Failure scenario protected:** Transient network failures, timeout errors, or rate-limiting (429, 5xx) from external cloud APIs previously caused hard failures and raw error responses.
+**Recovery flow:**
+1. A request to an external API fails with a 5xx, 429, or network error.
+2. The `fetchWithRetry` wrapper catches the failure (skipping intentional `AbortError`s).
+3. It waits using an exponential backoff (100ms, 200ms, 400ms).
+4. The request is retried transparently up to 3 times before finally propagating the error back up.
+**Blast radius before:** Any external failure immediately failed the user's operation (e.g., stopping voice processing or fallback LLM responses), forcing a manual UI retry.
+**Blast radius after:** Transient faults and momentary rate limits are silently absorbed and healed on the backend. Only sustained (>2s) outages require user intervention.
+**Logging/alerting:** Winston logs emit a `logger.warn` message when a failure occurs and a retry is triggered, detailing the current attempt and delay. Engineers can monitor these warnings for API stability trends.
+**Remaining failure points:** Genesis should next address the unprotected `fs.readFileSync` calls during initial PDF/TXT document ingestion which crash the sync block.
