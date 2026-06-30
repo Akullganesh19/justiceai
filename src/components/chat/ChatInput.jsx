@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../../contexts/TranscriptionContext';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
   const [text, setText] = useState('');
@@ -40,16 +41,18 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
     }
   }, [text]);
 
-  useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
+  // Handle new Context-based transcription
+  const { transcriptionData } = useTranscription();
+  // We use a ref initialized to the current context's timestamp (or 0)
+  // to avoid replay bugs when the component remounts and reads old context state.
+  const processedTranscriptionRef = useRef(transcriptionData?.timestamp || 0);
 
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+  useEffect(() => {
+    if (transcriptionData?.text && transcriptionData.timestamp > processedTranscriptionRef.current) {
+      setText((prev) => (prev ? `${prev} ${transcriptionData.text}` : transcriptionData.text));
+      processedTranscriptionRef.current = transcriptionData.timestamp;
+    }
+  }, [transcriptionData]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">

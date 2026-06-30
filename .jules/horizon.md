@@ -1,0 +1,10 @@
+## 2025-05-18 — React Context Event Bridge Migration
+
+**Risk identified:** Using global DOM `CustomEvents` (`window.dispatchEvent` / `window.addEventListener`) for standard, tightly-coupled UI component state sharing (specifically, passing voice transcriptions from the `FloatingVoiceButton` down to form inputs like `ChatInput`). This approach is brittle, lacks type-safety, breaks React's standard data flow paradigm, makes testing difficult without heavy mocking, and creates a high risk of memory leaks and replay bugs on component remount. This gets significantly harder to migrate later as more components rely on the implicit global event.
+**Migration target:** The React Context API (`TranscriptionContext`). Moving toward a structured, provider-based state management solution that integrates natively with the React component lifecycle.
+**Migrated this session:**
+- Created `TranscriptionContext.jsx` with `TranscriptionProvider`.
+- Modified `src/main.jsx` to wrap the app in the provider and created an inner `GlobalVoiceManager` to dispatch transcription state simultaneously to the new context and the legacy `window.dispatchEvent` (additive migration).
+- Migrated `src/components/chat/ChatInput.jsx` to consume the new context, using a `useRef` to track event timestamps to prevent replay bugs, while keeping a safety fallback for the legacy event.
+**Remaining:** Migrate all other consumers of the `justice-ai-transcription` CustomEvent across the application (e.g., other input fields, search bars) to consume the `TranscriptionContext`. Once all consumers are migrated, remove the legacy `window.dispatchEvent` fallback in `src/main.jsx` and the legacy listener fallbacks in the components.
+**Next session:** Find other instances of `window.addEventListener('justice-ai-transcription')` (if any exist) and migrate them to use `useTranscription()`.

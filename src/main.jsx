@@ -7,13 +7,25 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { TranscriptionProvider, useTranscription } from './contexts/TranscriptionContext';
 import './index.css';
 
-const handleGlobalTranscription = (text) => {
-  // Dispatch a custom event that any page (like ChatPage) can listen for
-  const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
-  window.dispatchEvent(event);
-};
+// Additive migration: We need to use the context from inside the provider tree.
+// We'll create an inner component to handle the global voice button and context dispatching.
+function GlobalVoiceManager() {
+  const { dispatchTranscription } = useTranscription();
+
+  const handleGlobalTranscription = (text) => {
+    // 1. Dispatch via new Context API (future-proof)
+    dispatchTranscription(text);
+
+    // 2. Dispatch legacy CustomEvent (additive migration - to support unmigrated components)
+    const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
+    window.dispatchEvent(event);
+  };
+
+  return <FloatingVoiceButton onTranscription={handleGlobalTranscription} />;
+}
 
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
@@ -56,11 +68,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <ToastProvider>
         <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
+          <TranscriptionProvider>
+            <div className="grain-overlay" aria-hidden="true" />
+            <ScrollToTop />
+            <CommandPalette />
+            <GlobalVoiceManager />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -85,7 +98,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </Suspense>
+            </Suspense>
+          </TranscriptionProvider>
         </Router>
       </ToastProvider>
     </ErrorBoundary>
