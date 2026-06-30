@@ -24,6 +24,7 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.vitest,
+        ...globals.node,
         global: 'readonly',
       },
     },

@@ -630,7 +630,7 @@ app.post('/api/voice/process', async (req, res) => {
 
   } catch (err) {
     console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -699,7 +699,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -941,10 +941,7 @@ app.post('/api/chat', async (req, res) => {
     
   } catch (err) {
     console.error("Chat Error:", err);
-    res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -963,7 +960,7 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -971,8 +968,7 @@ app.post('/api/embed', async (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    error: 'Internal Server Error'
   });
 });
 
@@ -994,7 +990,10 @@ app.use((req, res) => {
 // Keep process alive if event loop becomes empty (Express should handle this, but adding a fail-safe)
 setInterval(() => {}, 1000 * 60 * 60); // 1 hour tick
 
-app.listen(PORT, () => {
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
   console.log(`\n⚖️  JusticeAI RAG Server running on port ${PORT}`);
   console.log(`📡 API available at: http://localhost:${PORT}/api`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
@@ -1003,7 +1002,8 @@ app.listen(PORT, () => {
   console.log(`\nRequired models:`);
   console.log(`  ollama pull ${EMBEDDING_MODEL}`);
   console.log(`  ollama pull ${CHAT_MODEL}\n`);
-});
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
