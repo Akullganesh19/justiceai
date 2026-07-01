@@ -187,6 +187,15 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    if (email) {
+      localStorage.setItem('justice_auth_user', JSON.stringify({
+        id: 'user_' + Date.now(),
+        email: email,
+        loginTime: new Date().toISOString()
+      }));
+    }
     console.log('UI: Sign In form submitted');
   };
   return (
@@ -229,6 +238,17 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
+    if (email) {
+      localStorage.setItem('justice_auth_user', JSON.stringify({
+        id: 'user_' + Date.now(),
+        email: email,
+        name: name,
+        loginTime: new Date().toISOString()
+      }));
+    }
     console.log('UI: Sign Up form submitted');
   };
   return (
