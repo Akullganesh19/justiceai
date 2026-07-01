@@ -23,9 +23,74 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Winston logger
+
+// Regex patterns for sensitive data
+const REDACT_PATTERNS = [
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email
+  /\b(?:\d[ -]*?){13,16}\b/g, // Credit Card
+  /\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, // Phone Number
+  /\b\d{3}-\d{2}-\d{4}\b/g, // SSN
+  /\b(?:password|passwd|pwd|secret|api_key|apikey|token)["'\s:=]+(.*?)["',\s}\n]/gi // Credentials
+];
+
+const redactString = (str) => {
+  if (typeof str !== 'string') return str;
+  let redacted = str;
+  REDACT_PATTERNS.forEach(pattern => {
+    redacted = redacted.replace(pattern, '[REDACTED]');
+  });
+  return redacted;
+};
+
+const deepRedact = (obj, seen = new WeakSet()) => {
+  if (!obj || typeof obj !== 'object') {
+    return redactString(obj);
+  }
+
+  if (obj instanceof Date) return obj;
+  if (obj instanceof Error) {
+    return {
+      message: redactString(obj.message),
+      stack: redactString(obj.stack),
+      name: obj.name
+    };
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  const clone = Array.isArray(obj) ? [] : {};
+
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (/password|token|secret|key|authorization/i.test(key)) {
+        clone[key] = '[REDACTED]';
+      } else {
+        clone[key] = deepRedact(obj[key], seen);
+      }
+    }
+  }
+
+  seen.delete(obj);
+  return clone;
+};
+
+const redactPII = winston.format((info) => {
+  const clonedInfo = deepRedact(info);
+
+  // Preserve symbols for Winston
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    clonedInfo[sym] = redactString(info[sym]);
+  }
+
+  return clonedInfo;
+});
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactPII(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -448,7 +513,7 @@ async function loadAndIndexDocuments() {
     
     console.log(`✅ RAG Vector Database Loaded! Total chunks indexed: ${totalChunks}`);
   } catch (error) {
-    console.error('Error loading documents:', error);
+    logger.error('Error loading documents', { error: error });
   }
 }
 
@@ -629,8 +694,8 @@ app.post('/api/voice/process', async (req, res) => {
     }
 
   } catch (err) {
-    console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    logger.error('Bhashini Proxy Error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -698,8 +763,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    logger.error('Upload error', { error: error });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -821,7 +886,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info(`Routing query to Ollama (message length: ${latestUserMessage.length})`);
     
     try {
       if (stream) {
@@ -918,7 +983,7 @@ app.post('/api/chat', async (req, res) => {
             finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
-            console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
+            logger.error(`❌ DeepSeek fallback failed`, { error: deepseekErr });
             errorChain.push(`DeepSeek: ${deepseekErr.message}`);
           }
         }
@@ -940,11 +1005,8 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
-    res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    logger.error("Chat Error", { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -963,16 +1025,17 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error('Embedding error', { error: err });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: err });
   res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: 'Something went wrong'
   });
 });
 
