@@ -1,0 +1,19 @@
+## ⚖️ Data Governance Fix
+
+**What:** Closed active exposures of sensitive user data in API logs and prevented structural server details from leaking to the frontend.
+**Data classification:** PII (Email, Phone, SSN, Credit Card, Passwords) and user-submitted confidential legal inputs.
+**Exposure before:**
+- The user's latest input was logged in plaintext via `console.log` during RAG chat queries.
+- Application error logs (`console.error`) were completely unredacted.
+- `err.message` and `err.stack` were leaked directly to the client in Express catch blocks and error handlers.
+**Fix:**
+- Injected a robust `redactPII` Winston logger format using regex and deep-cloning (preserving Winston internal Symbols) to irreversibly mask PII and credentials across all logs.
+- Replaced the `console.log` in `/api/chat` with `logger.info` that tracks message length instead of content.
+- Updated Express catch blocks to log via `logger.error` while explicitly returning generic "Internal Server Error" strings to the frontend.
+**Verified:**
+- Tested structural integrity using `node -c server.js`.
+- Verified that all replaced logs correctly serialize objects to the Winston logger.
+- Verified Express error handlers send normalized 500 JSON without stack traces.
+**Remaining gaps:**
+- Data retention/deletion path: We need to evaluate whether users can successfully delete their records from the local Vector database / Document store.
+- Auth endpoints were not fully audited for DB-level redaction and rate limiting this session.
