@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Replaced vulnerable raw `fetch` calls with a new `fetchWithRetry` utility in `server.js`.
+**Failure scenario protected:** Transient network errors, rate limits (429), and server errors (5xx) from external APIs (Gemini, DeepSeek, Bhashini, Ollama) causing immediate hard failures.
+**Recovery flow:** When an API request fails with a transient error, it now automatically retries up to 3 times with exponential backoff (1s, 2s, 4s). Intentional timeouts (`AbortError`) are correctly re-thrown.
+**Blast radius before:** High. Any temporary network hiccup or rate limit would instantly fail the user's request, resulting in broken chat, missing transcription, or failed document processing.
+**Blast radius after:** Low. Transient errors are absorbed silently while users wait slightly longer for the retries. Hard failures only occur on persistent outages or client errors (e.g., 400).
+**Logging/alerting:** Warnings are logged to the console with `[Genesis]` tag, detailing the attempt number, URL, error message, and next retry delay.
+**Remaining failure points:** Potential missing error handling in frontend `fetch` calls or unhandled promise rejections in other background jobs.
