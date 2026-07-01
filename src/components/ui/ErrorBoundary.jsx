@@ -17,11 +17,23 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Enrich error logs with user context (Synapse Pattern)
+    let userContext = null;
+    try {
+      const savedUser = localStorage.getItem('justice_auth_user');
+      if (savedUser) {
+        userContext = JSON.parse(savedUser);
+      }
+    } catch (e) {
+      // Ignore parse errors for context extraction
+    }
+
+    console.error('ErrorBoundary caught an error:', error, errorInfo, userContext ? { user: userContext } : {});
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      this.props.onError(error, errorInfo, userContext);
     }
   }
 
