@@ -7,13 +7,13 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { TranscriptionProvider, useTranscription } from './contexts/TranscriptionContext.jsx';
 import './index.css';
 
-const handleGlobalTranscription = (text) => {
-  // Dispatch a custom event that any page (like ChatPage) can listen for
-  const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
-  window.dispatchEvent(event);
-};
+function AppVoiceButton() {
+  const { dispatchTranscription } = useTranscription();
+  return <FloatingVoiceButton onTranscription={dispatchTranscription} />;
+}
 
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
@@ -55,11 +55,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
+        <TranscriptionProvider>
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
           <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+          <AppVoiceButton />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -87,6 +88,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </Routes>
           </Suspense>
         </Router>
+      </TranscriptionProvider>
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
