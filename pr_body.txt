@@ -1,0 +1,12 @@
+## 🛡️ Adversarial Verification Report
+
+**Scope attacked:** Express backend API routes, specifically `/api/upload`, `/api/chat`, and `/api/embed`.
+**🔴 Exploitable findings:**
+- **Disk Exhaustion Leak:** Unsupported file types (e.g., `.docx`) uploaded to `/api/upload` were skipping the `fs.unlinkSync()` cleanup step, leaving files permanently on disk. A malicious actor could easily exhaust server disk space.
+- **Credential Leak in Chat API:** The `/api/chat` route passed the raw `err.message` in the 500 JSON response. When the Gemini fallback failed due to API suspension or rate limits, the Google API error explicitly contained the `GEMINI_API_KEY`, leaking the server's root API key to any client hitting the error.
+**🟡 Latent findings:** None explicitly addressed this session.
+**🟢 Theoretical findings:** None explicitly addressed this session.
+**Fixed this session:**
+- Fixed the disk leak by placing `fs.unlinkSync()` in a `finally` block in `/api/upload`. Added a Supertest regression test to prove unsupported files are cleaned up.
+- Fixed the credential leak by stripping `api_key:...` strings from error messages in `/api/chat` and `/api/embed` before sending them to the client. Added a Supertest regression test to prove API keys are redacted.
+**Requires human review:** None.

@@ -630,7 +630,7 @@ app.post('/api/voice/process', async (req, res) => {
 
   } catch (err) {
     console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'development' ? err.message : 'Embedding failed' });
   }
 });
 
@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Always clean up uploaded file from disk regardless of success or failure
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -941,9 +943,14 @@ app.post('/api/chat', async (req, res) => {
     
   } catch (err) {
     console.error("Chat Error:", err);
+    // Sanitize API keys from error messages before sending to client
+    let safeMessage = err.message || 'Unknown error';
+    if (safeMessage.includes('api_key:')) {
+      safeMessage = safeMessage.replace(/api_key:[a-zA-Z0-9_-]+/g, 'api_key:REDACTED');
+    }
     res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: 'An error occurred during chat processing. Check server logs for details.',
+      details: process.env.NODE_ENV === 'development' ? safeMessage : undefined
     });
   }
 });
@@ -1015,3 +1022,5 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
+
+export { app };
