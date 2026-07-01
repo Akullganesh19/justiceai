@@ -1,0 +1,7 @@
+**What**: Fix file leak vulnerability in `/api/upload`.
+**Attacked**: File upload API handling.
+**Found**: Uploaded files with unsupported extensions bypass cleanup entirely. Files causing processing errors bypass cleanup. This leads to disk exhaustion.
+**Severity**: 🔴 Exploitable now
+**Fixed or flagged**: Fixed by moving `fs.unlinkSync` to a `finally` block to ensure guaranteed execution.
+**Systemic pattern**: Resource cleanup not enclosed in `finally` blocks when exceptions can be thrown.
+**Verified**: Added Supertest regression test for the endpoint.
