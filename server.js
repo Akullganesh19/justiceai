@@ -267,6 +267,42 @@ function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
   return chunks;
 }
 
+
+
+// fetchWithRetry utility for self-healing external calls
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  const baseDelay = 1000;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        if (response.status === 429 || response.status >= 500) {
+          if (attempt === maxRetries) return response; // Return the response to let caller handle it instead of throwing generic error
+          throw new Error(`Transient API error: ${response.status}`);
+        }
+        return response; // Client error (e.g. 400), don't retry, let caller handle
+      }
+      return response;
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      if (attempt === maxRetries) throw error;
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.warn(`[Genesis] fetchWithRetry attempt ${attempt + 1} failed for ${url}: ${error.message}. Retrying in ${delay}ms...`);
+
+      // Listen for abort signal during sleep
+      await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(resolve, delay);
+        if (options.signal) {
+          options.signal.addEventListener('abort', () => {
+            clearTimeout(timeoutId);
+            reject(new DOMException('Aborted during retry delay', 'AbortError'));
+          });
+        }
+      });
+    }
+  }
+}
+
 // Native Cosine Similarity
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
@@ -318,7 +354,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +390,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +603,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +634,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,7 +866,7 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
@@ -856,7 +892,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
