@@ -91,6 +91,40 @@ app.use(helmet({
   sourceMaps: NODE_ENV === 'development'
 }));
 
+// 🧬 Genesis: Self-healing fetch wrapper with exponential backoff for transient errors
+async function fetchWithRetry(url, options = {}, maxAttempts = 3, baseDelayMs = 100) {
+  let attempt = 1;
+  while (true) {
+    let response;
+    try {
+      response = await fetch(url, options);
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      if (attempt >= maxAttempts) throw err;
+
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      logger.warn(`Attempt ${attempt} failed for ${url}, retrying in ${delay}ms...`, { error: err.message });
+      await new Promise(res => setTimeout(res, delay));
+      attempt++;
+      continue;
+    }
+
+    if (!response.ok && [429, 500, 502, 503, 504].includes(response.status) && attempt < maxAttempts) {
+      // Consume the body of the failed response to prevent memory leaks in Node.js
+      await response.text().catch(() => {});
+
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      logger.warn(`Attempt ${attempt} got ${response.status} for ${url}, retrying in ${delay}ms...`);
+      await new Promise(res => setTimeout(res, delay));
+      attempt++;
+      continue;
+    }
+
+    return response;
+  }
+}
+
+
 // CORS with better security
 app.use(cors({
   origin: process.env.CORS_ORIGIN || (NODE_ENV === 'production' ? false : '*'),
@@ -318,7 +352,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +388,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +601,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +632,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,7 +864,7 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
@@ -856,7 +890,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),

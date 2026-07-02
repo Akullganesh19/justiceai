@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Global auto-retry with exponential backoff on transient HTTP errors.
+**Failure scenario protected:** Direct dependencies (Ollama, Gemini, DeepSeek, Bhashini) failing due to transient network drops, 429 rate limits, or momentary 5xx server errors, which would crash backend endpoints and surface 500s to the user.
+**Recovery flow:** All native `fetch` calls are intercepted by `fetchWithRetry`. When a transient error occurs (429, 500-504, or network timeout), the app sleeps (100ms -> 200ms) and attempts the request again, completely invisible to the client, up to 3 times (the 3rd failed attempt throws immediately).
+**Blast radius before:** Any temporary API blip resulted in an instant failure of the core AI features.
+**Blast radius after:** The user might experience a sub-second delay, but the feature succeeds. Only sustained outages propagate as errors.
+**Logging/alerting:** Winston logs a `warn` entry explicitly when `fetchWithRetry` fires an attempt and retries, leaving an audit trail without polluting the error channel unless the final retry fails.
+**Remaining failure points:** Potential for webhook or concurrent database writes to collide (no idempotency checks yet), and lack of fallback for vector DB unavailability.
