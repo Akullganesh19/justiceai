@@ -1,0 +1,13 @@
+## 🌀 Invisible Infrastructure Added
+
+**What:** Request coalescing for `fetch` that deduplicates identical concurrent GET requests using an in-memory `Map` wrapper and response cloning.
+**Hot path:** All frontend HTTP requests triggered via `window.fetch`.
+**Before:** Multiple components requesting the same endpoint simultaneously caused redundant network traffic and server load.
+**After:** Concurrent requests for the same URL and headers are coalesced into a single network call, and the resulting `Response` is cloned for each caller.
+**Users notice:** The app feels faster and smoother, with fewer loading states on complex pages.
+**Measurable via:** Inspecting the Network tab in DevTools will show only one request for a specific resource even if multiple components trigger it simultaneously.
+**Correctness risk:** Race conditions or conflation of distinct requests. Mitigated by:
+1. Explicitly skipping `Request` objects, non-GET requests, and requests with custom `AbortSignal`s.
+2. Incorporating `init.headers` into the cache key to separate requests that look similar but use different auth tokens or content types.
+3. Cloning the `Response` object for every caller so that they can consume the body stream independently.
+**Next:** Implementing a stale-while-revalidate caching pattern for reference data.
