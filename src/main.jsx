@@ -1,3 +1,4 @@
+import { coalescedFetch } from './lib/utils';
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -49,6 +50,11 @@ function PageLoader() {
       </p>
     </div>
   );
+}
+
+
+if (typeof window !== 'undefined') {
+  window.fetch = coalescedFetch;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
