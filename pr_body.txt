@@ -1,0 +1,8 @@
+## ⚡ Complexity Eliminated
+
+**What:** Removed unused components and demo pages (`AIChatPage.jsx`, `DocumentGeneratorPage.jsx`, `AuthDemo.tsx`, `DemoOne.tsx`, `SidebarDemo.tsx`, `3DBackground.jsx`).
+**First-principles case:** If designed from scratch today, these files wouldn't exist because they are completely unreferenced in the application and provide no value to the current feature set. Dead code is a liability that increases bundle size and maintenance overhead.
+**Why it existed:** Likely remnants from previous experiments, UI iteration, or template copy-pasting during early development phases.
+**Net change:** +0 lines added, -795 lines removed, 6 files eliminated.
+**Behavior change:** None. The removed files were not imported anywhere in the application.
+**Next target:** Identify and remove redundant wrapper components or duplicated state management.

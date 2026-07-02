@@ -154,6 +154,7 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecentCases(parsed.slice(0, 5));
       } catch (e) {}
     }
