@@ -1,10 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../../contexts/TranscriptionContext';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Use Context instead of custom window event
+  const { transcription } = useTranscription();
+  // Prevent replay bugs on component remount using context timestamp
+  const lastProcessedTimestamp = useRef(transcription?.timestamp || 0);
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -41,15 +47,11 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
   }, [text]);
 
   useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
-
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+    if (transcription?.text && transcription.timestamp !== lastProcessedTimestamp.current) {
+      setText((prev) => (prev ? `${prev} ${transcription.text}` : transcription.text));
+      lastProcessedTimestamp.current = transcription.timestamp;
+    }
+  }, [transcription]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">

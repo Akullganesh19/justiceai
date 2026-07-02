@@ -1,0 +1,6 @@
+## 2024-05-18 — [Migrate Global Voice Events to React Context]
+**Risk identified:** Using global DOM `CustomEvents` (`window.dispatchEvent`) for standard, tightly-coupled UI component state sharing (passing transcriptions) lacks type-safety, testability, traceability, and can cause race conditions (e.g., synchronous vs asynchronous state updates).
+**Migration target:** React Context API (`TranscriptionContext`) to improve type-safety, testability, and provide a clear, trackable data flow for transcription state across the app.
+**Migrated this session:** Created `TranscriptionContext`. Updated `src/main.jsx` to wrap the app in the new provider using an additive migration strategy (`GlobalVoiceBridge`) to update both Context and the legacy event. Migrated `src/components/chat/ChatInput.jsx` to consume the new context and removed its legacy event listener, fixing replay bugs via a timestamp ref.
+**Remaining:** Identify any other consumers of the legacy `justice-ai-transcription` event and migrate them to `TranscriptionContext`. Once all consumers are migrated, remove the legacy event dispatching from `GlobalVoiceBridge` in `src/main.jsx` entirely.
+**Next session:** Grep for any remaining usages of `justice-ai-transcription` or `handleGlobalTranscription` and fully deprecate the legacy global custom event.
