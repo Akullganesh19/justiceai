@@ -1,0 +1,13 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated the transient, global `justice-ai-transcription` browser event in the frontend from `window.dispatchEvent` and `CustomEvent` to a React Context architecture (`TranscriptionContext`).
+
+**Risk it eliminates:** The previous approach relied on implicitly passing data globally through browser DOM events. This pattern is brittle, not type-safe, prone to race conditions (e.g., duplicate events during component remounts), and tightly coupled UI components to global transient browser events, making it a maintenance nightmare as the application scales.
+
+**Why now:** Refactoring global implicit state mechanisms becomes exponentially harder as the application grows. Migrating this foundational communication layer now ensures robust component isolation, improves predictability, and prepares the UI architecture for strict, type-safe rendering behaviors in modern React.
+
+**Migration approach:** We created `TranscriptionContext.jsx` to manage the transcription state with timestamp tracking (to prevent replay bugs). We implemented an additive strategy in `main.jsx`—the `AppContent` handles global transcriptions by both updating the React context and emitting the legacy global event. Finally, we updated `ChatInput.jsx` to natively consume the context instead of manually attaching event listeners, using a `useRef` to guarantee idempotency across remounts.
+
+**Remaining:** We need to audit and migrate other instances of `window.dispatchEvent` or global `CustomEvent` usage for UI state sharing across the codebase to ensure complete deprecation of the pattern.
+
+**Next session:** Check for other `CustomEvent` usages and systematically migrate them to appropriate Context providers or localized state management, specifically focusing on eliminating remaining implicit component couplings.
