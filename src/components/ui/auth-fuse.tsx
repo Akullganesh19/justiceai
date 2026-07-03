@@ -188,6 +188,23 @@ function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign In form submitted');
+
+    // Extract email from the form
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email');
+
+    // Dispatch global event for Synapse Event Bridge
+    if (typeof window !== 'undefined' && email) {
+      window.dispatchEvent(
+        new CustomEvent('justice-auth-login', {
+          detail: {
+            email,
+            action: 'signin',
+            timestamp: new Date().toISOString()
+          }
+        })
+      );
+    }
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -230,6 +247,25 @@ function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign Up form submitted');
+
+    // Extract email from the form
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email');
+    const name = formData.get('name');
+
+    // Dispatch global event for Synapse Event Bridge
+    if (typeof window !== 'undefined' && email) {
+      window.dispatchEvent(
+        new CustomEvent('justice-auth-login', {
+          detail: {
+            email,
+            name,
+            action: 'signup',
+            timestamp: new Date().toISOString()
+          }
+        })
+      );
+    }
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
