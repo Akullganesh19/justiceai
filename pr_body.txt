@@ -1,0 +1,8 @@
+## 🧠 Cross-System Intelligence Added
+
+**What:** Auth ↔ Analytics Event Bridge
+**Systems:** Auth system (`auth-fuse.tsx`) now talks to the Analytics/History system (`justice_ai_history`).
+**Intelligence emerged:** The Analytics and History system now automatically knows when a user logs in, their demographic segment (citizen vs legal professional based on `.law` email), and their last login timestamp. This is captured as an audit record in their history.
+**Data flow:** Auth System emits a global `justice-auth-login` event containing the user's email, action (signin/signup), and timestamp. The Synapse listener (`src/lib/synapse.js`) captures this and injects an audit record directly into `justice_ai_history` while setting the `justice_auth_user` context.
+**Coupling:** Event Bridge Pattern. Auth knows nothing about History. History knows nothing about Auth. The `initSynapse` layer acts as the completely decoupled translator.
+**Next:** Errors ↔ Users (Proactive error correlation).
