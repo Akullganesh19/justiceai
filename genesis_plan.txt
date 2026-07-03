@@ -1,0 +1,3 @@
+1. We found that `server.js` was relying heavily on `fetch()` calls to external APIs without any retry mechanism.
+2. We implemented an exponential backoff wrapper `fetchWithRetry()` and replaced all `fetch()` calls in `server.js` with this.
+3. The `.jules/genesis.md` file was successfully created to fulfill the prompt's journal requirement.
