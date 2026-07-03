@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** PII and internal structure active leakage in server logs closed.
+**Data classification:** Emails, Credit Cards, SSNs, API Keys, and internal Error Stacks.
+**Exposure before:** Winston logger indiscriminately logged user messages and payloads which may contain PII in plaintext. Additionally, `console.error` routed unhandled application errors directly to stdout (leaking stack traces), and Express error handlers conditionally leaked raw `err.message` (and sometimes `err.stack`) directly back to API consumers.
+**Fix:** Created a custom Winston `redactionFormatter` to deeply traverse log payloads and mask specific PII patterns (Emails, CCs, SSNs, and object keys implying secrets). Overrode native `console.*` methods to route through this centralized, redacted Winston instance. Modified global Express error handling to exclusively return a generic "Internal Server Error" rather than passing through raw `err.message`.
+**Verified:** `node -c server.js` confirmed syntax stability. Manual invocation of the endpoints validated that Express returns a `500` status with `{ error: 'Internal Server Error' }`, and the Winston logs correctly output `[REDACTED SSN]` and `j***@example.com` while maintaining correct Error struct definitions without masking stack context entirely.
+**Remaining gaps:** The backend currently holds extracted user documents in-memory / on-disk `documentChunks` which does not currently have a defined TTL, access-control granularity, or comprehensive data-subject deletion path.
