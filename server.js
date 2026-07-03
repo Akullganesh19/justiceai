@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import util from 'util';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -23,9 +24,99 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Winston logger
+
+const redactionFormatter = winston.format((info) => {
+  const clone = {};
+
+  // copy symbols (crucial for Winston core functionality)
+  const syms = Object.getOwnPropertySymbols(info);
+  syms.forEach(sym => {
+    clone[sym] = info[sym];
+  });
+
+  const seen = new WeakSet();
+
+  const redactString = (str) => {
+    let s = str;
+    // Email: j***@example.com
+    s = s.replace(/([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, (match, p1, p2) => {
+      return `${p1[0]}***@${p2}`;
+    });
+    // Strict Credit Card (13-16 digits, with optional spaces/dashes)
+    s = s.replace(/\b(?:\d[ -]*?){13,16}\b/g, (match) => {
+      if (/\d{4}-\d{2}-\d{2}/.test(match)) return match; // exclude dates
+      return '[REDACTED CARD]';
+    });
+    // SSN
+    s = s.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED SSN]');
+    return s;
+  };
+
+  const traverse = (obj) => {
+    if (obj instanceof Date) return obj;
+    if (Buffer.isBuffer(obj)) return '[Buffer]';
+    if (obj instanceof Error) {
+      return {
+        message: redactString(obj.message),
+        stack: obj.stack ? redactString(obj.stack) : undefined,
+        name: obj.name
+      };
+    }
+
+    if (typeof obj === 'string') {
+      return redactString(obj);
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(traverse);
+    }
+
+    if (obj !== null && typeof obj === 'object') {
+      if (seen.has(obj)) return '[Circular]';
+      seen.add(obj);
+
+      const newObj = {};
+      for (const [key, value] of Object.entries(obj)) {
+        const lowerKey = key.toLowerCase();
+        if (typeof value === 'string' && (lowerKey.includes('key') || lowerKey.includes('token') || lowerKey.includes('password') || lowerKey.includes('secret'))) {
+            newObj[key] = '[REDACTED SECRET]';
+        } else {
+            newObj[key] = traverse(value);
+        }
+      }
+
+      seen.delete(obj);
+      return newObj;
+    }
+
+    return obj;
+  };
+
+  for (const [key, value] of Object.entries(info)) {
+    // If it's the main error object passed as meta
+    if (value instanceof Error) {
+       clone[key] = {
+         message: redactString(value.message),
+         stack: value.stack ? redactString(value.stack) : undefined,
+         name: value.name
+       };
+    } else {
+       clone[key] = traverse(value);
+    }
+  }
+
+  // Also redact the main message if it's a string
+  if (typeof clone.message === 'string') {
+    clone.message = redactString(clone.message);
+  }
+
+  return clone;
+});
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactionFormatter(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -35,6 +126,32 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+
+// Override console methods to route through Winston for centralized redaction
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+const originalConsoleInfo = console.info;
+
+console.log = function(...args) {
+  logger.info(util.format(...args));
+};
+console.info = function(...args) {
+  logger.info(util.format(...args));
+};
+console.warn = function(...args) {
+  logger.warn(util.format(...args));
+};
+console.error = function(message, ...args) {
+  if (message instanceof Error) {
+    logger.error(message.message, { error: message });
+  } else if (args.length > 0 && args[0] instanceof Error) {
+    logger.error(util.format(message), { error: args[0] });
+  } else {
+    logger.error(util.format(message, ...args));
+  }
+};
 
 const app = express();
 
@@ -630,7 +747,7 @@ app.post('/api/voice/process', async (req, res) => {
 
   } catch (err) {
     console.error('Bhashini Proxy Error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -699,7 +816,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -941,10 +1058,7 @@ app.post('/api/chat', async (req, res) => {
     
   } catch (err) {
     console.error("Chat Error:", err);
-    res.status(500).json({ 
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -963,7 +1077,7 @@ app.post('/api/embed', async (req, res) => {
       model: EMBEDDING_MODEL
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

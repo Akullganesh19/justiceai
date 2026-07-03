@@ -1,0 +1,6 @@
+## 2026-07-03 — Active exposure of PII and internal structure in server logs
+**Data traced:** Emails, Credit Cards, SSNs, API Keys, and Error Stacks
+**Exposure found:** Winston logger logs all objects/strings indiscriminately. `console.error` logs unhandled exception stack traces directly into standard output/file logs which may contain user input payload. The `/api/chat` error responses optionally leaked internal errors (like `err.stack` with `err.message`) under dev mode back to the user.
+**Fix:** Introduced a Winston custom formatter `redactionFormatter` to deeply traverse and redact emails, SSNs, Credit Cards, and keys/tokens. Replaced `console.*` with a wrapped Winston logging. Adjusted Express error handlers to always respond with a generic "Internal Server Error" rather than full `err.message` which leaks internal structure.
+**Coverage confirmed:** The `redactionFormatter` effectively intercepts and masks PII/keys logged via `logger.*` and the intercepted `console.*` methods. It properly preserves `Symbol`s, handles nested objects, arrays, and standard Error objects. Express correctly outputs `500` with generic error.
+**Still exposed elsewhere:** There might be other structural problems (no user data deletion mechanism, etc), but for this session the highest risk PII active leakage logging is addressed.
