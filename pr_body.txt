@@ -1,0 +1,10 @@
+## 🌀 Invisible Infrastructure Added
+
+**What:** A global `window.fetch` interceptor that implements Request Coalescing. It safely tracks in-flight idempotent `GET` requests (keyed by URL and strictly serialized headers) and returns cloned promise resolutions to concurrent callers.
+**Hot path:** Runs silently on every single network request across the entire frontend application, catching overlapping independent component data fetching.
+**Before:** Decoupled components firing simultaneously would blindly generate redundant, identical `GET` requests, wasting client connections, duplicating backend load, and increasing apparent latency.
+**After:** Identical concurrent requests are automatically coalesced into a single network operation. The first request establishes the wire call, and all simultaneous siblings immediately receive a localized, cloned `Response` once the primary request resolves.
+**Users notice:** Nothing visually changes — but the application feels noticeably snappier during complex page loads or dashboard renders, as network congestion is implicitly minimized.
+**Measurable via:** Inspecting the browser's Network tab or checking backend API request logs to observe a drop in duplicate consecutive `GET` queries during component mounting.
+**Correctness risk:** Potential cache conflation bugs if headers are improperly serialized (e.g., `JSON.stringify(Headers)` returning `{}`). This is explicitly mitigated by properly iterating and sorting the `Headers` entries into a string map for the cache key. `Request` object inputs and explicit `AbortSignal`s are also explicitly bypassed to prevent unsafe abort-chaining or body consumptions.
+**Next:** Stale-while-revalidate client caching for high-volume reference data to extend the benefits of coalescing beyond simultaneous flights to sequential cross-route navigation.

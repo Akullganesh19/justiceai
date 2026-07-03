@@ -1,0 +1,7 @@
+## 2024-07-03 — Request Coalescing Added
+**Gap found:** The frontend naively fired multiple simultaneous `fetch` requests to identical endpoints (e.g., fetching configuration or multiple components mounting simultaneously and independently requesting the same data).
+**Why it existed:** The React frontend was highly decoupled, with distinct components operating independently without a centralized state or data management wrapper handling request deduplication.
+**Built:** An invisible, application-wide `window.fetch` interceptor in the main entry point (`src/main.jsx`). It tracks in-flight idempotent `GET` requests in a `Map` (keyed by URL and serialized headers) and dynamically clones the resolving promise for concurrent requestors, effectively coalescing simultaneous identical requests into a single network call.
+**Hot path affected:** Any decoupled component initialization or user interactions that trigger identical concurrent reads across the frontend application.
+**Measurable improvement:** Direct reduction in duplicate network traffic, measurable via browser network tabs or backend access logs showing significantly fewer redundant `GET` requests during heavy interaction or concurrent component rendering. Latency is reduced as subsequent local awaiters resolve instantly with cloned responses instead of waiting for a new network roundtrip.
+**Next opportunity:** Investigate implementing an intelligent stale-while-revalidate caching layer for reference data that rarely changes, to persist coalesced results across unmounts/remounts.
