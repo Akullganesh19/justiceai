@@ -9,6 +9,50 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+// 🌀 Phantom: Request Coalescing
+// Intercept fetch to deduplicate simultaneous identical GET requests
+if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+  const originalFetch = window.fetch;
+  const inFlightRequests = new Map();
+
+  window.fetch = async function coalescedFetch(resource, init) {
+    const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
+
+    // Only coalesce simple GET requests without custom abort signals or Request objects
+    if (
+      method !== 'GET' ||
+      (init && init.body) ||
+      resource instanceof Request ||
+      (init && init.signal)
+    ) {
+      return originalFetch(resource, init);
+    }
+
+    // Safely serialize headers for the cache key to avoid conflation bugs
+    let serializedHeaders = '';
+    if (init && init.headers) {
+      serializedHeaders = JSON.stringify([...new Headers(init.headers).entries()].sort());
+    }
+
+    const cacheKey = `${resource.toString()}::${serializedHeaders}`;
+
+    // If identical request is in-flight, return a clone of its promise resolution
+    if (inFlightRequests.has(cacheKey)) {
+      return inFlightRequests.get(cacheKey).then(res => res.clone());
+    }
+
+    // Fire actual request and track it
+    const fetchPromise = originalFetch(resource, init).finally(() => {
+      inFlightRequests.delete(cacheKey); // Clear tracking once resolved/rejected
+    });
+
+    inFlightRequests.set(cacheKey, fetchPromise);
+
+    // Return a clone so the original response isn't consumed by the first awaiter
+    return fetchPromise.then(res => res.clone());
+  };
+}
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
