@@ -638,6 +638,30 @@ export default function CaseTrackerPage() {
     }
   });
 
+  useEffect(() => {
+    // Synapse EventBridge Listener for auto-created cases
+    const handleCaseAutoCreated = (e) => {
+      if (e.detail?.newCase) {
+        setCases(prev => {
+          // Double check it's not already in there to prevent strict mode dups
+          if (prev.some(c => c.id === e.detail.newCase.id)) return prev;
+          return [e.detail.newCase, ...prev];
+        });
+        success({
+          title: 'Intelligence Emerged',
+          message: 'Case Tracker automatically initialized from AI Strategic Analysis.'
+        });
+      }
+    };
+
+    window.addEventListener('justice-ai-case-auto-created', handleCaseAutoCreated);
+
+    // Cleanup Synapse listener on unmount
+    return () => {
+      window.removeEventListener('justice-ai-case-auto-created', handleCaseAutoCreated);
+    };
+  }, [success]);
+
   const [activeCaseId, setActiveCaseId] = useState(cases[0]?.id);
   const [newStepLabel, setNewStepLabel] = useState('');
   const [showNewCaseModal, setShowNewCaseModal] = useState(false);
