@@ -51,6 +51,50 @@ function PageLoader() {
   );
 }
 
+
+// --- PHANTOM: Request Coalescing Infrastructure ---
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  const inFlightRequests = new Map();
+
+  window.fetch = async function(input, init) {
+    const method = (init && init.method) || 'GET';
+    const hasBody = init && init.body;
+    const hasCustomSignal = init && init.signal;
+
+    // Bypass coalescing for complex requests
+    if (
+      input instanceof Request ||
+      method.toUpperCase() !== 'GET' ||
+      hasBody ||
+      hasCustomSignal
+    ) {
+      return originalFetch.apply(this, arguments);
+    }
+
+    const url = typeof input === 'string' ? input : input.toString();
+    const headersObj = init && init.headers ? new Headers(init.headers) : new Headers();
+    const sortedHeaders = JSON.stringify([...headersObj.entries()].sort());
+    const cacheKey = `${url}|${sortedHeaders}`;
+
+    if (inFlightRequests.has(cacheKey)) {
+      const cachedPromise = inFlightRequests.get(cacheKey);
+      const res = await cachedPromise;
+      return res.clone();
+    }
+
+    const fetchPromise = originalFetch.apply(this, arguments).finally(() => {
+      inFlightRequests.delete(cacheKey);
+    });
+
+    inFlightRequests.set(cacheKey, fetchPromise);
+
+    const res = await fetchPromise;
+    return res.clone();
+  };
+}
+// --------------------------------------------------
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
