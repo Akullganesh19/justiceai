@@ -1,0 +1,17 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Replacing the legacy global `window.addEventListener('justice-ai-transcription')` mechanism with a structured React Context model using `TranscriptionContext.jsx`.
+
+**Risk it eliminates:** The legacy pattern relies on imperative DOM events that bypass the React rendering loop, increasing the risk of race conditions, memory leaks (if handlers aren't explicitly unmounted), and conflicts with concurrent rendering optimizations. In modern React frameworks, decoupled global events create unpredictable behaviors.
+
+**Why now:** Waiting will cause testing efforts to become overly complex as mock setups need to mimic native DOM interaction events. Migrating it now guarantees predictable state injection as more application endpoints rely on transcription hooks.
+
+**Migration approach:** We have implemented an additive compatibility migration. `TranscriptionContext` was introduced at the app root, and `main.jsx` now explicitly updates Context state *alongside* the legacy `CustomEvent` dispatch. This allowed us to safely update `ChatInput.jsx` to depend entirely on the Context hook while retaining support for any legacy components. To prevent context replay bugs upon unmounting/remounting, we added an explicit tracking `useRef` tied to the event timestamp.
+
+**Remaining:**
+- Scanning the rest of the application tree for `justice-ai-transcription` event listeners.
+- Once complete, we must remove `window.dispatchEvent` entirely from `handleGlobalTranscription`.
+
+**Next session:**
+- Continue migrating remaining components to `useTranscription`.
+- Finalize removal of `CustomEvent` dispatches across the project.

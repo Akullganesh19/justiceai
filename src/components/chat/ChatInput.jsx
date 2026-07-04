@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
+import { useTranscription } from '../../lib/TranscriptionContext.jsx';
 
 export default function ChatInput({ onSend, onUpload, isLoading }) {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { transcription } = useTranscription();
+  const lastProcessedRef = useRef(transcription?.timestamp || 0);
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -41,15 +44,12 @@ export default function ChatInput({ onSend, onUpload, isLoading }) {
   }, [text]);
 
   useEffect(() => {
-    const handleTranscription = (e) => {
-      if (e.detail?.text) {
-        setText((prev) => (prev ? `${prev} ${e.detail.text}` : e.detail.text));
-      }
-    };
-
-    window.addEventListener('justice-ai-transcription', handleTranscription);
-    return () => window.removeEventListener('justice-ai-transcription', handleTranscription);
-  }, []);
+    if (transcription && transcription.timestamp > lastProcessedRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setText((prev) => (prev ? `${prev} ${transcription.text}` : transcription.text));
+      lastProcessedRef.current = transcription.timestamp;
+    }
+  }, [transcription]);
 
   return (
     <div className="p-6 md:p-8 border-t-2 border-white/5 bg-void relative">
