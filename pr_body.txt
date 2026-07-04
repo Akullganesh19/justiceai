@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** Structural Data Exfiltration Prevented in Application Logs
+**Data classification:** PII (Email, SSN, Credit Cards) and Secrets (API Keys, Passwords, Tokens)
+**Exposure before:** `server.js` used raw `console.log`, `console.error`, and `console.warn` throughout the codebase, writing highly sensitive user requests and incoming payload structures directly to `stdout`. These unmasked logs could have been persisted in third-party log aggregators or container storage, causing long-term PII leaks without deletion paths.
+**Fix:** Created a custom Winston formatter `redactFormatter` that applies irreversible regex masking to PII and key-based masking to secrets in a deeply-cloned log payload. Replaced all `console.*` calls with `logger.*` and refactored string-interpolated logs to pass sensitive variables as metadata objects, enabling proper redaction.
+**Verified:** Wrote an end-to-end integration test (`test_redaction.js`) simulating a malicious payload containing an email, CC, SSN, and apiKeys. Confirmed the standard output correctly substituted values with `***` and `[REDACTED]` without mutating the live Express request object.
+**Remaining gaps:** Vector embeddings stored in the local file system or memory may still contain PII extracted directly from uploaded docs. We currently do not have a robust retention/deletion policy for embeddings.
