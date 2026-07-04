@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Replaced native \`fetch\` calls with a custom \`fetchWithRetry\` utility using exponential backoff.
+**Failure scenario protected:** Transient errors like rate limits (429) or temporary server errors (5xx) from third-party APIs (DeepSeek, Gemini, Bhashini, Ollama) causing total failures.
+**Recovery flow:** The app now automatically retries failing requests up to 3 times with exponentially increasing delays, except for intentional \`AbortError\` exceptions which pass through immediately.
+**Blast radius before:** Any temporary API error resulted in a hard failure, affecting a large portion of users by forcing them to manually retry their queries or actions.
+**Blast radius after:** Users should no longer experience transient API failures, experiencing only a brief delay in response times.
+**Logging/alerting:** Warnings are logged using Winston via \`logger.warn\` for each retry attempt and after maximum retries are reached.
+**Remaining failure points:** Ensure similar patterns are maintained if new external API integrations are introduced.
