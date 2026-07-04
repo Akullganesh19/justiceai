@@ -225,6 +225,11 @@ export default function ChatPage() {
 
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+        // Synapse EventBridge: Emit analysis for auto-case creation
+        const event = new CustomEvent('justice-ai-analysis-completed', {
+          detail: { analysis: newAnalysis }
+        });
+        window.dispatchEvent(event);
       }
 
       // Auto-save to history
