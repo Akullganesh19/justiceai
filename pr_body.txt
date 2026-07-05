@@ -1,0 +1,11 @@
+## 🛡️ Adversarial Verification Report
+
+**Scope attacked:** Document Upload and Vector Storage API (`/api/upload`, `/api/documents`)
+**🔴 Exploitable findings:**
+- **File leak on Document Upload:** Temp files handled by `multer` (e.g. `.docx` files triggering 'Unsupported file type') early return and throw errors without hitting the `fs.unlinkSync(filePath)` call inside the `try` block. This allows an attacker to exhaust server disk space with dummy documents.
+**🟡 Latent findings:** None explicitly identified in this scope, but the file leak is immediately exploitable.
+**🟢 Theoretical findings:** None.
+**Fixed this session:**
+- **File leak on Document Upload:** Moved `fs.unlinkSync(filePath)` to a `finally` block and verified the `filePath` check outside the `try` block, ensuring temp file deletion always executes regardless of unsupported types or processing failures. Includes regression test `test_upload_regression.cjs` which confirms files are deleted from the disk properly.
+**Requires human review:**
+- **Unauthenticated Document Deletion:** Endpoints `DELETE /api/documents/:source` and `DELETE /api/documents` lack authorization/authentication checks. Any user can completely wipe the server's document knowledge base. I have flagged this finding but not fixed it, as it requires a broader authentication architecture rather than a one-off patch.
