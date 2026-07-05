@@ -1,0 +1,8 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated the global `justice-ai-transcription` CustomEvent listener in `ChatInput` to a React Context (`VoiceContext`).
+**Risk it eliminates:** Relying on global DOM events (`window.dispatchEvent`) for component state updates is an anti-pattern in React. It leads to race conditions (especially on remounts in StrictMode), makes testing difficult, and causes hard-to-trace bugs as the application scales.
+**Why now:** As the voice features expand, managing state via scattered DOM listeners will compound technical debt and make the application brittle. Migrating now, while the usage is isolated, establishes the correct pattern for future voice integration.
+**Migration approach:** Created an additive `VoiceContext` that encapsulates the global listener and exposes the transcription data declaratively via `useVoiceContext`. The publisher (`FloatingVoiceButton`) still dispatches the event, ensuring no breakages, while `ChatInput` consumes it safely using a `useRef` to track processed timestamps and prevent replay bugs.
+**Remaining:** The `FloatingVoiceButton` currently still relies on `window.dispatchEvent` to broadcast the data.
+**Next session:** Migrate the publisher side (`FloatingVoiceButton`) to use a dispatch function exposed by `VoiceContext`, entirely removing the DOM CustomEvent from the app.

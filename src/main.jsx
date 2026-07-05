@@ -6,6 +6,7 @@ import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
+import { VoiceProvider } from './lib/VoiceContext';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
@@ -55,38 +56,40 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/rights" element={<RightsPage />} />
-              <Route path="/estimator" element={<EstimatorPage />} />
-              <Route path="/lawyers" element={<LawyerFinderPage />} />
-              <Route path="/tracker" element={<CaseTrackerPage />} />
-              <Route path="/quiz" element={<LegalQuizPage />} />
-              <Route path="/limitation" element={<LimitationCalculatorPage />} />
-              <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
-              <Route path="/glossary" element={<GlossaryPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/samples" element={<SamplesPage />} />
-              <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
-              <Route path="/disclaimer" element={<DisclaimerPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+        <VoiceProvider>
+          <Router>
+            <div className="grain-overlay" aria-hidden="true" />
+            <ScrollToTop />
+            <CommandPalette />
+            <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/documents" element={<DocumentsPage />} />
+                <Route path="/rights" element={<RightsPage />} />
+                <Route path="/estimator" element={<EstimatorPage />} />
+                <Route path="/lawyers" element={<LawyerFinderPage />} />
+                <Route path="/tracker" element={<CaseTrackerPage />} />
+                <Route path="/quiz" element={<LegalQuizPage />} />
+                <Route path="/limitation" element={<LimitationCalculatorPage />} />
+                <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
+                <Route path="/glossary" element={<GlossaryPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/samples" element={<SamplesPage />} />
+                <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
+                <Route path="/disclaimer" element={<DisclaimerPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/showcase" element={<ShowcasePage />} />
+                <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </VoiceProvider>
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
