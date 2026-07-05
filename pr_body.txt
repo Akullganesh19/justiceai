@@ -1,0 +1,27 @@
+## 🛡️ Adversarial Verification Report
+
+**Scope attacked:** POST `/api/upload` route in `server.js` handling document processing for RAG embeddings.
+**🔴 Exploitable findings:** Disk-exhaustion vulnerability. When an uploaded file passes Multer file filtering (e.g. `.doc`) but fails the application's specific extension checks, or when processing the file throws an error, the temporary file is bypassed from the `fs.unlinkSync` cleanup logic due to a `continue` or an uncaught exception, permanently leaving the file on the server's disk (`uploads/` directory). An attacker could exhaust server disk space by continually uploading invalid or unsupported files.
+**🟡 Latent findings:** None explicitly addressed in this PR.
+**🟢 Theoretical findings:** None explicitly addressed in this PR.
+**Fixed this session:**
+  - Restructured the `/api/upload` endpoint's processing loop to ensure `fs.unlinkSync(filePath)` is called safely inside a `finally` block. The `filePath` variable is now declared before the `try` block to ensure visibility. Tested by verifying temporary files are cleaned up upon unsupported file type rejection.
+**Requires human review:** None
+
+## 🛡️ Sentinel: Fixed uncleaned temporary file vulnerability in `/api/upload`
+
+**What:**
+Moved the cleanup of Multer temporary files inside a `finally` block during the `req.files` processing loop. Extracted `filePath` so it is safely scoped.
+
+**Failure scenario protected:**
+Attackers continuously uploading unsupported or malformed files that bypass Multer's filter but fail application-level parsing, silently filling up server disk space because they skipped the cleanup logic.
+
+**Recovery flow:**
+The cleanup will execute regardless of whether the file successfully embeds, is skipped for being unsupported, or fails to parse.
+
+**Blast radius before:** High (Remote unauthenticated disk exhaustion)
+**Blast radius after:** None
+**Remaining failure points:** Multer limits the maximum total upload size per request, which protects against large single-file exhaustion, but does not stop repeated requests (which are handled by rate limiting).
+
+**Verified:**
+Uploaded `dummy.doc` to the `/api/upload` endpoint. Confirmed the server correctly rejected it and successfully deleted the temporary file from the `uploads/` directory instead of leaving it there permanently.
