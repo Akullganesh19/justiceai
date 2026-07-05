@@ -1,0 +1,14 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Auto-retry wrapper with exponential backoff for downstream API fetches (`fetchWithRetry`).
+**Failure scenario protected:** Transient errors (5xx server errors, 429 Too Many Requests, or network drops) from third-party services (Gemini, DeepSeek, Ollama, Bhashini) instantly failing user requests without a second chance.
+**Recovery flow:**
+1. A downstream API request fails.
+2. If it's a 5xx, 429, or network error, `fetchWithRetry` intercepts it.
+3. It delays for an exponentially increasing time (e.g. 500ms -> 1000ms -> 2000ms).
+4. It re-attempts the exact same request.
+5. If successful, it transparently returns the result. If it fails 3 times, it returns the final failure to bubble up properly.
+**Blast radius before:** High. Even a 1-second blip in a third-party LLM API caused a complete halt to chat or RAG features for affected users.
+**Blast radius after:** Low/None for transient errors. Brief API downtime is handled invisibly with a slight delay, rather than a hard crash for the user.
+**Logging/alerting:** Warnings are printed to the console prefixed with `[🧬 Genesis]` when a retry is triggered, and when all retries are exhausted.
+**Remaining failure points:** Unhandled internal server errors in backend routes, lacking circuit breakers for prolonged third-party outages, and potential DB write conflicts (if added in the future).
