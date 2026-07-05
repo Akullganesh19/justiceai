@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -659,7 +659,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           text = fs.readFileSync(filePath, 'utf-8');
         } else {
           failedFiles.push({ name: fileName, error: 'Unsupported file type' });
-          continue;
+          continue; // cleanup in finally block
         }
 
         // Chunk and embed
@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file in finally block to avoid disk exhaustion leak
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
