@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
+import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2, Bookmark } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -8,6 +8,7 @@ export function CaseHistorySidebar({
   onSelect,
   onNew,
   onDelete,
+  onTogglePin,
   isOpen,
   setIsOpen,
 }) {
@@ -54,7 +55,7 @@ export function CaseHistorySidebar({
 
             {/* Sidebar Content */}
             <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
-              {history.length === 0 ? (
+              {[...history].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).length === 0 ? (
                 <div className="text-center py-20 px-8 space-y-6 opacity-40">
                   <div className="w-16 h-16 rounded-2xl bg-midnight border border-white/5 flex items-center justify-center mx-auto text-white shadow-inner">
                     <FileText className="w-8 h-8" />
@@ -64,7 +65,7 @@ export function CaseHistorySidebar({
                   </p>
                 </div>
               ) : (
-                history.map((item) => (
+                [...history].sort((a, b) => (b.pinned === a.pinned ? 0 : b.pinned ? 1 : -1)).map((item) => (
                   <div
                     key={item.id}
                     className={`group relative p-5 rounded-2xl border transition-all cursor-pointer ${
@@ -90,15 +91,27 @@ export function CaseHistorySidebar({
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(item.id);
-                      }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-xl text-text-tertiary hover:bg-gold/10 hover:text-gold opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-gold/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-all ${item.pinned ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onTogglePin) onTogglePin(item.id);
+                        }}
+                        className={`p-2.5 rounded-xl transition-all border border-transparent ${item.pinned ? 'text-gold hover:bg-gold/10 hover:border-gold/20' : 'text-text-tertiary hover:text-white hover:bg-white/10'} ${item.pinned ? 'opacity-100 group-hover:opacity-100' : ''}`}
+                        style={item.pinned ? { opacity: 1 } : {}}
+                      >
+                        <Bookmark className={`w-4 h-4 ${item.pinned ? 'fill-current' : ''}`} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(item.id);
+                        }}
+                        className="p-2.5 rounded-xl text-text-tertiary hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent hover:border-red-500/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
