@@ -1,0 +1,9 @@
+## 🌌 Emergent Feature Added
+
+**What:** Case Pinning / Bookmarked Conversations
+**Derivation:** JusticeAI stores 'INTELLIGENCE_RECORDS' in the dashboard representing previous chat consultations. Users rely on the AI copilot for extended legal advice, creating history entries. Therefore, users obviously need a way to bookmark, save, or "star" specific conversations so they don't get lost as they do more chats (since only the top 5 are shown or easily accessible). It didn't exist because the history feature was a simple chronological array dumped to localStorage without metadata for importance or bookmarking. I'm building it because legal issues span months and users need a reliable way to pin a specific consultation about their ongoing case so they can return to it without searching through unrelated queries.
+**Why it was missing:** The history feature was a simple chronological array dumped to localStorage without metadata for importance or bookmarking.
+**User story:** As a user, I can now pin critical legal consultations permanently, ensuring they sort to the top of my records and don't roll off the recent list.
+**Data used:** The existing 'justice_ai_history' localStorage array.
+**Discovery:** Users will find a "Bookmark" icon on their recent cases in the Dashboard and within the Chat sidebar history list.
+**Next:** What Nexus should derive next session: Case outcome tracking or linking a chat thread directly to the CaseTracker timeline.

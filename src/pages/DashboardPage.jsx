@@ -22,6 +22,7 @@ import {
   HeartHandshake,
   BookMarked,
   AlertCircle,
+  Bookmark,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -105,7 +106,7 @@ function QuickActionCard({ icon: Icon, title, description, path, accent }) {
   );
 }
 
-function RecentCaseCard({ caseData }) {
+function RecentCaseCard({ caseData, onTogglePin }) {
   const navigate = useNavigate();
   const title = caseData.title || 'Untitled Consultation';
   const date = new Date(caseData.timestamp).toLocaleDateString('en-IN', {
@@ -134,10 +135,22 @@ function RecentCaseCard({ caseData }) {
             </span>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onTogglePin) onTogglePin(caseData.id);
+            }}
+            className={`p-2 rounded-sm transition-all ${caseData.pinned ? 'text-gold hover:bg-gold/10' : 'text-text-tertiary hover:text-white hover:bg-white/10'} opacity-0 group-hover:opacity-100`}
+            style={caseData.pinned ? { opacity: 1 } : {}}
+          >
+            <Bookmark className={`w-4 h-4 ${caseData.pinned ? 'fill-current' : ''}`} />
+          </button>
           <div className="flex items-center gap-1.5 text-[9px] uppercase font-extrabold tracking-widest text-emerald-400 bg-emerald-400/5 px-2.5 py-1 rounded-sm border-2 border-emerald-400/20 shadow-hard">
             <div className="w-1.5 h-1.5 rounded-sm bg-emerald-400 animate-pulse" />
             Analyzed
           </div>
+        </div>
       </div>
     </button>
   );
@@ -149,14 +162,31 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
-  useEffect(() => {
+  const loadCases = () => {
     const saved = localStorage.getItem('justice_ai_history');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
+        setRecentCases(parsed.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).slice(0, 5));
       } catch (e) {}
     }
+  };
+
+  const togglePin = (id) => {
+    const saved = localStorage.getItem('justice_ai_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const updated = parsed.map(c => c.id === id ? { ...c, pinned: !c.pinned } : c);
+        localStorage.setItem('justice_ai_history', JSON.stringify(updated));
+        loadCases();
+      } catch (e) {}
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCases();
 
     const hour = new Date().getHours();
     if (hour < 12) {
@@ -334,7 +364,7 @@ export default function DashboardPage() {
 
               <div className="space-y-6">
                 {recentCases.length > 0 ? (
-                  recentCases.map((c, i) => <RecentCaseCard key={c.id || i} caseData={c} />)
+                  recentCases.map((c, i) => <RecentCaseCard key={c.id || i} caseData={c} onTogglePin={togglePin} />)
                 ) : (
                   <div className="p-12 rounded-sm bg-void border-2 border-white/5 text-center space-y-8 shadow-hard">
                     <div className="w-16 h-16 rounded-sm bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto opacity-20">

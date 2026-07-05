@@ -149,6 +149,12 @@ export default function ChatPage() {
     setAnalysis(null);
   };
 
+  const togglePin = (id) => {
+    setHistory((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c))
+    );
+  };
+
   const deleteCase = (id) => {
     setHistory((prev) => prev.filter((c) => c.id !== id));
     if (activeCaseId === id) {
@@ -276,6 +282,7 @@ export default function ChatPage() {
           onSelect={loadCase}
           onNew={handleNewCase}
           onDelete={deleteCase}
+          onTogglePin={togglePin}
         />
 
         <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
