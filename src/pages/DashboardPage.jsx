@@ -143,6 +143,94 @@ function RecentCaseCard({ caseData }) {
   );
 }
 
+
+function PredictiveNextAction({ history }) {
+  const navigate = useNavigate();
+
+  if (!history || history.length === 0) return null;
+
+  const latestCase = history[0];
+  if (!latestCase || !latestCase.analysis) return null;
+
+  // Predict next step based on the case analysis strategy and title
+  const analysisText = JSON.stringify(latestCase.analysis).toLowerCase();
+  const caseTitle = latestCase.title?.toLowerCase() || '';
+  const combinedText = analysisText + ' ' + caseTitle;
+
+  let prediction = null;
+
+  if (combinedText.includes('notice') || combinedText.includes('draft') || combinedText.includes('complaint') || combinedText.includes('application')) {
+    prediction = {
+      title: 'Draft Required Documents',
+      desc: 'Based on your recent case analysis, generating a formal document is the recommended next step.',
+      icon: FileText,
+      path: '/documents',
+      cta: 'Formulate Draft'
+    };
+  } else if (combinedText.includes('lawyer') || combinedText.includes('advocate') || combinedText.includes('representation')) {
+    prediction = {
+      title: 'Consult a Legal Professional',
+      desc: 'Your case strategy indicates you need professional representation. Find a verified lawyer.',
+      icon: UserCheck,
+      path: '/lawyers',
+      cta: 'Find Lawyer'
+    };
+  } else if (combinedText.includes('cost') || combinedText.includes('fee') || combinedText.includes('expense')) {
+    prediction = {
+      title: 'Estimate Case Costs',
+      desc: 'Forecast the potential institutional and professional fees for your case.',
+      icon: Calculator,
+      path: '/estimator',
+      cta: 'Calculate Costs'
+    };
+  } else if (combinedText.includes('limit') || combinedText.includes('time') || combinedText.includes('deadline')) {
+    prediction = {
+      title: 'Check Limitation Period',
+      desc: 'Ensure your case is within statutory deadlines before proceeding.',
+      icon: Clock,
+      path: '/limitation',
+      cta: 'Check Deadlines'
+    };
+  }
+
+  if (!prediction) return null;
+
+  return (
+    <div className="mb-12 p-8 rounded-sm bg-gold/5 border-2 border-gold/30 shadow-luxe relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gold/[0.02] opacity-50 group-hover:opacity-100 transition-opacity" />
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 rounded bg-void flex items-center justify-center flex-shrink-0 border-2 border-gold/50 shadow-luxe text-gold">
+            <Sparkles className="w-8 h-8 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20">
+                Oracle Prediction
+              </span>
+              <span className="text-xs text-text-tertiary">Recommended Next Step</span>
+            </div>
+            <h3 className="text-xl font-display font-bold text-white uppercase tracking-tight">
+              {prediction.title}
+            </h3>
+            <p className="text-sm text-text-tertiary font-body mt-1 leading-relaxed max-w-xl">
+              {prediction.desc}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(prediction.path)}
+          className="flex items-center justify-center gap-2 px-8 py-4 bg-gold text-midnight rounded-sm border-2 border-gold/20 font-extrabold text-[10px] uppercase tracking-widest hover:bg-gold-light transition-all shadow-hard whitespace-nowrap italic"
+        >
+          <prediction.icon className="w-4 h-4" />
+          {prediction.cta}
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [recentCases, setRecentCases] = useState([]);
@@ -154,8 +242,11 @@ export default function DashboardPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     const hour = new Date().getHours();
@@ -287,6 +378,7 @@ export default function DashboardPage() {
             />
           </div>
 
+          <PredictiveNextAction history={recentCases} />
           <div className="grid lg:grid-cols-3 gap-16">
             {/* Core Capabilities Module */}
             <div className="lg:col-span-2 space-y-12">

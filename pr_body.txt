@@ -1,0 +1,11 @@
+## 🛸 Predictive Intelligence Added
+
+**What:** Implemented a prediction engine consisting of a "Predictive Next Action" terminal on the Dashboard and "Intelligent Defaults" within the Document Generator.
+**Why:** Bridges the gap between case analysis and actionable steps. Users no longer have to manually figure out what to do next or copy-paste context between isolated tools.
+**Signal used:** User case history and AI analysis results stored in `justice_ai_history` `localStorage`.
+**How users feel it:**
+- The Dashboard instantly recommends the highest-leverage next step (e.g., generating a notice or finding a lawyer).
+- The Document Generator automatically selects the correct template and pre-fills facts, showing a "🔮 Oracle Active" notification.
+**Accuracy:** High for determining category intent based on keywords present in the structured JSON analysis block.
+**Failure mode:** Degrades gracefully. If no recent history exists or no keywords match, the prediction widgets remain hidden, and normal manual flows proceed without disruption.
+**Next:** Prefetching specific court location data and legal precedent documents upon case initialization to warm up local caches before user queries occur.

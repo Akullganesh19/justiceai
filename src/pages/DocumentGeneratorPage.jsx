@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import {
@@ -169,6 +169,62 @@ export default function DocumentGeneratorPage() {
   const [formData, setFormData] = useState({});
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    // Prediction Engine: Auto-configure document based on recent case history
+    try {
+      const savedHistory = localStorage.getItem('justice_ai_history');
+      if (savedHistory) {
+        const history = JSON.parse(savedHistory);
+        if (history && history.length > 0) {
+          const latestCase = history[0];
+
+          if (latestCase && latestCase.messages && latestCase.analysis) {
+            const analysisText = JSON.stringify(latestCase.analysis).toLowerCase();
+            const caseTitle = (latestCase.title || '').toLowerCase();
+            const combinedText = analysisText + ' ' + caseTitle;
+
+            // Extract facts from user messages
+            const userMessages = latestCase.messages
+              .filter(m => m.role === 'user')
+              .map(m => m.content)
+              .join('\n\n');
+
+            let predictedTemplateId = null;
+            let predictedFormData = {};
+
+            if (combinedText.includes('notice') || combinedText.includes('demand')) {
+              predictedTemplateId = 'legal_notice';
+              predictedFormData = { facts: userMessages };
+            } else if (combinedText.includes('consumer') || combinedText.includes('deficiency') || combinedText.includes('product')) {
+              predictedTemplateId = 'consumer_complaint';
+              predictedFormData = { deficiency: userMessages };
+            } else if (combinedText.includes('criminal') || combinedText.includes('fir') || combinedText.includes('police')) {
+              predictedTemplateId = 'bns_complaint';
+              predictedFormData = { incident_details: userMessages };
+            } else if (combinedText.includes('rti') || combinedText.includes('information')) {
+              predictedTemplateId = 'rti_application';
+              predictedFormData = { information_requested: userMessages };
+            }
+
+            if (predictedTemplateId && DOCUMENT_TEMPLATES[predictedTemplateId]) {
+              // eslint-disable-next-line react-hooks/set-state-in-effect
+              setSelectedTemplate(DOCUMENT_TEMPLATES[predictedTemplateId]);
+              // eslint-disable-next-line react-hooks/set-state-in-effect
+              setFormData(predictedFormData);
+
+              setTimeout(() => {
+                info({ title: '🔮 Oracle Active', message: 'Pre-configured document draft based on your recent case history.' });
+              }, 500);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error in prediction engine:', e);
+    }
+  }, [info]);
+
 
   const handleFieldChange = (id, value) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
