@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +682,17 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file securely
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch (e) {
+            console.error(`Failed to delete temp file ${filePath}`, e);
+          }
+        }
       }
     }
 
