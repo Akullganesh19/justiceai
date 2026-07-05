@@ -10,6 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
+import util from 'util';
 import winston from 'winston';
 
 const require = createRequire(import.meta.url);
@@ -22,11 +23,59 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+const redactPII = winston.format((info) => {
+  const redactString = (str) => {
+    if (typeof str !== 'string') return str;
+    let redacted = str;
+    // Email
+    redacted = redacted.replace(/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g, '[REDACTED EMAIL]');
+    // SSN
+    redacted = redacted.replace(/\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, '[REDACTED SSN]');
+    // Credit card (strict pattern to avoid timestamps)
+    redacted = redacted.replace(/\b(?:\d{4}[ -]?){3}\d{4}\b/g, '[REDACTED CC]');
+    return redacted;
+  };
+
+  const deepRedact = (obj, seen = new WeakSet()) => {
+    if (obj === null || typeof obj !== 'object') {
+      return typeof obj === 'string' ? redactString(obj) : obj;
+    }
+    if (Buffer.isBuffer(obj)) return obj;
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) {
+      return {
+        message: redactString(obj.message),
+        stack: redactString(obj.stack),
+        name: obj.name
+      };
+    }
+    if (seen.has(obj)) return '[Circular]';
+    seen.add(obj);
+
+    const cloned = Array.isArray(obj) ? [] : {};
+    for (const key of Object.keys(obj)) {
+      cloned[key] = deepRedact(obj[key], seen);
+    }
+    seen.delete(obj);
+    return cloned;
+  };
+
+  const clonedInfo = deepRedact(info);
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    const symVal = info[sym];
+    clonedInfo[sym] = typeof symVal === 'string' ? redactString(symVal) : deepRedact(symVal);
+  }
+  return clonedInfo;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
+    redactPII(),
     winston.format.json()
   ),
   transports: [
@@ -35,6 +84,19 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+
+// Override console methods to pipe through Winston for global redaction
+console.log = (...args) => logger.info(util.format(...args));
+console.warn = (...args) => logger.warn(util.format(...args));
+console.error = (...args) => {
+  const errorObj = args.find(a => a instanceof Error);
+  if (errorObj) {
+    logger.error(util.format(...args), { error: errorObj });
+  } else {
+    logger.error(util.format(...args));
+  }
+};
 
 const app = express();
 
