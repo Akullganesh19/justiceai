@@ -9,6 +9,61 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+
+// 🌀 PHANTOM: Request Coalescing
+// Identical GET requests made concurrently will share a single network call.
+const originalFetch = window.fetch;
+const inFlight = new Map();
+
+window.fetch = async function coalescedFetch(input, init) {
+  // Only coalesce simple GET requests without custom abort signals
+  if (typeof Request !== 'undefined' && input instanceof Request) {
+    return originalFetch.apply(this, arguments);
+  }
+
+  const method = init?.method || 'GET';
+  if (method.toUpperCase() !== 'GET') {
+    return originalFetch.apply(this, arguments);
+  }
+
+  if (init?.signal) {
+    return originalFetch.apply(this, arguments);
+  }
+
+  const url = input.toString();
+  // Safe header serialization as per memory guidelines
+  let headerMap = [];
+  if (init?.headers) {
+    try {
+      headerMap = [...new Headers(init.headers).entries()].sort();
+    } catch (e) {
+      // Fallback if headers are weird
+    }
+  }
+
+  const cacheKey = JSON.stringify({ url, headers: headerMap });
+
+  if (inFlight.has(cacheKey)) {
+    console.debug('🌀 Phantom: Coalesced duplicate request for', url);
+    const res = await inFlight.get(cacheKey);
+    return res.clone();
+  }
+
+  const promise = originalFetch.apply(this, arguments);
+  inFlight.set(cacheKey, promise);
+
+  promise.finally(() => {
+    inFlight.delete(cacheKey);
+  }).catch(() => {});
+
+  const res = await promise;
+  return res.clone();
+};
+
+
+
+
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
