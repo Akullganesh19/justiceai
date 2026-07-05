@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** Closed active PII exposure in backend application logs.
+**Data classification:** PII (SSN, Email, Credit Cards)
+**Exposure before:** `server.js` was logging up to the first 50 characters of user chat queries in plaintext to the console, and generic errors could potentially bubble up PII to error logs.
+**Fix:** Introduced a custom `winston.format` to perform a deep, irreversible redaction of PII patterns from all log fields and symbols. Overrode global `console.log`, `console.warn`, and `console.error` to automatically pipe through this secured logger, securing new code by default.
+**Verified:** Executed local test script injecting an SSN and Email into the log payload via `console.log` and confirmed it prints as `[REDACTED SSN]` and `[REDACTED EMAIL]`.
+**Remaining gaps:** Database contents (if stored), and unredacted query text sent to external APIs (Gemini/DeepSeek) which is required for product functionality.
