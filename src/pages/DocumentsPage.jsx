@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +378,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDrafts, setSavedDrafts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_drafts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('justice_ai_drafts', JSON.stringify(savedDrafts));
+  }, [savedDrafts]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +399,33 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save to drafts
+    const newDraft = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      templateTitle: selectedTemplate.title,
+      date: new Date().toISOString(),
+      content: doc,
+      formData: formData
+    };
+    setSavedDrafts(prev => [newDraft, ...prev].slice(0, 10)); // Keep last 10
+
     setStage('preview');
+  };
+
+  const handleViewDraft = (draft) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === draft.templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setGeneratedDoc(draft.content);
+      setStage('preview');
+    }
+  };
+
+  const handleDeleteDraft = (e, id) => {
+    e.stopPropagation();
+    setSavedDrafts(prev => prev.filter(d => d.id !== id));
   };
 
   const handleReset = () => {
@@ -420,6 +460,51 @@ export default function DocumentsPage() {
                   SYSTEMATIC GENERATION OF STATUTORY NOTICES AND PROCEDURAL APPLICATIONS.
                 </p>
               </div>
+
+
+              {/* Draft Archive */}
+              {savedDrafts.length > 0 && (
+                <div className="mt-24 space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white italic">
+                      DRAFT_ARCHIVE
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDrafts.map((draft) => (
+                      <motion.div
+                        key={draft.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => handleViewDraft(draft)}
+                        className="group relative cursor-pointer p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 shadow-hard flex flex-col gap-4"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-sm font-bold text-white uppercase tracking-widest group-hover:text-gold transition-colors line-clamp-1">
+                            {draft.templateTitle}
+                          </h3>
+                          <button
+                            onClick={(e) => handleDeleteDraft(e, draft.id)}
+                            className="text-white/20 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-text-tertiary font-mono opacity-60">
+                          {new Date(draft.date).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
