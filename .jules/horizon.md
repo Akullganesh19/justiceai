@@ -1,0 +1,6 @@
+## 2024-05-18 — Migrate Global Events to React Context
+**Risk identified:** Using transient global browser `CustomEvent` listeners to communicate cross-component state (like voice transcription) scales poorly, causing duplicated logic and severe race conditions as the component tree deepens. This gets harder over time as more features depend on this asynchronous cross-app communication.
+**Migration target:** A centralized React Context structure (e.g. `TranscriptionContext`) to encapsulate the event listeners and share reactive state seamlessly and safely throughout the application tree.
+**Migrated this session:** Added the `TranscriptionProvider` wrap to the application root (`src/main.jsx`), created `TranscriptionContext.jsx`, and migrated `ChatInput.jsx` away from raw `window.addEventListener` to use the `useTranscription` hook, ensuring no broken behavior or regressions.
+**Remaining:** Migrate any other components actively listening to `justice-ai-transcription` manually and completely deprecate the `handleGlobalTranscription` dispatcher in `FloatingVoiceButton.jsx` eventually.
+**Next session:** Start migrating any other scattered components using the legacy event system to the `TranscriptionContext` to standardize data flow and completely sunset the global `window.dispatchEvent` approach.
