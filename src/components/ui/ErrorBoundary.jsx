@@ -19,6 +19,18 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
+    // Dispatch a global event so decoupled systems (like Toast notifications) can react
+    window.dispatchEvent(
+      new CustomEvent('system.error', {
+        detail: {
+          title: 'System Exception',
+          message: error?.message || 'A critical rendering error occurred.',
+          error,
+          errorInfo,
+        },
+      })
+    );
+
     // Log to error reporting service (if configured)
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
