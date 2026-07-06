@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Implemented a robust `fetchWithRetry` utility using Exponential Backoff (3 attempts, max ~400ms delay) and replaced all hard `fetch` instances for Gemini, DeepSeek, Bhashini, and Ollama in `server.js`.
+**Failure scenario protected:** Transient network failures, rate limiting (429), or temporary server errors (500s) from third-party and local LLM providers that previously resulted in immediate request termination.
+**Recovery flow:** If a network error occurs or a 429/5xx status is received, the system sleeps exponentially (100ms -> 200ms) and retries the request transparently. If max attempts are exhausted, it gracefully bubbles the final failed response back to the caller for standard error handling or fallback cascading.
+**Blast radius before:** Any micro-outage in API availability or brief rate-limit caused user-facing 500 errors or immediate transition to fallback providers.
+**Blast radius after:** Users experience a slight latency increase during transient failures (up to ~300ms total), but the request recovers silently without breaking the UI.
+**Logging/alerting:** Genesis fires standard `console.warn` (`⚠️ [Self-Healing] HTTP ... Retrying`) capturing the target URL, status, and backoff delay, giving engineers observability without noise.
+**Remaining failure points:** Database operations (vector retrieval timeouts) and disk-based operations (`multer` temp files) currently lack robust retry wrappers.
