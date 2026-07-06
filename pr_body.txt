@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** PII exposure in backend system logs (stdout and log files).
+**Data classification:** Personally Identifiable Information (PII) including Emails, SSNs, and Credit Card numbers.
+**Exposure before:** `console.log` and `console.error` calls throughout `server.js` could log sensitive user data directly into system streams or files (`logs/error.log`, `logs/combined.log`).
+**Fix:** Created a custom deep-redacting Winston formatter and overridden global `console` methods (`console.log`, `console.warn`, `console.error`) to route all native logging through the Winston logger, ensuring that sensitive data is irreversibly masked as `[REDACTED]` prior to storage or stdout emission.
+**Verified:** Verified deep-redaction logic against primitive strings, nested objects, arrays, and Error instances, verifying that objects like Buffers and circular references do not crash the logger. Passed linter and verified existing frontend tests.
+**Remaining gaps:** Third-party APIs (Gemini, DeepSeek, Ollama) might receive sensitive information in prompts if not explicitly sanitized before sending. Additionally, client-side logging was not addressed in this PR.
