@@ -9,6 +9,52 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  const inFlightRequests = new Map();
+
+  window.fetch = async function coalescedFetch(input, init) {
+    if (typeof Request !== 'undefined' && input instanceof Request) {
+      return originalFetch(input, init);
+    }
+
+    const method = (init?.method || 'GET').toUpperCase();
+    if (method !== 'GET' || init?.body) {
+      return originalFetch(input, init);
+    }
+
+    if (init?.signal) {
+      return originalFetch(input, init);
+    }
+
+    const urlStr = typeof input === 'string' ? input : input.toString();
+    const headersStr = init?.headers
+      ? JSON.stringify([...new Headers(init.headers).entries()].sort())
+      : '[]';
+
+    const cacheKey = `${urlStr}|${headersStr}`;
+
+    if (inFlightRequests.has(cacheKey)) {
+      const res = await inFlightRequests.get(cacheKey);
+      return res.clone();
+    }
+
+    const promise = originalFetch(input, init).finally(() => {
+      // Small delay before deleting to allow microtasks to clone
+      // Actually, removing it immediately in finally is fine since the promise is already resolved,
+      // but awaiters might be in the microtask queue. If we delete it, a NEW request right after
+      // would start a new fetch, which is exactly what we want (it's not caching, it's coalescing).
+      inFlightRequests.delete(cacheKey);
+    });
+
+    inFlightRequests.set(cacheKey, promise);
+
+    const res = await promise;
+    return res.clone();
+  };
+}
+
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
