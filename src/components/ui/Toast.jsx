@@ -114,6 +114,20 @@ export function ToastProvider({ children }) {
   const warning = useCallback((data) => addToast('warning', data), [addToast]);
   const info = useCallback((data) => addToast('info', data), [addToast]);
 
+  React.useEffect(() => {
+    const handleSystemError = (e) => {
+      // Trigger error toast on system exception
+      error({
+        title: e.detail?.title || 'System Error',
+        message: e.detail?.message || 'An unexpected error occurred.',
+        duration: 8000,
+      });
+    };
+
+    window.addEventListener('system.error', handleSystemError);
+    return () => window.removeEventListener('system.error', handleSystemError);
+  }, [error]);
+
   const value = {
     toasts,
     addToast,

@@ -1,0 +1,8 @@
+## 🧠 Cross-System Intelligence Added
+
+**What:** Global Error Monitoring Event Bridge
+**Systems:** ErrorBoundary (React UI) ↔ Toast Notification (UI)
+**Intelligence emerged:** When a React component crashes and gets caught by ErrorBoundary, the user gets immediately notified via the Toast system instead of just seeing a crash screen or silent console errors. This allows the system to proactively alert the user about failures.
+**Data flow:** `ErrorBoundary` catches error → dispatches global `system.error` CustomEvent with error details → `ToastProvider` listener catches it → triggers `useToast().error(...)`.
+**Coupling:** Loosely coupled via `CustomEvent('system.error')`. The `ErrorBoundary` does not need to import or know about `ToastProvider` directly.
+**Next:** Auth ↔ Case Tracker (correlating active user to their specific local cases).
