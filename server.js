@@ -22,10 +22,77 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+import util from 'util';
+const REDACT_STRING = '[REDACTED]';
+
+const redactPatterns = [
+  // Email
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  // SSN
+  /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g,
+  // Credit Card (strict)
+  /\b(?:\d[ -]*?){13,16}\b/g
+];
+
+function redactString(str) {
+  let redacted = str;
+  for (const pattern of redactPatterns) {
+    redacted = redacted.replace(pattern, REDACT_STRING);
+  }
+  return redacted;
+}
+
+const redactFormatter = winston.format((info) => {
+  const clone = Object.assign({}, info);
+  for (const sym of Object.getOwnPropertySymbols(info)) {
+    clone[sym] = info[sym];
+  }
+
+  function deepRedact(obj, seen = new WeakSet()) {
+    if (obj === null || typeof obj !== 'object') {
+      if (typeof obj === 'string') {
+        return redactString(obj);
+      }
+      return obj;
+    }
+
+    if (seen.has(obj)) return '[Circular]';
+    if (Buffer.isBuffer(obj)) return '[Buffer]';
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) {
+      return {
+        message: redactString(obj.message),
+        stack: redactString(obj.stack || '')
+      };
+    }
+
+    seen.add(obj);
+
+    let result = Array.isArray(obj) ? [] : {};
+    for (const key of Object.keys(obj)) {
+      result[key] = deepRedact(obj[key], seen);
+    }
+
+    seen.delete(obj);
+    return result;
+  }
+
+  const redactedInfo = deepRedact(clone);
+
+  // copy symbols back because deepRedact returns plain object
+  for (const sym of Object.getOwnPropertySymbols(clone)) {
+    redactedInfo[sym] = clone[sym];
+  }
+
+  return redactedInfo;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormatter(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -35,6 +102,29 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+
+// Override native console methods
+const originalConsoleLog = console.log;
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+
+console.log = function(...args) {
+  logger.info(util.format(...args));
+};
+
+console.warn = function(...args) {
+  logger.warn(util.format(...args));
+};
+
+console.error = function(...args) {
+  if (args[1] instanceof Error) {
+    // special handling for common console.error('msg', error) pattern
+    logger.error(util.format(args[0]), { error: args[1] });
+  } else {
+    logger.error(util.format(...args));
+  }
+};
 
 const app = express();
 
