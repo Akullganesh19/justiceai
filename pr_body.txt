@@ -1,0 +1,9 @@
+## 🌌 Emergent Feature Added
+
+**What:** Document Draft Archive
+**Derivation:** "Actions Without Memory" pattern. The system allowed generating complex legal documents but failed to remember them. If a user refreshed or left the page, their draft was permanently lost.
+**Why it was missing:** The initial implementation focused on the core AI generation flow, treating generation as a stateless, single-session transaction.
+**User story:** As a user, I can now generate a legal document and it will automatically save to my Draft Archive. I can safely leave the page, come back later, and click on my past drafts to review, copy, or download them.
+**Data used:** Existing document templates and generated string outputs, persisting via `localStorage` alongside existing AI chat history patterns.
+**Discovery:** A "DRAFT_ARCHIVE" section now automatically appears below the drafting protocols when a user has generated at least one document.
+**Next:** Saving state on the Cost Estimator or persistent tracking of Case Milestones.

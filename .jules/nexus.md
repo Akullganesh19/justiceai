@@ -1,0 +1,6 @@
+## 2024-07-06 — Document Draft Archive
+**Product understood as:** An AI-powered legal co-pilot helping Indian citizens understand rights and draft legal documents.
+**Derivation reasoning:** Pattern 3: Actions Without Memory. The product has a Document Generator page (`/documents`) that creates high-value, complex legal drafts based on extensive user input. However, once generated, if the user navigates away or closes the browser, the draft is lost forever. Users need an automatic way to save and revisit past drafts. It doesn't exist because the original focus was on single-session generation. I'm building it to prevent critical data loss and enable asynchronous legal preparation.
+**Feature built:** An automatic Draft Archive in `DocumentsPage.jsx` that saves generated drafts to `localStorage` and displays them as clickable cards below the template selection grid.
+**User impact:** Users can now generate multiple documents, safely navigate away, and return later to review, copy, or download their previously generated legal drafts.
+**Next logical feature:** "Actions Without Memory" on the Cost Estimator (saving calculation histories) or "Events Without Notification" for case tracking milestones.
