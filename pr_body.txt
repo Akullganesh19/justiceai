@@ -1,0 +1,8 @@
+## ⚡ Complexity Eliminated
+
+**What:** Removed `AIChatPage.jsx`.
+**First-principles case:** This codebase has two chat interfaces (`ChatPage.jsx` and `AIChatPage.jsx`). If designed from scratch today, `AIChatPage` wouldn't exist because it is a stripped-down duplicate of the main `ChatPage`.
+**Why it existed:** It was likely an early demo or prototype for the `gemma3` model integration that was left in the codebase after the main `ChatPage` was built.
+**Net change:** +0 lines added, -237 lines removed, 1 page abstraction eliminated.
+**Behavior change:** None. The file was pure dead code and not imported anywhere in the main application flow.
+**Next target:** Explore redundant Showcase and Demo pages that duplicate component logic but are unlinked.
