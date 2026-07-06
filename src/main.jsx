@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { TranscriptionProvider } from './components/voice/TranscriptionContext';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -55,6 +56,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
+        <TranscriptionProvider>
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
@@ -87,6 +89,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </Routes>
           </Suspense>
         </Router>
+        </TranscriptionProvider>
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,

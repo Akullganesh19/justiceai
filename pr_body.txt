@@ -1,0 +1,8 @@
+## 🔭 Future-Proofing Migration
+
+**What:** Migrated the transient, global `CustomEvent` `justice-ai-transcription` listener pattern to a robust React Context provider (`TranscriptionContext`).
+**Risk it eliminates:** Relying heavily on raw `window.addEventListener` in random components scales terribly as the component tree expands, causing memory leaks, duplicate triggers, and hard-to-trace state desyncs between disconnected UI slices.
+**Why now:** Continuing to use the legacy pattern for global event dispatches makes the frontend highly brittle, and transitioning it today before multiple other sub-features depend on it avoids massive refactoring headaches later.
+**Migration approach:** We used an additive migration. The legacy event dispatcher in `main.jsx` was left intact, but the actual state management and listener logic was encapsulated safely within the new `<TranscriptionProvider>`, ensuring no existing behavior broke while enabling the new, cleaner pattern for `ChatInput.jsx`.
+**Remaining:** Identify and migrate other stray components currently subscribed directly to `justice-ai-transcription`, and phase out the direct `window.dispatchEvent` inside `main.jsx` once everything listens via Context.
+**Next session:** Hunt for and migrate any final straggler components from `window.addEventListener` to the `useTranscription` hook to achieve a clean context-driven architecture.
