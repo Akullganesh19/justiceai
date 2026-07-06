@@ -1,0 +1,13 @@
+## 🛡️ Adversarial Verification Report
+
+**Scope attacked:** The POST \`/api/upload\` endpoint in \`server.js\` boundary testing (unsupported file handling) and local disk operations.
+**🔴 Exploitable findings:**
+1. **File Leak/Disk Exhaustion Vulnerability:** When uploading an unsupported file type (e.g., .doc, .exe), the endpoint caught the invalid file type correctly but executed a \`continue\` statement inside the file processing loop. This bypassed the final \`fs.unlinkSync\` cleanup call on the multer temporary file, leaving the unsupported file permanently on the server's disk. This allows a malicious actor to perform a disk exhaustion DoS attack by uploading large quantities of garbage unsupported files.
+  - **Reproduction:** Use \`fetch\` with a \`FormData\` body containing a \`document\` blob named \`badfile.doc\`. The server returns a 200 containing \`"error": "Unsupported file type"\`, but checking the \`uploads/\` directory shows the temporary file left on disk.
+**🟡 Latent findings:** None explicitly identified during this session.
+**🟢 Theoretical findings:**
+- Concurrency issues during large chunk processing of extremely massive PDFs (potential memory spike).
+**Fixed this session:**
+1. **File Leak Vulnerability fixed:** Modified the \`/api/upload\` loop inside \`server.js\` to wrap the file processing in a \`try...finally\` block. The \`finally\` block explicitly calls \`fs.unlinkSync\` if the file exists, guaranteeing that the multer temporary file is always deleted from the disk regardless of whether the file was successfully embedded, failed parsing, or was rejected as an unsupported type. Regression test executed locally to confirm un-supported files are now properly cleaned up.
+**Requires human review:**
+- None. The fix is localized to resource cleanup logic and does not impact application business logic or external behaviors.

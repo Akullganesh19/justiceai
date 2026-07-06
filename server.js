@@ -651,39 +651,43 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
 
-        if (ext === '.pdf') {
-          const dataBuffer = fs.readFileSync(filePath);
-          const pdfData = await parsePdf(dataBuffer);
-          text = pdfData.text;
-        } else if (ext === '.txt' || ext === '.md') {
-          text = fs.readFileSync(filePath, 'utf-8');
-        } else {
-          failedFiles.push({ name: fileName, error: 'Unsupported file type' });
-          continue;
-        }
+        try {
+          if (ext === '.pdf') {
+            const dataBuffer = fs.readFileSync(filePath);
+            const pdfData = await parsePdf(dataBuffer);
+            text = pdfData.text;
+          } else if (ext === '.txt' || ext === '.md') {
+            text = fs.readFileSync(filePath, 'utf-8');
+          } else {
+            failedFiles.push({ name: fileName, error: 'Unsupported file type' });
+            continue;
+          }
 
-        // Chunk and embed
-        const rawChunks = splitTextIntoChunks(text, 1000, 200);
-        let chunksEmbedded = 0;
+          // Chunk and embed
+          const rawChunks = splitTextIntoChunks(text, 1000, 200);
+          let chunksEmbedded = 0;
 
-        for (const chunk of rawChunks) {
-          const vector = await embeddings.embedQuery(chunk);
-          documentChunks.push({
-            content: chunk,
-            vector: vector,
-            source: fileName
+          for (const chunk of rawChunks) {
+            const vector = await embeddings.embedQuery(chunk);
+            documentChunks.push({
+              content: chunk,
+              vector: vector,
+              source: fileName
+            });
+            chunksEmbedded++;
+          }
+
+          uploadedFiles.push({
+            name: fileName,
+            size: file.size,
+            chunks: chunksEmbedded
           });
-          chunksEmbedded++;
+        } finally {
+          // Clean up uploaded file
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
         }
-
-        uploadedFiles.push({
-          name: fileName,
-          size: file.size,
-          chunks: chunksEmbedded
-        });
-
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
 
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
