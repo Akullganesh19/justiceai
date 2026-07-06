@@ -1,0 +1,10 @@
+## 🌀 Invisible Infrastructure Added
+
+**What:** Implemented Request Coalescing (Deduplication) for all global fetch calls.
+**Hot path:** Runs on every `window.fetch` client-side API call.
+**Before:** The frontend naively issued independent duplicate network requests if multiple components or concurrent interactions fetched the same URL simultaneously.
+**After:** A coalesced `window.fetch` wrapper intercepts GET requests. If an identical request (by URL and headers) is already in-flight, it returns a cloned `Response` of the existing promise instead of hitting the network again.
+**Users notice:** Nothing — but the app feels faster, especially during complex page loads or when multiple widgets request the same configuration/data.
+**Measurable via:** Inspecting the Network tab in DevTools during parallel mounting of components fetching the same resource; only a single request will be dispatched.
+**Correctness risk:** Non-GET requests, requests with bodies, and requests with custom `AbortSignal` are explicitly bypassed to avoid caching side effects or breaking complex interactions. The in-flight cache is cleared immediately when the promise resolves, so subsequent requests fetch fresh data.
+**Next:** Implement edge or memory caching layer with TTL.
