@@ -1,0 +1,17 @@
+## 🛡️ Adversarial Verification Report
+
+**Scope attacked:** `/api/upload` endpoint, `/api/chat` endpoint, generic error boundaries.
+**🔴 Exploitable findings:**
+- **Upload Resource Exhaustion (Leak):** Submitting a corrupted or intentionally invalid `.pdf` file caused the `pdf-parse` library to throw an exception midway through the upload loop. Because the unlinking logic was located at the end of the `try` block, it was bypassed during an exception. This meant the temporary file remained in the `uploads/` directory permanently, which an attacker could exploit to fill up server disk space.
+- **Chat Endpoint Server Crash (Type Error):** Sending an empty string, null, or a `messages` array lacking a `content` string triggered an unhandled exception (`Cannot read properties of undefined (reading 'substring')`) and crashed the request thread.
+
+**🟡 Latent findings:** None explicitly fixed, though file type rejections directly through `multer` trigger unhandled Rejection warnings if unhandled by Express middleware.
+**🟢 Theoretical findings:** Multple consecutive large file uploads may still stress memory because we buffer `.pdf` contents directly into memory before parsing.
+
+**Fixed this session:**
+- Fixed file leak in `/api/upload` by safely declaring the file path variable and enforcing file cleanup strictly inside a `finally` block, ensuring unlinks occur regardless of parse status.
+- Hardened the `splitTextIntoChunks` utility and `/api/chat` inputs to ensure it never crashes on `null`/`undefined` text, guarding `.substring()`.
+- Added strict isolated regression tests for Sentinel failure paths using supertest via vitest under a Node.js test environment configuration.
+
+**Requires human review:**
+- Review the `multer` configuration which uses a hardcoded fallback directory without size monitoring.
