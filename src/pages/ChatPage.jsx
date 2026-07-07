@@ -106,7 +106,8 @@ export default function ChatPage() {
 
   // Case Management Handlers
   const saveCurrentToHistory = () => {
-    const title = messages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+    const content = messages[1]?.content;
+    const title = content ? `${content.substring(0, 40)}...` : 'Untitled Case';
     const caseData = {
       id: activeCaseId,
       title,
@@ -192,7 +193,18 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+
+        // Synapse Event Bridge: Notify Case Tracker of newly generated timeline
+        if (newAnalysis.timeline && newAnalysis.timeline.length > 0) {
+          const content = currentMsgs[1]?.content;
+          const eventTitle = content ? `${content.substring(0, 40)}...` : 'Untitled Case';
+          window.dispatchEvent(new CustomEvent('justice-ai-analysis-complete', {
+            detail: { activeCaseId, title: eventTitle, analysis: newAnalysis }
+          }));
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -228,7 +240,8 @@ export default function ChatPage() {
       }
 
       // Auto-save to history
-      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+      const content = updatedMessages[1]?.content;
+      const title = content ? `${content.substring(0, 40)}...` : 'Untitled Case';
       const caseData = {
         id: activeCaseId,
         title,
@@ -241,6 +254,13 @@ export default function ChatPage() {
         const filtered = prev.filter((c) => c.id !== activeCaseId);
         return [caseData, ...filtered];
       });
+
+      // Synapse Event Bridge: Notify Case Tracker of newly generated timeline
+      if (newAnalysis && newAnalysis.timeline && newAnalysis.timeline.length > 0) {
+        window.dispatchEvent(new CustomEvent('justice-ai-analysis-complete', {
+          detail: { activeCaseId, title, analysis: newAnalysis }
+        }));
+      }
     } catch (error) {
       console.error('Chat Error:', error);
       const errorMsg = {
