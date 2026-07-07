@@ -1,0 +1,9 @@
+## 🧬 Self-Healing Architecture Added
+
+**What:** Auto-Retry with Exponential Backoff (`fetchWithRetry`).
+**Failure scenario protected:** Unprotected `fetch()` calls to external APIs (Gemini, DeepSeek, Bhashini, Ollama) that would hard-fail the application immediately on transient network errors, rate limits (429), or temporary server errors (5xx).
+**Recovery flow:** The new mechanism intercepts external HTTP calls, checks for transient failures, and automatically retries the request up to 3 times, scaling the delay exponentially (200ms, 400ms) between attempts. It also safely re-generates timeout signals on each attempt and ensures memory is cleaned up correctly.
+**Blast radius before:** High. Any temporary cloud or local network hiccup caused an immediate, unrecoverable error for the active user session.
+**Blast radius after:** Low. Users will experience slightly elevated latency during a transient failure as the system heals and retries silently, preventing hard crashes.
+**Logging/alerting:** Winston logs emit `[Genesis]` warnings and errors upon retries and max-failure thresholds.
+**Remaining failure points:** Long-running timeouts not tied to fetch (e.g. queue workers) or heavy synchronous processing blocking the event loop.
