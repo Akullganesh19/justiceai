@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { TranscriptionProvider } from './components/voice/TranscriptionContext';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -55,12 +56,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
+        <TranscriptionProvider>
+          <Router>
+            <div className="grain-overlay" aria-hidden="true" />
+            <ScrollToTop />
+            <CommandPalette />
+            <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -84,9 +86,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/showcase" element={<ShowcasePage />} />
               <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
               <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+              </Routes>
+            </Suspense>
+          </Router>
+        </TranscriptionProvider>
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
