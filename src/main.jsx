@@ -9,6 +9,75 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+
+// Request Coalescing Wrapper
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  const inFlightRequests = new Map();
+
+  window.fetch = async function coalescedFetch(input, init) {
+    let method = 'GET';
+    if (init?.method) {
+      method = init.method.toUpperCase();
+    } else if (typeof Request !== 'undefined' && input instanceof Request) {
+      method = input.method.toUpperCase();
+    }
+
+    if (method !== 'GET' || init?.signal || (typeof Request !== 'undefined' && input instanceof Request && input.signal)) {
+      return originalFetch.call(this, input, init);
+    }
+
+    let url = '';
+    if (typeof input === 'string') {
+      url = input;
+    } else if (typeof URL !== 'undefined' && input instanceof URL) {
+      url = input.toString();
+    } else if (typeof Request !== 'undefined' && input instanceof Request) {
+      url = input.url;
+    } else {
+      url = input.toString();
+    }
+
+    let headersStr = '';
+    if (init?.headers) {
+      headersStr = JSON.stringify([...new Headers(init.headers).entries()].sort());
+    } else if (typeof Request !== 'undefined' && input instanceof Request && input.headers) {
+      headersStr = JSON.stringify([...new Headers(input.headers).entries()].sort());
+    }
+
+    const credentials = init?.credentials || (typeof Request !== 'undefined' && input instanceof Request ? input.credentials : '') || '';
+    const mode = init?.mode || (typeof Request !== 'undefined' && input instanceof Request ? input.mode : '') || '';
+
+    const cacheKey = `${url}|${headersStr}|${credentials}|${mode}`;
+
+    if (inFlightRequests.has(cacheKey)) {
+      const sharedPromise = inFlightRequests.get(cacheKey);
+      const res = await sharedPromise;
+      return res.clone();
+    }
+
+    const promise = originalFetch.call(this, input, init).then(res => {
+      inFlightRequests.delete(cacheKey);
+      return res;
+    }).catch(err => {
+      inFlightRequests.delete(cacheKey);
+      throw err;
+    });
+
+    inFlightRequests.set(cacheKey, promise);
+
+    const res = await promise;
+    // The original caller gets a clone as well to ensure that if concurrent callers await the shared promise in the same microtask queue turn,
+    // they don't crash because the original caller consumed the stream first.
+    return res.clone();
+  };
+}
+
+
+
+
+
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
