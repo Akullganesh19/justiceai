@@ -1,14 +1,71 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { Milestone, ArrowRight } from 'lucide-react';
+import { useToast } from '../ui/Toast';
 
-export function Timeline({ timeline }) {
+export function Timeline({ timeline, caseType }) {
+  const navigate = useNavigate();
+  const { success } = useToast();
+
   if (!timeline || timeline.length === 0) return null;
+
+  const handleExportToTracker = () => {
+    try {
+      const STORAGE_KEY = 'justice_ai_case_tracker_v2';
+      const existingData = localStorage.getItem(STORAGE_KEY);
+      const cases = existingData ? JSON.parse(existingData) : [];
+
+      const mappedSteps = timeline.map((item, index) => ({
+        id: Date.now() + index,
+        label: item.stage,
+        description: item.detail,
+        completed: item.status === 'completed',
+      }));
+
+      const newCase = {
+        id: Date.now().toString(),
+        name: caseType || 'AI Generated Case Strategy',
+        caseType: 'custom',
+        steps: mappedSteps,
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: '',
+          courtName: '',
+          bench: '',
+        },
+      };
+
+      cases.push(newCase);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+
+      success({
+        title: 'Exported to Tracker',
+        message: 'Case timeline successfully added to your tracker.',
+      });
+
+      navigate('/tracker');
+    } catch (error) {
+      console.error('Failed to export to tracker:', error);
+    }
+  };
 
   return (
     <div className="space-y-10 pt-12 border-t border-white/5 relative">
       <div className="absolute top-0 left-0 w-1.5 h-10 bg-gold/20 rounded-sm" />
-      <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-text-tertiary block mb-8 opacity-60 italic">
-        CASE_PROGRESSION_TIMELINE
-      </label>
+      <div className="flex items-center justify-between mb-8">
+        <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-text-tertiary block opacity-60 italic">
+          CASE_PROGRESSION_TIMELINE
+        </label>
+
+        <button
+          onClick={handleExportToTracker}
+          className="group flex items-center gap-2 px-4 py-2 bg-gold/10 hover:bg-gold/20 border border-gold/20 hover:border-gold/40 text-gold rounded-sm transition-all text-[10px] font-bold uppercase tracking-widest shadow-luxe"
+        >
+          <Milestone className="w-3.5 h-3.5" />
+          <span>Send to Tracker</span>
+          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
 
       <div className="space-y-8 relative">
         {timeline.map((item, i) => {
