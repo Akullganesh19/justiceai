@@ -1,0 +1,6 @@
+## 2024-07-07 — Predictive Route Prefetching Added
+**Product understood as:** JusticeAI is an AI-powered legal copilot for Indian citizens, helping them understand their rights, estimate costs, track cases, and prepare for legal matters. It is a dense, multi-tool React application with heavy routing (20+ pages).
+**Prediction invented:** Implemented `RoutePredictor`, a behavioral-based route prefetching system in `src/main.jsx`. It records the user's past page-to-page navigation sequences into `localStorage` (`oracle_transitions`) and builds a Markov chain probability matrix. When the user navigates to a new page, it immediately starts dynamically `import()`-ing the top 2 routes they are most likely to visit next in the background.
+**Data used:** Explicit navigation transition data, aggregated locally in `localStorage` from the user's ongoing session and past sessions (e.g. going from `/dashboard` -> `/chat`).
+**Impact:** After establishing baseline behavior patterns, user clicks to their most common destinations will feel instant (~0ms perceived load) instead of waiting for the Vite dynamic chunk to download over the network.
+**Next opportunity:** Prefetching specific document templates or starting API inference (like generating summaries) when the user enters the `/documents` or `/chat` views, since LLM latency is a major bottleneck in RAG apps.
