@@ -1,0 +1,9 @@
+## 🌌 Emergent Feature Added
+
+**What:** Added a "Send to Tracker" button in the AI Case Timeline visualization.
+**Derivation:** The product generates complex, actionable case timelines (Timeline.jsx) and has a separate manual Case Tracker (CaseTrackerPage.jsx). However, users could not easily move their AI-generated strategy into their tracker. This is a classic "Isolation Without Integration" pattern.
+**Why it was missing:** The case tracking module and the AI analysis generation module were built as separate silos.
+**User story:** As a user, I can now instantly promote a generated AI case strategy into an actionable, trackable project in the Case Tracker without manually copying the steps.
+**Data used:** The existing AI `analysis.timeline` block and the existing `justice_ai_case_tracker_v2` localStorage schema.
+**Discovery:** Users will find this feature as a prominent action button directly on the "Case Progression Timeline" section of their AI analysis results.
+**Next:** Automated deadline reminders (Notifications/Calendar integrations) for tracked milestones.
