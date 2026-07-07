@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import util from 'util';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -23,9 +24,91 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Winston logger
+
+
+function maskEmail(email) {
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  const username = parts[0];
+  const maskedUsername = username.length > 2
+    ? username[0] + '*'.repeat(username.length - 2) + username[username.length - 1]
+    : '*'.repeat(username.length);
+  return `${maskedUsername}@${parts[1]}`;
+}
+
+function maskSSN(ssn) {
+  return '***-**-' + ssn.slice(-4);
+}
+
+function maskCC(cc) {
+  return '****-****-****-' + cc.slice(-4);
+}
+
+function redactString(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g, (match) => maskEmail(match))
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, (match) => maskSSN(match))
+    .replace(/\b(?:\d{4}[ -]?){3}\d{4}\b/g, (match) => maskCC(match.replace(/[ -]/g, '')));
+}
+
+function deepRedact(obj, seen = new WeakSet()) {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') return redactString(obj);
+  if (typeof obj !== 'object') return obj;
+
+  if (obj instanceof Date) return obj;
+  if (Buffer.isBuffer(obj)) return obj;
+
+  if (obj instanceof Error) {
+    const redactedErr = {
+      message: redactString(obj.message),
+      stack: redactString(obj.stack),
+      name: obj.name
+    };
+    for (const key of Object.keys(obj)) {
+      if (key !== 'message' && key !== 'stack' && key !== 'name') {
+         redactedErr[key] = deepRedact(obj[key], seen);
+      }
+    }
+    return redactedErr;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  let result;
+  if (Array.isArray(obj)) {
+    result = obj.map(item => deepRedact(item, seen));
+  } else {
+    result = {};
+    for (const key of Object.keys(obj)) {
+      const lowerKey = key.toLowerCase();
+      if (['email', 'ssn', 'password', 'creditcard', 'cardnumber', 'phone'].includes(lowerKey)) {
+         result[key] = '[REDACTED]';
+      } else {
+         result[key] = deepRedact(obj[key], seen);
+      }
+    }
+  }
+
+  seen.delete(obj);
+  return result;
+}
+
+const customRedactFormat = winston.format((info) => {
+  const clonedInfo = deepRedact(info);
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    clonedInfo[sym] = typeof info[sym] === 'string' ? redactString(info[sym]) : info[sym];
+  }
+  return clonedInfo;
+});
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    customRedactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -35,6 +118,28 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+// Override native console methods for complete capture & redaction
+console.log = (...args) => {
+  const redactedArgs = args.map(arg => deepRedact(arg));
+  logger.info(util.format(...redactedArgs));
+};
+console.warn = (...args) => {
+  const redactedArgs = args.map(arg => deepRedact(arg));
+  logger.warn(util.format(...redactedArgs));
+};
+console.error = (...args) => {
+  if (args.length >= 2 && args[1] instanceof Error) {
+    const redactedMsg = deepRedact(args[0]);
+    const redactedErr = deepRedact(args[1]);
+    logger.error(util.format(redactedMsg), { error: redactedErr });
+  } else {
+    const redactedArgs = args.map(arg => deepRedact(arg));
+    logger.error(util.format(...redactedArgs));
+  }
+};
+
+
 
 const app = express();
 
