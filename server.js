@@ -258,6 +258,7 @@ async function parsePdf(dataBuffer) {
 
 // Custom lightweight text splitter 
 function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
+  if (typeof text !== 'string') text = String(text || '');
   const chunks = [];
   let i = 0;
   while (i < text.length) {
@@ -645,8 +646,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      let filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +683,12 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        if (filePath && fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -746,7 +748,10 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Get the latest user message to search for context
-    const latestUserMessage = messages[messages.length - 1].content;
+    const latestUserMessage = messages[messages.length - 1]?.content || '';
+    if (!latestUserMessage) {
+      return res.status(400).json({ error: 'Latest message content is missing' });
+    }
     
     let contextStr = '';
     let retrievedSources = [];
@@ -1015,3 +1020,4 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
+export { app };
