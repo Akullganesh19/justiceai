@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import util from 'util';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -22,11 +23,104 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+// --- PII REDACTION UTILS ---
+const PII_PATTERNS = {
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+  ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
+  creditCard: /\b(?:\d{4}[ -]?){3}\d{4}\b/g,
+  phone: /\b\+?1?\s*\(?-*\d{3}\)?[-. \s]?\d{3}[-. \s]?\d{4}\b/g,
+};
+
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  return `${local[0]}***@${domain}`;
+}
+
+function maskString(str) {
+  if (typeof str !== 'string') return str;
+  let masked = str;
+
+  masked = masked.replace(PII_PATTERNS.email, (match) => maskEmail(match));
+  masked = masked.replace(PII_PATTERNS.ssn, '***-**-****');
+  masked = masked.replace(PII_PATTERNS.creditCard, (match) => {
+    const digits = match.replace(/[- ]/g, '');
+    return `****-****-****-${digits.slice(-4)}`;
+  });
+  masked = masked.replace(PII_PATTERNS.phone, '***-***-****');
+
+  return masked;
+}
+
+function deepRedact(obj, seen = new WeakSet()) {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') return maskString(obj);
+  if (typeof obj !== 'object') return obj;
+
+  if (Buffer.isBuffer(obj)) return '[Buffer]';
+  if (obj instanceof Date) return obj;
+  if (obj instanceof Error) {
+    const newErr = new Error(maskString(obj.message));
+    newErr.stack = maskString(obj.stack || '');
+    newErr.name = obj.name;
+    // Copy all custom enumerable properties
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newErr[key] = deepRedact(obj[key], seen);
+      }
+    }
+    return newErr;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  let result;
+  if (Array.isArray(obj)) {
+    result = obj.map(item => deepRedact(item, seen));
+  } else {
+    result = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (key.toLowerCase() === 'password' || key.toLowerCase() === 'token' || key.toLowerCase() === 'authorization') {
+          result[key] = '[REDACTED]';
+        } else {
+          result[key] = deepRedact(obj[key], seen);
+        }
+      }
+    }
+  }
+
+  seen.delete(obj);
+  return result;
+}
+
+
+
+const redactFormat = winston.format((info, opts) => {
+  // We need to preserve Symbols from Winston
+  const symbols = Object.getOwnPropertySymbols(info);
+  const redacted = deepRedact(info);
+
+  if (typeof redacted === 'object') {
+    for (const sym of symbols) {
+      redacted[sym] = info[sym];
+    }
+    return redacted;
+  }
+  return info;
+});
+
+
+
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
+    redactFormat(),
     winston.format.json()
   ),
   transports: [
@@ -35,6 +129,23 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+
+// Override native console methods to use Winston (and deepRedact)
+
+const origConsoleLog = console.log;
+const origConsoleWarn = console.warn;
+const origConsoleError = console.error;
+
+console.log = function(...args) {
+  logger.info(util.format(...deepRedact(args)));
+};
+console.warn = function(...args) {
+  logger.warn(util.format(...deepRedact(args)));
+};
+console.error = function(...args) {
+  logger.error(util.format(...deepRedact(args)));
+};
 
 const app = express();
 

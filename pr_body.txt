@@ -1,0 +1,8 @@
+## ⚖️ Data Governance Fix
+
+**What:** Closed a critical structural logging vulnerability where raw PII (emails, SSNs, credit cards, passwords, phone numbers) provided by users via the `/api/chat` payload and request bodies was actively written unredacted into both stdout logs and `logs/combined.log`.
+**Data classification:** Sensitive Personally Identifiable Information (PII) and Secure Credentials.
+**Exposure before:** The Express server used `winston` combined with naive `console.log` overrides without redaction. Every `/api/chat` request body was stringified and dumped to the log file in plaintext, exposing everything users pasted into prompts.
+**Fix:** Created a `deepRedact` traversal utility mapping regex patterns for sensitive strings and masking exact dictionary keys (like `password` and `token`). Injected this safely as a `winston.format` that preserves logging metadata (`Symbols`), and globally overrode `console.log`, `console.warn`, and `console.error` to pipe through the redacting logger first.
+**Verified:** Generated local mock chat requests with fake SSNs, emails, and passwords, executed them against the backend, and manually `grep`ped the output of `logs/combined.log` to confirm exact replacements (e.g. `t***@example.com`, `***-**-****`, `[REDACTED]`).
+**Remaining gaps:** Unredacted request bodies may still be sent externally to Cloud AI APIs (Gemini, DeepSeek) when local Ollama fallback paths are triggered. Client-side localstorage caching still persists raw values indefinitely.
