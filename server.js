@@ -281,6 +281,53 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+
+// --- BEGIN GENESIS RECOVERY MECHANISM ---
+// Auto-Retry with Exponential Backoff for transient HTTP failures
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  let timeoutId;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const controller = new AbortController();
+      let fetchOptions = { ...options };
+
+      // Setup timeout to ensure we don't hang forever
+      const timeoutMs = 15000;
+
+      if (!fetchOptions.signal) {
+        timeoutId = setTimeout(() => controller.abort(new Error('TimeoutError')), timeoutMs);
+        fetchOptions.signal = controller.signal;
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      // If we reach the max attempts, just return the response instead of throwing,
+      // keeping the standard fetch contract where the caller handles !response.ok
+      if (!response.ok && (response.status >= 500 || response.status === 429)) {
+        if (attempt === maxAttempts) {
+          if (timeoutId) clearTimeout(timeoutId);
+          return response;
+        }
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      if (timeoutId) clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (attempt === maxAttempts) throw err;
+
+      logger.warn(`⚠️ [Genesis] fetch attempt ${attempt} failed for ${url.toString().substring(0, 50)}...: ${err.message}. Retrying...`);
+
+      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+}
+// --- END GENESIS RECOVERY MECHANISM ---
+
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,7 +365,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +401,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +614,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +645,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,7 +877,7 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
@@ -856,7 +903,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
