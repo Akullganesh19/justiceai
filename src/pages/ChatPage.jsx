@@ -225,6 +225,18 @@ export default function ChatPage() {
 
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // Synapse: Dispatch the cross-system intelligence event
+        const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-complete', {
+            detail: {
+              caseId: activeCaseId,
+              title,
+              analysis: newAnalysis
+            }
+          })
+        );
       }
 
       // Auto-save to history
