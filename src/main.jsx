@@ -39,6 +39,45 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
+// --- 🛸 ORACLE: PREDICTIVE ROUTE PREFETCHING ---
+// Anticipate the most likely next actions a user will take after initial load
+// and silently fetch those JS chunks in the background.
+// Impact: Clicking primary navigation feels impossibly fast (~0ms perceived load).
+const PREFETCH_MAP = {
+  chat: () => import('./pages/ChatPage.jsx'),
+  dashboard: () => import('./pages/DashboardPage.jsx'),
+  tracker: () => import('./pages/CaseTrackerPage.jsx'),
+  lawyers: () => import('./pages/LawyerFinderPage.jsx'),
+};
+
+const prefetchPredictedRoutes = () => {
+  // Wait until main thread is idle and initial render is complete
+  const doPrefetch = () => {
+    setTimeout(() => {
+      Object.values(PREFETCH_MAP).forEach((prefetchFn) => {
+        // Fire and forget - results are cached by Vite/Webpack
+        prefetchFn().catch(() => {
+          // Degrade gracefully: If network fails, normal click will just retry
+        });
+      });
+    }, 1500); // Give the initial page 1.5s to fully breathe before hitting network
+  };
+
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(doPrefetch);
+  } else if (document.readyState === 'complete') {
+    doPrefetch();
+  } else {
+    window.addEventListener('load', doPrefetch, { once: true });
+  }
+};
+
+// Initiate prefetch sequence
+if (typeof window !== 'undefined') {
+  prefetchPredictedRoutes();
+}
+// ---------------------------------------------
+
 // Loading fallback component
 function PageLoader() {
   return (
