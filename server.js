@@ -730,7 +730,7 @@ app.delete('/api/documents', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
   try {
-    const { 
+    let {
       messages, 
       personality, 
       mode, 
@@ -740,13 +740,22 @@ app.post('/api/chat', async (req, res) => {
       provider = 'auto', 
       apiKeys = {} 
     } = req.body;
+
+    if (apiKeys === null) {
+      apiKeys = {};
+    }
     
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
     // Get the latest user message to search for context
-    const latestUserMessage = messages[messages.length - 1].content;
+    let latestUserMessage = messages[messages.length - 1]?.content;
+    if (latestUserMessage === null || latestUserMessage === undefined) {
+      latestUserMessage = '';
+    } else if (typeof latestUserMessage !== 'string') {
+      latestUserMessage = String(latestUserMessage);
+    }
     
     let contextStr = '';
     let retrievedSources = [];

@@ -1,0 +1,17 @@
+**Scope attacked:** POST `/api/chat` boundary tests with empty, null, and missing `content` strings in the `messages` array, as well as null `apiKeys` objects in the JSON body.
+
+**🔴 Exploitable findings:**
+- Sending a valid JSON body where `apiKeys: null` circumvents the destructured default parameter `{}`, causing the backend server to crash with `TypeError: Cannot read properties of null (reading 'gemini')` upon failover logic executing.
+- Sending a `messages` array where `content: null` or is undefined/missing causes the backend server to crash with `TypeError: Cannot read properties of undefined (reading 'substring')` or `TypeError: latestUserMessage.substring is not a function` when checking input strings for logging.
+
+**🟡 Latent findings:** None.
+
+**🟢 Theoretical findings:** Sending an empty file array to `/api/upload` might fail ungracefully, but it correctly returns 400.
+
+**Fixed this session:**
+- Fixed `apiKeys` coalescing for explicit `null` payloads.
+- Added optional chaining and explicit string casting to `latestUserMessage.content` to ensure downstream string operations (like `.substring`) do not crash the Node.js Express server.
+- Verified using regression testing (no more 500 error server crashes)
+
+**Requires human review:**
+- Validating that coercing `null` or `undefined` message content to an empty string `''` aligns with the desired product behavior vs returning a 400.
