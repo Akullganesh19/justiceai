@@ -1,0 +1,7 @@
+## 2026-07-08 — Global Request Coalescing
+**Gap found:** The frontend application issued independent, redundant network requests for identical resources when multiple components or lazy-loaded pages attempted to fetch the same data simultaneously. No request coalescing or deduplication existed.
+**Why it existed:** The native `fetch` API lacks built-in coalescing, and components were implemented defensively to fetch their own required data without a shared caching or state management layer coordinating the requests.
+**Built:** Injected a transparent wrapper around `window.fetch` at the application entry point (`src/main.jsx`). The wrapper intercepts `GET` requests, computes a composite cache key (URL, headers, credentials, mode), and returns a shared, cloned `Response` stream for any identical requests already in-flight. It also safely manages `AbortSignal` decoupling to prevent one caller from aborting the shared underlying request.
+**Hot path affected:** All `GET` requests across the application, especially during initial page load, concurrent component mounts, or when prefetching routes.
+**Measurable improvement:** Reduces the number of duplicate network requests made over the wire. Can be measured by monitoring network tab activity during initialization (e.g., fewer duplicate requests to config or duplicate reference data endpoints) resulting in lower latency and saved throughput.
+**Next opportunity:** Implement stale-while-revalidate caching to persist the responses across navigations instead of just deduplicating concurrent in-flight requests.

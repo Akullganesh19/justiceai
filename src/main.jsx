@@ -9,6 +9,122 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+
+// 🌀 PHANTOM INFRASTRUCTURE: Global Request Coalescing
+// Identical simultaneous GET requests are deduplicated.
+const originalFetch = window.fetch.bind(window);
+const inFlightRequests = new Map();
+
+window.fetch = async function (input, init = {}) {
+  // Extract request method safely
+  const isRequest = typeof Request !== 'undefined' && input instanceof Request;
+  const method = (init.method || (isRequest ? input.method : 'GET')).toUpperCase();
+
+  // Only coalesce GET requests
+  if (method !== 'GET') {
+    return originalFetch.apply(window, arguments);
+  }
+
+  // Extract URL
+  let url = '';
+  if (typeof input === 'string') {
+    url = input;
+  } else if (input instanceof URL) {
+    url = input.toString();
+  } else if (isRequest) {
+    url = input.url;
+  }
+
+  // Extract and normalize headers
+  let headersObj = init.headers;
+  if (!headersObj && isRequest) {
+    headersObj = input.headers;
+  }
+
+  let headersString = '';
+  if (headersObj) {
+    // Convert to a standard Headers object first to normalize arrays, objects, etc.
+    const h = new Headers(headersObj);
+    const hObj = {};
+    h.forEach((val, key) => (hObj[key] = val));
+    headersString = JSON.stringify(hObj);
+  } else {
+    headersString = JSON.stringify({});
+  }
+
+  // Extract credentials and mode
+  const credentials = init.credentials || (isRequest ? input.credentials : 'omit');
+  const mode = init.mode || (isRequest ? input.mode : 'cors');
+
+  // Extract signal
+  const callerSignal = init.signal || (isRequest ? input.signal : null);
+
+  // Generate composite cache key
+  const cacheKey = `${method}:${url}|headers:${headersString}|cred:${credentials}|mode:${mode}`;
+
+  if (inFlightRequests.has(cacheKey)) {
+    return new Promise((resolve, reject) => {
+      const sharedPromise = inFlightRequests.get(cacheKey);
+
+      const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+      if (callerSignal) {
+        if (callerSignal.aborted) return onAbort();
+        callerSignal.addEventListener('abort', onAbort);
+      }
+
+      sharedPromise
+        .then(res => resolve(res.clone()))
+        .catch(reject)
+        .finally(() => {
+          if (callerSignal) callerSignal.removeEventListener('abort', onAbort);
+        });
+    });
+  }
+
+  // We must not share the AbortSignal with the underlying fetch,
+  // otherwise one caller aborting will cancel it for everyone.
+  let originalInput = input;
+  let sharedInit = { ...init };
+  delete sharedInit.signal;
+
+  if (isRequest) {
+    // Reconstruct Request without signal
+    const reqInit = {
+      method: input.method,
+      headers: input.headers,
+      mode: input.mode,
+      credentials: input.credentials,
+      cache: input.cache,
+      redirect: input.redirect,
+      referrer: input.referrer,
+      integrity: input.integrity,
+      ...sharedInit
+    };
+    originalInput = new Request(input.url, reqInit);
+  }
+
+  const promise = originalFetch(originalInput, sharedInit).finally(() => {
+    inFlightRequests.delete(cacheKey);
+  });
+
+  inFlightRequests.set(cacheKey, promise);
+
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+    if (callerSignal) {
+      if (callerSignal.aborted) return onAbort();
+      callerSignal.addEventListener('abort', onAbort);
+    }
+
+    promise
+      .then(res => resolve(res.clone()))
+      .catch(reject)
+      .finally(() => {
+        if (callerSignal) callerSignal.removeEventListener('abort', onAbort);
+      });
+  });
+};
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
