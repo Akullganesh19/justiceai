@@ -10,7 +10,7 @@ import {
   Copy,
   Download,
   Check,
-  X,
+  X, History,
   ChevronRight,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
@@ -377,6 +377,19 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  const [history, setHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_doc_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_doc_history', JSON.stringify(history));
+  }, [history]);
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -386,6 +399,16 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      date: new Date().toISOString(),
+      document: doc,
+      formData: formData,
+    };
+    setHistory((prev) => [newDoc, ...prev].slice(0, 20));
   };
 
   const handleReset = () => {
@@ -432,6 +455,52 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* History Section */}
+              {history.length > 0 && (
+                <div className="mt-24 space-y-6">
+                  <div className="flex items-center gap-3 border-b-2 border-white/5 pb-4">
+                    <History className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-white italic">
+                      DRAFT_HISTORY
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {history.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          const template = DOCUMENT_TEMPLATES.find(t => t.id === item.templateId);
+                          if(template) {
+                            setSelectedTemplate(template);
+                            setGeneratedDoc(item.document);
+                            setStage('preview');
+                          }
+                        }}
+                        className="p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all cursor-pointer shadow-hard group relative overflow-hidden"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHistory(prev => prev.filter(h => h.id !== item.id));
+                          }}
+                          className="absolute top-4 right-4 p-2 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <p className="text-sm font-bold text-white uppercase tracking-widest truncate group-hover:text-gold transition-colors pr-8">
+                          {item.title}
+                        </p>
+                        <div className="flex items-center gap-4 mt-4">
+                          <span className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-sm border-2 border-white/5">
+                            {new Date(item.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 

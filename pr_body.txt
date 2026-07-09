@@ -1,0 +1,9 @@
+## 🌌 Emergent Feature Added
+
+**What:** Added a "Draft History" section to the DocumentsPage that persists generated procedural documents locally.
+**Derivation:** Pattern 3: Actions Without Memory. Users generate documents but the app previously lost them upon navigation. This adds local persistence for those generated drafts.
+**Why it was missing:** Likely an oversight during the initial V1 document generation build, where the focus was entirely on the generation logic rather than user retention/reusability.
+**User story:** As a user, I can now revisit, review, and re-export previously generated legal documents without having to refill the entire form.
+**Data used:** Selected Template ID, Form Data, Generated Text, and Timestamp.
+**Discovery:** Users will see their previous drafts at the bottom of the main Documents selection page.
+**Next:** "Pattern 4: Events Without Notification" -> Case Tracker could proactively remind users based on timeline expectations.
