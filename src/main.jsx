@@ -9,6 +9,125 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+// 🌀 Phantom: Request Coalescing
+// Deduplicate identical simultaneous GET requests to save bandwidth and reduce latency
+const originalFetch = window.fetch.bind(window);
+const fetchInFlight = new Map();
+
+window.fetch = function customFetch(input, init) {
+  let method = 'GET';
+  if (init && init.method) {
+    method = init.method.toUpperCase();
+  } else if (typeof Request !== 'undefined' && input instanceof Request) {
+    method = input.method.toUpperCase();
+  }
+
+  // Only coalesce GET requests
+  if (method !== 'GET') {
+    return originalFetch(input, init);
+  }
+
+  let url = '';
+  if (typeof input === 'string') {
+    url = input;
+  } else if (typeof Request !== 'undefined' && input instanceof Request) {
+    url = input.url;
+  } else {
+    url = input ? input.toString() : '';
+  }
+
+  // Normalize headers into a consistent string format
+  let headersObj = {};
+  if (init && init.headers) {
+    if (typeof Headers !== 'undefined' && init.headers instanceof Headers) {
+      init.headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+    } else if (Array.isArray(init.headers)) {
+      init.headers.forEach(([key, value]) => {
+        headersObj[key] = value;
+      });
+    } else {
+      headersObj = { ...init.headers };
+    }
+  } else if (typeof Request !== 'undefined' && input instanceof Request && input.headers) {
+    input.headers.forEach((value, key) => {
+      headersObj[key] = value;
+    });
+  }
+  const headersStr = JSON.stringify(Object.entries(headersObj).sort(([a], [b]) => a.localeCompare(b)));
+
+  const credentials = init?.credentials || (typeof Request !== 'undefined' && input instanceof Request ? input.credentials : '');
+  const mode = init?.mode || (typeof Request !== 'undefined' && input instanceof Request ? input.mode : '');
+
+  const cacheKey = `GET:${url}:${headersStr}:${credentials}:${mode}`;
+
+  let sharedPromise;
+  if (fetchInFlight.has(cacheKey)) {
+    sharedPromise = fetchInFlight.get(cacheKey);
+  } else {
+    // We must pass the original inputs as accurately as possible to the underlying fetch,
+    // but without the caller's AbortSignal.
+    let fetchInput = input;
+    let safeInit = init ? { ...init } : {};
+    delete safeInit.signal;
+
+    if (typeof Request !== 'undefined' && input instanceof Request) {
+      // If input is a Request, clone it to avoid lock issues and strip the signal
+      // Passing both Request and an init object to fetch allows overriding Request properties
+      // However, we just want to remove the signal.
+      fetchInput = input.clone();
+    }
+
+    sharedPromise = originalFetch(fetchInput, safeInit)
+      .then((response) => {
+        fetchInFlight.delete(cacheKey);
+        return response;
+      })
+      .catch((err) => {
+        fetchInFlight.delete(cacheKey);
+        throw err;
+      });
+
+    fetchInFlight.set(cacheKey, sharedPromise);
+  }
+
+  return new Promise((resolve, reject) => {
+    const callerSignal = init?.signal || (typeof Request !== 'undefined' && input instanceof Request ? input.signal : null);
+    let isAborted = false;
+
+    const abortHandler = () => {
+      isAborted = true;
+      reject(new DOMException('Aborted', 'AbortError'));
+      if (callerSignal) {
+        callerSignal.removeEventListener('abort', abortHandler);
+      }
+    };
+
+    if (callerSignal) {
+      if (callerSignal.aborted) {
+        return reject(new DOMException('Aborted', 'AbortError'));
+      }
+      callerSignal.addEventListener('abort', abortHandler);
+    }
+
+    sharedPromise
+      .then((response) => {
+        if (!isAborted) {
+          if (callerSignal) callerSignal.removeEventListener('abort', abortHandler);
+          // Crucial: return a clone of the response so each caller gets their own body stream
+          resolve(response.clone());
+        }
+      })
+      .catch((err) => {
+        if (!isAborted) {
+          if (callerSignal) callerSignal.removeEventListener('abort', abortHandler);
+          reject(err);
+        }
+      });
+  });
+};
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
