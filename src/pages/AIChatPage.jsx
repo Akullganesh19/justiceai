@@ -75,21 +75,47 @@ How may I assist you with your legal matters today?`,
 
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: updatedMessages
-            .filter((m) => m.role !== 'system')
-            .map((m) => ({ role: m.role, content: m.content })),
-          personality: 'neutral',
-          mode: 'copilot',
-          jurisdiction: 'National',
-          basePrompt: `You are JusticeAI's Legal Copilot. Be highly articulate, exceptionally professional, and precise. Your responses should reflect a high-end, premium legal consulting service. Always format cleanly. You have access to local constitutional resources via Openclaw.`,
-          provider: localStorage.getItem('justice_ai_provider') || 'ollama',
-          apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}'),
-        }),
-      });
+
+      let response;
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          response = await fetch(`${baseUrl}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: updatedMessages
+                .filter((m) => m.role !== 'system')
+                .map((m) => ({ role: m.role, content: m.content })),
+              personality: 'neutral',
+              mode: 'copilot',
+              jurisdiction: 'National',
+              basePrompt: `You are JusticeAI's Legal Copilot. Be highly articulate, exceptionally professional, and precise. Your responses should reflect a high-end, premium legal consulting service. Always format cleanly. You have access to local constitutional resources via Openclaw.`,
+              provider: localStorage.getItem('justice_ai_provider') || 'ollama',
+              apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}'),
+            }),
+          });
+
+          if (response.ok) break;
+
+          if (response.status >= 500 && attempt < maxAttempts) {
+            console.warn(`[Genesis] API 5xx error (${response.status}). Retrying attempt ${attempt + 1}...`);
+            await new Promise(res => setTimeout(res, 500 * Math.pow(2, attempt - 1)));
+            continue;
+          } else {
+            break;
+          }
+        } catch (err) {
+          if (attempt < maxAttempts) {
+            console.warn(`[Genesis] Network error: ${err.message}. Retrying attempt ${attempt + 1}...`);
+            await new Promise(res => setTimeout(res, 500 * Math.pow(2, attempt - 1)));
+          } else {
+            throw err;
+          }
+        }
+      }
+
 
       if (!response.ok) throw new Error('Network response was not ok');
 
