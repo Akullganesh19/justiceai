@@ -12,6 +12,10 @@ import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
 
+import { deepRedact } from './src/lib/loggerRedaction.js';
+import util from 'util';
+
+
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
 import dotenv from 'dotenv';
@@ -27,6 +31,9 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
+    winston.format((info) => {
+      return deepRedact(info);
+    })(),
     winston.format.json()
   ),
   transports: [
@@ -36,7 +43,24 @@ const logger = winston.createLogger({
   ]
 });
 
+
 const app = express();
+
+// Override native console methods to pipe through custom Winston logger with redaction
+const originalConsoleLog = console.log;
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+
+console.log = function (...args) {
+  logger.info(util.format(...deepRedact(args)));
+};
+console.warn = function (...args) {
+  logger.warn(util.format(...deepRedact(args)));
+};
+console.error = function (...args) {
+  logger.error(util.format(...deepRedact(args)));
+};
+
 
 // Configuration from environment variables with fallbacks
 const PORT = process.env.PORT || 3001;
