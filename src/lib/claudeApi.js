@@ -7,26 +7,56 @@ export async function sendMessage(conversationHistory, userMessage, options = {}
   const { judgePersonality = 'Neutral', mode = 'copilot', jurisdiction = 'National' } = options;
 
   try {
-    const response = await fetch(RAG_BACKEND_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: [
-          ...conversationHistory.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        ],
-        personality: judgePersonality,
-        mode: mode,
-        jurisdiction: jurisdiction,
-        basePrompt: SYSTEM_PROMPT,
-        provider: localStorage.getItem('justice_ai_provider') || 'ollama',
-        apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}')
-      }),
-    });
+
+    let response;
+    let lastError;
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        response = await fetch(RAG_BACKEND_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [
+              ...conversationHistory.map((m) => ({
+                role: m.role,
+                content: m.content,
+              })),
+            ],
+            personality: judgePersonality,
+            mode: mode,
+            jurisdiction: jurisdiction,
+            basePrompt: SYSTEM_PROMPT,
+            provider: localStorage.getItem('justice_ai_provider') || 'ollama',
+            apiKeys: JSON.parse(localStorage.getItem('justice_ai_keys') || '{}')
+          }),
+        });
+
+        if (response.ok) {
+          break; // Success
+        }
+
+        if (response.status >= 500 && attempt < maxAttempts) {
+          console.warn(`[Genesis] Backend returned ${response.status}. Retrying attempt ${attempt + 1}...`);
+          await new Promise(res => setTimeout(res, 500 * Math.pow(2, attempt - 1)));
+          continue;
+        } else {
+          break; // Break and handle error below
+        }
+      } catch (err) {
+        lastError = err;
+        if (attempt < maxAttempts) {
+          console.warn(`[Genesis] Network error: ${err.message}. Retrying attempt ${attempt + 1}...`);
+          await new Promise(res => setTimeout(res, 500 * Math.pow(2, attempt - 1)));
+        } else {
+          throw err;
+        }
+      }
+    }
+
 
     if (!response.ok) {
       const errorText = await response.text();
