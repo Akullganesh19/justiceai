@@ -738,8 +738,10 @@ app.post('/api/chat', async (req, res) => {
       basePrompt, 
       stream = false,
       provider = 'auto', 
-      apiKeys = {} 
+      apiKeys: incomingApiKeys = {}
     } = req.body;
+
+    const apiKeys = incomingApiKeys || {};
     
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
