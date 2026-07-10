@@ -684,6 +684,29 @@ export default function CaseTrackerPage() {
   };
 
   const toggleStep = (stepId) => {
+    // Determine if we need to dispatch an event BEFORE updating state
+    const activeCase = cases.find(c => c.id === activeCaseId);
+    if (activeCase) {
+      const stepIndex = activeCase.steps.findIndex(s => s.id === stepId);
+      if (stepIndex !== -1) {
+        const step = activeCase.steps[stepIndex];
+        const isCompleting = !step.completed;
+        if (isCompleting) {
+          const nextStepLabel = activeCase.steps[stepIndex + 1]?.label || null;
+          const event = new CustomEvent('justice-ai-milestone-completed', {
+            detail: {
+              caseName: activeCase.details?.caseNumber || activeCase.name || 'Unknown Case',
+              stepLabel: step.label,
+              nextStepLabel: nextStepLabel,
+              timestamp: new Date().toISOString()
+            }
+          });
+          console.log('[Synapse Bridge] Emit: justice-ai-milestone-completed', event.detail);
+          window.dispatchEvent(event);
+        }
+      }
+    }
+
     updateActiveCase((c) => ({
       ...c,
       steps: c.steps.map((s) =>
