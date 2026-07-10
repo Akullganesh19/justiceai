@@ -1,0 +1,6 @@
+## 2026-07-10 — Document Vault
+**Product understood as:** An AI-powered legal copilot that helps users formulate legal strategy and generate procedural documents.
+**Derivation reasoning:** The product generates statutory notices and procedural applications. Users draft these documents repeatedly but the app never learns or remembers them (Actions Without Memory pattern). Therefore, users obviously need a way to save, retrieve, and preview their generated drafts. It doesn't exist because the focus was likely on the generation engine itself. I'm building it because users need an organized, accessible record of their legal drafting history without needing to instantly download and manage PDFs manually.
+**Feature built:** Document Vault - A localStorage-backed history module integrated directly into the Documents Page that automatically archives generated drafts, displays them with their timestamp and template type, and allows instant previewing and deletion.
+**User impact:** Users can now seamlessly manage multiple generated documents across sessions, returning to previous drafts without having to regenerate them from scratch.
+**Next logical feature:** "Draft Versioning" - The ability to edit a saved draft from the vault and save the revisions, rather than just previewing the read-only generated text.
