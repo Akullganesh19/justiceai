@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,12 +12,15 @@ import {
   Check,
   X,
   ChevronRight,
+  History,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
 import jsPDF from 'jspdf';
 
 const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
+const STORAGE_KEY = 'justice_ai_documents_vault';
 
 function TemplateCard({ template, onSelect, index }) {
   const Icon = ICONS[template.icon] || FileWarning;
@@ -372,10 +375,72 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+
+
+function SavedDocumentCard({ doc, onPreview, onDelete }) {
+  const date = new Date(doc.timestamp).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  return (
+    <div className="group relative p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all shadow-hard flex items-start justify-between cursor-pointer" onClick={() => onPreview(doc)}>
+      <div className="space-y-2">
+        <h4 className="text-sm font-display font-bold text-white uppercase tracking-tight group-hover:text-gold transition-colors">
+          {doc.templateName}
+        </h4>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-text-tertiary font-mono tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase">
+            {date}
+          </span>
+          <span className="text-[10px] text-gold/80 italic font-mono uppercase tracking-widest">
+            {doc.title}
+          </span>
+        </div>
+      </div>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(doc.id);
+        }}
+        className="p-2 rounded bg-void border border-white/5 text-text-tertiary hover:text-red-400 hover:border-red-400/30 transition-all opacity-0 group-hover:opacity-100 shadow-hard"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedDocs));
+  }, [savedDocs]);
+
+  const handleDeleteDoc = (id) => {
+    setSavedDocs(prev => prev.filter(doc => doc.id !== id));
+  };
+
+  const handlePreviewSaved = (doc) => {
+    setGeneratedDoc(doc.content);
+    setSelectedTemplate(DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0]);
+    setStage('preview');
+  };
+
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -384,6 +449,18 @@ export default function DocumentsPage() {
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
+
+    // Save to vault
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      templateName: selectedTemplate.name || selectedTemplate.title,
+      title: formData.subject || formData.recipient_name || 'Generated Document',
+      content: doc,
+      timestamp: new Date().toISOString()
+    };
+    setSavedDocs(prev => [newDoc, ...prev]);
+
     setGeneratedDoc(doc);
     setStage('preview');
   };
@@ -421,7 +498,35 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+
+
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="mb-16 space-y-6">
+                  <div className="flex items-center gap-3 border-b-2 border-white/5 pb-4">
+                    <History className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-white italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                    <span className="text-[10px] font-mono text-gold px-2 py-1 bg-gold/10 rounded-sm border border-gold/20">
+                      {savedDocs.length} RECORD{savedDocs.length !== 1 ? 'S' : ''}
+                    </span>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {savedDocs.map(doc => (
+                      <SavedDocumentCard
+                        key={doc.id}
+                        doc={doc}
+                        onPreview={handlePreviewSaved}
+                        onDelete={handleDeleteDoc}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Template Grid */}
+
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
