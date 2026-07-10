@@ -1,6 +1,6 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
@@ -39,6 +39,50 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
+// Predictive Route Engine Maps
+const PREFETCH_MAP = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+};
+
+const PredictiveRouteEngine = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Predictive logic: What is the user most likely to do next based on their current page?
+    const path = location.pathname;
+    const prefetches = [];
+
+    if (path === '/') {
+      // From landing page, users most often go to Dashboard or start a Chat
+      prefetches.push('/dashboard', '/chat');
+    } else if (path === '/dashboard') {
+      // From dashboard, users track cases or estimate costs
+      prefetches.push('/tracker', '/estimator');
+    } else if (path === '/chat') {
+      // From chat, users might want to check tracker
+      prefetches.push('/tracker');
+    }
+
+    // Execute background prefetching
+    prefetches.forEach(route => {
+      if (PREFETCH_MAP[route]) {
+        try {
+          // Programmatically load the module in the background
+          PREFETCH_MAP[route]().catch(() => {});
+        } catch (e) {
+          // Ignore prefetch errors
+        }
+      }
+    });
+  }, [location.pathname]);
+
+  return null;
+};
+
 // Loading fallback component
 function PageLoader() {
   return (
@@ -58,6 +102,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
+          <PredictiveRouteEngine />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
           <Suspense fallback={<PageLoader />}>
