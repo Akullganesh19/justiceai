@@ -192,7 +192,17 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+
+        // Broadcast the analysis so other systems (like Case Tracker) can consume it
+        const title = currentMsgs[1]?.content?.substring(0, 40) + '...' || 'AI Generated Case Strategy';
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-completed', {
+            detail: { title, analysis: newAnalysis }
+          })
+        );
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -223,12 +233,20 @@ export default function ChatPage() {
       const finaleMsgs = [...updatedMessages, aiMsg];
       setMessages(finaleMsgs);
 
+      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // Broadcast the analysis so other systems (like Case Tracker) can consume it
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-completed', {
+            detail: { title, analysis: newAnalysis }
+          })
+        );
       }
 
       // Auto-save to history
-      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
       const caseData = {
         id: activeCaseId,
         title,
