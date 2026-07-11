@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
+import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2, Search } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -11,6 +11,12 @@ export function CaseHistorySidebar({
   isOpen,
   setIsOpen,
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredHistory = history.filter((item) =>
+    (item.title || 'Untitled Consultation').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <motion.div
       initial={false}
@@ -52,8 +58,22 @@ export function CaseHistorySidebar({
               </div>
             </div>
 
+            {/* Sidebar Search */}
+            <div className="px-6 py-4 border-b border-white/5 bg-midnight">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary opacity-50" />
+                <input
+                  type="text"
+                  placeholder="Search consultations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-midnight-slate/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder:text-text-tertiary/50 focus:outline-none focus:border-gold/40 transition-colors shadow-inner"
+                />
+              </div>
+            </div>
+
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
               {history.length === 0 ? (
                 <div className="text-center py-20 px-8 space-y-6 opacity-40">
                   <div className="w-16 h-16 rounded-2xl bg-midnight border border-white/5 flex items-center justify-center mx-auto text-white shadow-inner">
@@ -63,8 +83,14 @@ export function CaseHistorySidebar({
                     No history found. Start a new consultation to begin.
                   </p>
                 </div>
+              ) : filteredHistory.length === 0 ? (
+                <div className="text-center py-12 px-8 space-y-4 opacity-40">
+                  <p className="text-[10px] text-text-tertiary leading-relaxed font-bold uppercase tracking-widest italic">
+                    No matching consultations found.
+                  </p>
+                </div>
               ) : (
-                history.map((item) => (
+                filteredHistory.map((item) => (
                   <div
                     key={item.id}
                     className={`group relative p-5 rounded-2xl border transition-all cursor-pointer ${
