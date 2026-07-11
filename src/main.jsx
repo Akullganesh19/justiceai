@@ -9,6 +9,101 @@ import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
 
+// Invisible Infrastructure: Global Request Coalescing
+// Identical simultaneous GET requests are merged into a single network call.
+const originalFetch = window.fetch.bind(window);
+const inFlightRequests = new Map();
+
+window.fetch = function (input, init) {
+  const isRequest = input && typeof input === 'object' && 'method' in input;
+  const method = (init?.method || (isRequest ? input.method : 'GET')).toUpperCase();
+
+  if (method !== 'GET') {
+    return originalFetch(input, init);
+  }
+
+  const url = isRequest ? input.url : (typeof input === 'string' ? input : input.toString());
+
+  let headersString = '';
+  const headersObj = init?.headers || (isRequest ? input.headers : undefined);
+  if (headersObj) {
+    if (headersObj.forEach) {
+      const entries = [];
+      headersObj.forEach((value, key) => entries.push(`${key}:${value}`));
+      headersString = entries.sort().join('|');
+    } else if (Array.isArray(headersObj)) {
+      headersString = headersObj.map(([k, v]) => `${k}:${v}`).sort().join('|');
+    } else {
+      headersString = Object.entries(headersObj).map(([k, v]) => `${k}:${v}`).sort().join('|');
+    }
+  }
+
+  const credentials = init?.credentials || (isRequest ? input.credentials : 'omit');
+  const mode = init?.mode || (isRequest ? input.mode : 'cors');
+
+  const cacheKey = JSON.stringify({ url, headers: headersString, credentials, mode });
+
+  const signal = init?.signal;
+
+  const handleAbort = (subscriberSignal, sharedState) => {
+    if (!subscriberSignal) return sharedState.promise.then(res => res.clone());
+
+    if (subscriberSignal.aborted) {
+      sharedState.activeCount--;
+      if (sharedState.activeCount === 0) {
+        sharedState.controller.abort(subscriberSignal.reason);
+      }
+      return Promise.reject(subscriberSignal.reason || new DOMException('Aborted', 'AbortError'));
+    }
+
+    return new Promise((resolve, reject) => {
+      const abortHandler = () => {
+        sharedState.activeCount--;
+        if (sharedState.activeCount === 0) {
+          sharedState.controller.abort(subscriberSignal.reason);
+        }
+        reject(subscriberSignal.reason || new DOMException('Aborted', 'AbortError'));
+      };
+      subscriberSignal.addEventListener('abort', abortHandler);
+
+      sharedState.promise.then(response => {
+        subscriberSignal.removeEventListener('abort', abortHandler);
+        resolve(response.clone());
+      }).catch(err => {
+        subscriberSignal.removeEventListener('abort', abortHandler);
+        reject(err);
+      });
+    });
+  };
+
+  if (inFlightRequests.has(cacheKey)) {
+    const sharedState = inFlightRequests.get(cacheKey);
+    sharedState.activeCount++;
+    return handleAbort(signal, sharedState);
+  }
+
+  const controller = new AbortController();
+  const sharedState = {
+    activeCount: 1,
+    controller,
+    promise: null
+  };
+
+  const finalInit = { ...init, signal: controller.signal };
+  if (isRequest && !init) {
+    // If it's a Request object and no init, we must pass the new signal in init
+  }
+
+  sharedState.promise = originalFetch(input, finalInit)
+    .finally(() => {
+      inFlightRequests.delete(cacheKey);
+    });
+
+  inFlightRequests.set(cacheKey, sharedState);
+
+  return handleAbort(signal, sharedState);
+};
+
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
   const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
