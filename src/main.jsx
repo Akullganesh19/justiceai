@@ -15,6 +15,56 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Event Bridge: Connect AI Analysis output to Case Tracker without coupling
+const initIntelligenceBridge = () => {
+  window.addEventListener('justice-ai-analysis-completed', (e) => {
+    try {
+      const { title, analysis } = e.detail;
+      if (!analysis || !analysis.timeline || analysis.timeline.length === 0) return;
+
+      const STORAGE_KEY = 'justice_ai_case_tracker_v2';
+      const existingCases = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      // Check if we already bridged this specific case based on title or recent time to avoid duplicates
+      // We'll create a new autonomous tracking case
+      const bridgeCaseId = 'bridge_' + Date.now().toString();
+
+      const steps = analysis.timeline.map((t, idx) => ({
+        id: idx + 1,
+        label: t.stage || 'Phase ' + (idx + 1),
+        description: t.detail || '',
+        completed: t.status === 'completed',
+        expectedDays: 14 // default estimate
+      }));
+
+      const newCase = {
+        id: bridgeCaseId,
+        name: title || 'AI Generated Case Strategy',
+        caseType: 'autonomous', // specific type for AI generated timelines
+        steps: steps,
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: 'AI-' + Math.floor(Math.random() * 10000),
+          courtName: 'Pending Jurisdiction',
+          bench: '',
+          advocateName: '',
+          advocatePhone: '',
+          oppositeParty: '',
+          nextHearing: '',
+        },
+      };
+
+      existingCases.push(newCase);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existingCases));
+      console.log('🧠 Synapse Bridge: Converted AI timeline into actionable Case Tracker entity.');
+    } catch (err) {
+      console.error('Bridge failed:', err);
+    }
+  });
+};
+
+initIntelligenceBridge();
+
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
 const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
