@@ -738,9 +738,12 @@ app.post('/api/chat', async (req, res) => {
       basePrompt, 
       stream = false,
       provider = 'auto', 
-      apiKeys = {} 
+      apiKeys: rawApiKeys
     } = req.body;
     
+    // Explicitly handle null to avoid "Cannot read properties of null"
+    const apiKeys = rawApiKeys || {};
+
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
