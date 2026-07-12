@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Ensure uploaded file is always cleaned up
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -741,6 +743,8 @@ app.post('/api/chat', async (req, res) => {
       apiKeys = {} 
     } = req.body;
     
+    const safeApiKeys = apiKeys || {};
+
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
@@ -891,10 +895,10 @@ app.post('/api/chat', async (req, res) => {
       if (provider !== 'auto') {
         console.log(`User-forced provider: ${provider}`);
         if (provider === 'gemini') {
-          finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
+          finalResult = await callGemini(messages, systemPrompt, safeApiKeys.gemini);
           usedProvider = 'Gemini (User Controlled)';
         } else if (provider === 'deepseek') {
-          finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
+          finalResult = await callDeepSeek(messages, systemPrompt, safeApiKeys.deepseek);
           usedProvider = 'DeepSeek (User Controlled)';
         } else {
           // Fall back to Ollama if forced provider is ollama or invalid
@@ -902,9 +906,9 @@ app.post('/api/chat', async (req, res) => {
         }
       } else {
         // Waterfall Tier 2: Gemini
-        if (apiKeys.gemini || GEMINI_API_KEY) {
+        if (safeApiKeys.gemini || GEMINI_API_KEY) {
           try {
-            finalResult = await callGemini(messages, systemPrompt, apiKeys.gemini);
+            finalResult = await callGemini(messages, systemPrompt, safeApiKeys.gemini);
             usedProvider = 'Gemini (Cloud Fallback)';
           } catch (geminiErr) {
             console.warn(`⚠️ Gemini fallback failed: ${geminiErr.message}. Shifting to DeepSeek...`);
@@ -913,9 +917,9 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // Waterfall Tier 3: DeepSeek
-        if (!finalResult && (apiKeys.deepseek || DEEPSEEK_API_KEY)) {
+        if (!finalResult && (safeApiKeys.deepseek || DEEPSEEK_API_KEY)) {
           try {
-            finalResult = await callDeepSeek(messages, systemPrompt, apiKeys.deepseek);
+            finalResult = await callDeepSeek(messages, systemPrompt, safeApiKeys.deepseek);
             usedProvider = 'DeepSeek (Cloud Fallback)';
           } catch (deepseekErr) {
             console.error(`❌ DeepSeek fallback failed: ${deepseekErr.message}`);
