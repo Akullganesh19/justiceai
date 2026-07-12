@@ -1,0 +1,6 @@
+## 2024-05-25 — [Auto-Retry for LLM APIs]
+**Failure point found:** All external API requests (Gemini, DeepSeek, Bhashini, Ollama) in the Node.js backend used vanilla `fetch` without any retry mechanisms. Any transient network error, timeout, or temporary 5xx response caused an immediate and unrecoverable failure for the user.
+**Why it existed:** The backend was initially built as a simple pass-through to LLM providers, optimizing for immediate delivery over resilience against network instability or API rate limits.
+**Recovery built:** Implemented `fetchWithRetry` in `server.js` with exponential backoff (100ms, 200ms, 400ms) for up to 3 attempts. It correctly handles timeouts per attempt and preserves the standard `fetch` API contract by returning the final failed response for 5xx errors instead of aggressively throwing, avoiding downstream handling breaks.
+**Blast radius before:** 100% of users experiencing transient network blips or LLM provider hiccups received immediate hard errors (e.g., "500 Internal Server Error"), degrading trust in the co-pilot.
+**Watch for:** Other integrations directly invoking `fetch` (e.g., new AI providers, webhook calls) without wrapping them in the retry mechanism. Ensure UI components properly handle prolonged response times caused by successful retries.
