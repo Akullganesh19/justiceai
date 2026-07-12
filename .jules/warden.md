@@ -1,0 +1,6 @@
+## 2026-07-12 — PII Leak in Backend Logs via `console` Overrides
+**Data traced:** PII (email, address, card_number, phone, SSN) and Secrets (apiKeys, token, authorization)
+**Exposure found:** `console.log`, `console.warn`, `console.error` throughout the Express routes were logging unredacted request bodies, error chains containing tokens/keys, and potentially sensitive documents to the raw application logs (e.g., `logs/combined.log` and standard output).
+**Fix:** Introduced deep redaction to the Winston logger format in `server.js` (`deepRedact` recursively traversing objects/errors). Systematically overrode `console.log`, `console.warn`, `console.error`, and `console.info` to pass all arguments through the `deepRedact` mechanism prior to passing them into the Winston logging flow.
+**Coverage confirmed:** Verified via standalone scripts that both string and object-based logs effectively strip target sensitive keys while maintaining non-sensitive diagnostic properties (including Error message/stack copies).
+**Still exposed elsewhere:** Front-end React applications (e.g. `src/components/ui/auth-fuse.tsx`) log interactions unredacted, and potentially store unencrypted cache entries in client `localStorage`.

@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import util from 'util';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -22,10 +23,83 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const SENSITIVE_KEYS = new Set([
+  'ip', 'email', 'password', 'token', 'authorization',
+  'cookie', 'apikey', 'apikeys', 'gemini', 'deepseek',
+  'ssn', 'phone', 'address', 'card_number'
+]);
+
+function deepRedact(obj, seen = new WeakSet()) {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'string') {
+    // Redact emails
+    return obj.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED EMAIL]');
+  }
+
+  if (typeof obj !== 'object') return obj;
+
+  if (
+    obj instanceof Date ||
+    obj instanceof RegExp ||
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof Buffer ||
+    obj instanceof String ||
+    obj instanceof Number ||
+    obj instanceof Boolean
+  ) {
+    return obj;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepRedact(item, seen));
+  }
+
+  const redactedObj = {};
+
+  if (obj instanceof Error) {
+    redactedObj.name = obj.name;
+    redactedObj.message = deepRedact(obj.message, seen);
+    redactedObj.stack = deepRedact(obj.stack, seen);
+    for (const key of Object.keys(obj)) {
+      if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+        redactedObj[key] = '[REDACTED]';
+      } else {
+        redactedObj[key] = deepRedact(obj[key], seen);
+      }
+    }
+    return redactedObj;
+  }
+
+  for (const key of Object.keys(obj)) {
+    if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+      redactedObj[key] = '[REDACTED]';
+    } else {
+      redactedObj[key] = deepRedact(obj[key], seen);
+    }
+  }
+
+  return redactedObj;
+}
+
+const redactFormatter = winston.format((info) => {
+  const redactedInfo = deepRedact(info);
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    redactedInfo[sym] = info[sym];
+  }
+  return redactedInfo;
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormatter(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -34,6 +108,14 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
+});
+
+// Override console methods to ensure all logs go through the redacting logger
+['log', 'info', 'warn', 'error'].forEach((method) => {
+  console[method] = (...args) => {
+    const level = method === 'log' ? 'info' : method;
+    logger[level](util.format(...deepRedact(args)));
+  };
 });
 
 const app = express();
