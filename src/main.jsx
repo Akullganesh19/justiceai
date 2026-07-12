@@ -7,7 +7,11 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { initializeEventBridge } from './lib/eventBridge';
 import './index.css';
+
+// Initialize background cross-system event bridge
+initializeEventBridge();
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
@@ -36,7 +40,9 @@ const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
+const IntelligenceSelectionTerminal = lazy(
+  () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 // Loading fallback component

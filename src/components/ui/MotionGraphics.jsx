@@ -13,8 +13,8 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    let width = canvas.width = window.innerWidth;
-    let height = canvas.height = window.innerHeight;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
     const particles = [];
     const lines = [];
@@ -127,7 +127,8 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
       draw(time) {
         ctx.beginPath();
         for (let x = 0; x < width; x += 5) {
-          const y = this.y + Math.sin(x * this.frequency + time * this.speed + this.phase) * this.amplitude;
+          const y =
+            this.y + Math.sin(x * this.frequency + time * this.speed + this.phase) * this.amplitude;
           if (x === 0) {
             ctx.moveTo(x, y);
           } else {
@@ -141,13 +142,13 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
     }
 
     // Initialize particles
-    const particleCount = Math.min(100, Math.floor(width * height / 10000));
+    const particleCount = Math.min(100, Math.floor((width * height) / 10000));
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
     }
 
     // Initialize lines
-    const lineCount = Math.min(30, Math.floor(width * height / 30000));
+    const lineCount = Math.min(30, Math.floor((width * height) / 30000));
     for (let i = 0; i < lineCount; i++) {
       lines.push(new Line());
     }
@@ -164,16 +165,16 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
       ctx.clearRect(0, 0, width, height);
 
       // Draw waves
-      waves.forEach(wave => wave.draw(time));
+      waves.forEach((wave) => wave.draw(time));
 
       // Draw lines
-      lines.forEach(line => {
+      lines.forEach((line) => {
         line.update();
         line.draw();
       });
 
       // Draw particles
-      particles.forEach(particle => {
+      particles.forEach((particle) => {
         particle.update();
         particle.draw();
       });

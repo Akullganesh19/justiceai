@@ -39,14 +39,12 @@ export default function ChatBubble({ role, content, timestamp }) {
             isAI ? 'bg-gold/10 border-gold/40' : 'bg-void border-white/10'
           }`}
         >
-          {isAI ? (
-            <Scale className="w-5 h-5 text-gold" />
-          ) : (
-            <User className="w-5 h-5 text-white" />
-          )}
+          {isAI ? <Scale className="w-5 h-5 text-gold" /> : <User className="w-5 h-5 text-white" />}
         </div>
 
-        <div className={`space-y-3 flex flex-col ${isAI ? 'items-start text-left' : 'items-end text-right'}`}>
+        <div
+          className={`space-y-3 flex flex-col ${isAI ? 'items-start text-left' : 'items-end text-right'}`}
+        >
           <div
             className={`px-7 py-5 rounded-sm font-body text-[15px] leading-relaxed relative ${
               isAI

@@ -142,7 +142,8 @@ export default function ChatPage() {
       {
         id: '1',
         role: 'assistant',
-        content: 'System reset. I am ready to assist with your next consultation. How may I help you?',
+        content:
+          'System reset. I am ready to assist with your next consultation. How may I help you?',
         timestamp: new Date(),
       },
     ]);
@@ -192,7 +193,19 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+        if (newAnalysis.timeline && Array.isArray(newAnalysis.timeline)) {
+          window.dispatchEvent(
+            new CustomEvent('justice-ai-case-update', {
+              detail: {
+                timeline: newAnalysis.timeline,
+                caseType: newAnalysis.caseType || 'AI Analysis',
+              },
+            }),
+          );
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -225,6 +238,16 @@ export default function ChatPage() {
 
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+        if (newAnalysis.timeline && Array.isArray(newAnalysis.timeline)) {
+          window.dispatchEvent(
+            new CustomEvent('justice-ai-case-update', {
+              detail: {
+                timeline: newAnalysis.timeline,
+                caseType: newAnalysis.caseType || 'AI Analysis',
+              },
+            }),
+          );
+        }
       }
 
       // Auto-save to history
@@ -285,7 +308,8 @@ export default function ChatPage() {
               <div className="w-full bg-void border-2 border-gold/40 p-3 rounded-sm shadow-luxe flex items-center justify-center gap-3 italic">
                 <AlertCircle className="w-4 h-4 text-gold" />
                 <p className="text-[10px] text-gold font-extrabold uppercase tracking-[0.3em] text-center">
-                  INSTITUTIONAL_NOTICE: CONSULTATIONS_ARE_INFORMATIONAL. NO_ADVOCATE_CLIENT_PRIVILEGE.
+                  INSTITUTIONAL_NOTICE: CONSULTATIONS_ARE_INFORMATIONAL.
+                  NO_ADVOCATE_CLIENT_PRIVILEGE.
                 </p>
               </div>
 
@@ -310,7 +334,7 @@ export default function ChatPage() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                   <div className="hidden lg:flex items-center gap-3">
+                  <div className="hidden lg:flex items-center gap-3">
                     <Milestone className="w-3.5 h-3.5 text-gold opacity-50" />
                     <select
                       value={judgePersonality}

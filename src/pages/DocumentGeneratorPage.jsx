@@ -39,7 +39,12 @@ const DOCUMENT_TEMPLATES = {
     icon: FileCheck,
     category: 'General',
     fields: [
-      { id: 'sender_name', label: 'Sender Full Name', type: 'text', placeholder: 'Enter your full legal name' },
+      {
+        id: 'sender_name',
+        label: 'Sender Full Name',
+        type: 'text',
+        placeholder: 'Enter your full legal name',
+      },
       {
         id: 'sender_address',
         label: 'Sender Address',
@@ -59,7 +64,12 @@ const DOCUMENT_TEMPLATES = {
         placeholder: 'Complete service address',
       },
       { id: 'notice_date', label: 'Date of Notice', type: 'date' },
-      { id: 'subject', label: 'Subject Matter', type: 'text', placeholder: 'Brief subject of the notice' },
+      {
+        id: 'subject',
+        label: 'Subject Matter',
+        type: 'text',
+        placeholder: 'Brief subject of the notice',
+      },
       {
         id: 'facts',
         label: 'Statement of Facts',
@@ -178,7 +188,10 @@ export default function DocumentGeneratorPage() {
     if (!selectedTemplate) return;
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
-    success({ title: 'Document Generated', message: 'The draft has been professionally formulated.' });
+    success({
+      title: 'Document Generated',
+      message: 'The draft has been professionally formulated.',
+    });
   };
 
   const handleCopy = () => {
@@ -188,17 +201,17 @@ export default function DocumentGeneratorPage() {
 
   const handleDownload = () => {
     if (!generatedDoc) return;
-    
+
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(11);
-      
+
       const lines = doc.splitTextToSize(generatedDoc, 170);
       let y = 20;
       const pageHeight = 280;
-      
-      lines.forEach(line => {
+
+      lines.forEach((line) => {
         if (y > pageHeight) {
           doc.addPage();
           y = 20;
@@ -206,7 +219,7 @@ export default function DocumentGeneratorPage() {
         doc.text(line, 20, y);
         y += 6;
       });
-      
+
       doc.save(`${selectedTemplate.id}_draft.pdf`);
       success({ title: 'PDF Downloaded', message: 'Document saved securely.' });
     } catch (err) {
@@ -236,7 +249,8 @@ export default function DocumentGeneratorPage() {
             INSTITUTIONAL <span className="text-gold">DRAFTING</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
-            FORMULATE STATUTORY NOTICES, PROCEDURAL APPLICATIONS, AND COMPLAINTS WITH PRECISION USING VALIDATED STATUTORY TEMPLATES.
+            FORMULATE STATUTORY NOTICES, PROCEDURAL APPLICATIONS, AND COMPLAINTS WITH PRECISION
+            USING VALIDATED STATUTORY TEMPLATES.
           </p>
         </div>
 
@@ -254,7 +268,9 @@ export default function DocumentGeneratorPage() {
                   <template.icon className="w-7 h-7" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-display font-bold text-white uppercase tracking-widest italic">{template.name}</h3>
+                  <h3 className="text-xl font-display font-bold text-white uppercase tracking-widest italic">
+                    {template.name}
+                  </h3>
                   <p className="text-sm text-text-tertiary font-body italic opacity-60">
                     {template.description}
                   </p>
@@ -289,7 +305,9 @@ export default function DocumentGeneratorPage() {
                     <selectedTemplate.icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-gold font-bold uppercase tracking-widest opacity-60">Form Input</p>
+                    <p className="text-[10px] text-gold font-bold uppercase tracking-widest opacity-60">
+                      Form Input
+                    </p>
                     <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tight">
                       {selectedTemplate.name}
                     </h3>
@@ -381,9 +399,13 @@ export default function DocumentGeneratorPage() {
                   <div className="mt-10 flex items-start gap-5 p-6 bg-gold/5 border-2 border-gold/20 rounded-sm relative z-10 shadow-hard">
                     <AlertTriangle className="w-6 h-6 text-gold shrink-0 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-gold uppercase tracking-widest">Legal Advisory</p>
+                      <p className="text-[10px] font-bold text-gold uppercase tracking-widest">
+                        Legal Advisory
+                      </p>
                       <p className="text-[11px] text-text-tertiary/70 font-body leading-relaxed">
-                        This document is a generated draft based on the information provided. It serves as a tool for formulation and should be reviewed by a legal professional before formal execution.
+                        This document is a generated draft based on the information provided. It
+                        serves as a tool for formulation and should be reviewed by a legal
+                        professional before formal execution.
                       </p>
                     </div>
                   </div>

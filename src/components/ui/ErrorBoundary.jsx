@@ -57,21 +57,22 @@ class ErrorBoundary extends React.Component {
           <div className="max-w-2xl w-full p-12 rounded-sm bg-void border-2 border-red/40 space-y-10 shadow-hard-red/20 relative overflow-hidden">
             <div className="absolute inset-0 bg-red/[0.02] pointer-events-none" />
             <div className="absolute top-0 left-0 w-full h-1 bg-red animate-pulse" />
-            
+
             {/* Error Icon */}
             <div className="flex justify-center relative z-10">
               <div className="w-20 h-20 rounded-sm bg-red/10 border-2 border-red/40 flex items-center justify-center shadow-hard-red/10">
                 <AlertTriangle className="w-10 h-10 text-red" />
               </div>
             </div>
- 
+
             {/* Error Title */}
             <div className="text-center space-y-6 relative z-10">
               <h1 className="text-3xl font-mono font-black text-white uppercase tracking-[0.3em] italic">
                 SYSTEM_CRITICAL_EXCEPTION
               </h1>
               <p className="text-[11px] text-text-tertiary font-mono uppercase tracking-[0.2em] max-w-md mx-auto leading-relaxed italic opacity-80">
-                A NON-RELIABLE_STATE HAS BEEN DETECTED. CORE_LOGS HAVE BEEN CAPTURED FOR AUDIT. NO CITIZEN_DATA AT RISK.
+                A NON-RELIABLE_STATE HAS BEEN DETECTED. CORE_LOGS HAVE BEEN CAPTURED FOR AUDIT. NO
+                CITIZEN_DATA AT RISK.
               </p>
             </div>
 
@@ -116,7 +117,7 @@ class ErrorBoundary extends React.Component {
                 <RefreshCw className="w-5 h-5" />
                 <span>R_BOOT System</span>
               </button>
- 
+
               <button
                 onClick={() => window.history.back()}
                 className="flex-1 flex items-center justify-center gap-3 bg-void border-2 border-white/10 text-text-tertiary px-8 py-5 rounded-sm font-black uppercase tracking-[0.3em] italic hover:border-red hover:text-white transition-all shadow-hard active:translate-y-[1px]"

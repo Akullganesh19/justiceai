@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Settings2, 
-  Cpu, 
-  Cloud, 
-  Database, 
-  ShieldCheck, 
-  ShieldAlert, 
-  Save, 
+import {
+  Settings2,
+  Cpu,
+  Cloud,
+  Database,
+  ShieldCheck,
+  ShieldAlert,
+  Save,
   RefreshCcw,
   Key,
   Globe,
-  Zap
+  Zap,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
 
 export default function IntelligenceSelectionTerminal() {
   const { addToast } = useToast();
-  
+
   // Settings State
   const [activeProvider, setActiveProvider] = useState('ollama');
   const [apiKeys, setApiKeys] = useState({
     gemini: '',
-    deepseek: ''
+    deepseek: '',
   });
-  
+
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(null); // null | 'ollama' | 'gemini' | 'deepseek'
@@ -34,7 +34,7 @@ export default function IntelligenceSelectionTerminal() {
   useEffect(() => {
     const savedProvider = localStorage.getItem('justice_ai_provider');
     const savedKeys = localStorage.getItem('justice_ai_keys');
-    
+
     if (savedProvider) setActiveProvider(savedProvider);
     if (savedKeys) setApiKeys(JSON.parse(savedKeys));
   }, []);
@@ -44,20 +44,20 @@ export default function IntelligenceSelectionTerminal() {
     try {
       localStorage.setItem('justice_ai_provider', activeProvider);
       localStorage.setItem('justice_ai_keys', JSON.stringify(apiKeys));
-      
+
       // Artificial delay for industrial "crunching" feel
-      await new Promise(r => setTimeout(r, 800));
-      
+      await new Promise((r) => setTimeout(r, 800));
+
       addToast({
         title: 'CONFIGURATION_UPDATED',
         description: `Active analysis provider shifted to ${activeProvider.toUpperCase()}.`,
-        type: 'success'
+        type: 'success',
       });
     } catch (e) {
       addToast({
         title: 'SYSTEM_ERROR',
         description: 'Failed to write to local storage framework.',
-        type: 'error'
+        type: 'error',
       });
     } finally {
       setIsSaving(false);
@@ -71,19 +71,19 @@ export default function IntelligenceSelectionTerminal() {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/health`);
       if (!response.ok) throw new Error('Backend Unreachable');
-      
-      await new Promise(r => setTimeout(r, 1200));
-      
+
+      await new Promise((r) => setTimeout(r, 1200));
+
       addToast({
         title: `LINK_VERIFIED: ${provider.toUpperCase()}`,
         description: 'Analysis link verified. System ready to assist.',
-        type: 'success'
+        type: 'success',
       });
     } catch (e) {
       addToast({
         title: 'LINK_FAILURE',
         description: 'Could not establish connection with backend system.',
-        type: 'error'
+        type: 'error',
       });
     } finally {
       setIsTesting(null);
@@ -93,11 +93,11 @@ export default function IntelligenceSelectionTerminal() {
   return (
     <div className="min-h-screen bg-void text-white font-mono selection:bg-gold/30">
       <Header />
-      
+
       <main className="max-w-5xl mx-auto px-6 pt-32 pb-20">
         <div className="mb-16 relative">
           <div className="absolute -left-10 top-0 w-1 h-full bg-gold opacity-30" />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 mb-4"
@@ -118,9 +118,9 @@ export default function IntelligenceSelectionTerminal() {
             <label className="text-[10px] uppercase font-black tracking-[0.5em] text-gold-light mb-4 block italic opacity-40">
               STRATEGIC_COMPUTE_SOURCE_MATRIX
             </label>
-            
+
             <div className="grid gap-4">
-              <ProviderCard 
+              <ProviderCard
                 id="ollama"
                 title="STATUTORY_LOCAL_CORE (gemma3:4b)"
                 description="PRIVACY-FIRST ANALYSIS POWERED BY OLLAMA. ALL INFERENCE RUNS LOCALLY — ZERO LATENCY, ZERO DATA LEAKAGE."
@@ -129,7 +129,7 @@ export default function IntelligenceSelectionTerminal() {
                 onClick={setActiveProvider}
                 status="OFFLINE_CORE"
               />
-              <ProviderCard 
+              <ProviderCard
                 id="gemini"
                 title="Google Gemini"
                 description="High-speed extraction and research. Requires API key fallback."
@@ -138,7 +138,7 @@ export default function IntelligenceSelectionTerminal() {
                 onClick={setActiveProvider}
                 status="CLOUD"
               />
-              <ProviderCard 
+              <ProviderCard
                 id="deepseek"
                 title="DeepSeek AI"
                 description="Advanced strategic reasoning. High-performance analysis backup."
@@ -159,7 +159,7 @@ export default function IntelligenceSelectionTerminal() {
                   className="p-8 bg-void border-2 border-white/5 rounded-sm relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-1/3 h-full bg-gold/5 skew-x-12 translate-x-32" />
-                  
+
                   <div className="flex items-center gap-3 mb-8">
                     <Key className="w-5 h-5 text-gold" />
                     <h3 className="text-lg font-bold uppercase tracking-tight italic">
@@ -173,13 +173,15 @@ export default function IntelligenceSelectionTerminal() {
                         {activeProvider === 'gemini' ? 'Gemini_API_Key' : 'DeepSeek_API_Key'}
                       </label>
                       <div className="relative group">
-                        <input 
+                        <input
                           type="password"
                           value={activeProvider === 'gemini' ? apiKeys.gemini : apiKeys.deepseek}
-                          onChange={(e) => setApiKeys(prev => ({
-                            ...prev,
-                            [activeProvider]: e.target.value
-                          }))}
+                          onChange={(e) =>
+                            setApiKeys((prev) => ({
+                              ...prev,
+                              [activeProvider]: e.target.value,
+                            }))
+                          }
                           className="w-full bg-black/40 border-2 border-white/10 p-4 font-mono text-sm focus:border-gold/50 focus:outline-none transition-all rounded-sm tracking-[0.3em] uppercase italic"
                           placeholder="••••••••••••••••••••••••••••••••"
                         />
@@ -225,9 +227,10 @@ export default function IntelligenceSelectionTerminal() {
 
               <div className="space-y-4">
                 <p className="text-[11px] text-text-secondary leading-relaxed italic">
-                  Changes to provider routing will take effect immediately upon application to the active legal session.
+                  Changes to provider routing will take effect immediately upon application to the
+                  active legal session.
                 </p>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
@@ -257,18 +260,22 @@ function ProviderCard({ id, title, description, icon, active, onClick, status })
       whileHover={{ x: 8 }}
       onClick={() => onClick(id)}
       className={`p-6 rounded-sm border-2 cursor-pointer transition-all relative group overflow-hidden ${
-        active 
-          ? 'bg-gold/10 border-gold shadow-[8px_8px_0px_0px_rgba(212,175,55,0.1)]' 
+        active
+          ? 'bg-gold/10 border-gold shadow-[8px_8px_0px_0px_rgba(212,175,55,0.1)]'
           : 'bg-void border-white/10 hover:border-white/30'
       }`}
     >
       <div className="flex items-center gap-5 relative z-10">
-        <div className={`p-3 rounded-sm ${active ? 'bg-gold text-midnight' : 'bg-void/5 text-text-tertiary'}`}>
+        <div
+          className={`p-3 rounded-sm ${active ? 'bg-gold text-midnight' : 'bg-void/5 text-text-tertiary'}`}
+        >
           {icon}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h3 className={`font-black uppercase tracking-tighter ${active ? 'text-white' : 'text-text-secondary'}`}>
+            <h3
+              className={`font-black uppercase tracking-tighter ${active ? 'text-white' : 'text-text-secondary'}`}
+            >
               {title}
             </h3>
             {active && (
@@ -277,15 +284,13 @@ function ProviderCard({ id, title, description, icon, active, onClick, status })
               </span>
             )}
           </div>
-          <p className="text-xs text-text-tertiary leading-relaxed">
-            {description}
-          </p>
+          <p className="text-xs text-text-tertiary leading-relaxed">{description}</p>
         </div>
         <div className="text-[10px] font-black tracking-widest text-white/20 opacity-0 group-hover:opacity-100 transition-opacity">
           [{status}]
         </div>
       </div>
-      
+
       {active && (
         <div className="absolute top-0 right-0 p-2">
           <ShieldCheck className="w-4 h-4 text-gold" />
@@ -298,10 +303,16 @@ function ProviderCard({ id, title, description, icon, active, onClick, status })
 function StatusLine({ label, active }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[11px] text-text-secondary font-bold uppercase tracking-tight">{label}</span>
+      <span className="text-[11px] text-text-secondary font-bold uppercase tracking-tight">
+        {label}
+      </span>
       <div className="flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-sm ${active ? 'bg-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]' : 'bg-void/20 border border-white/5'}`} />
-        <span className={`text-[10px] font-black tracking-widest ${active ? 'text-gold' : 'text-white/10'}`}>
+        <div
+          className={`w-1.5 h-1.5 rounded-sm ${active ? 'bg-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]' : 'bg-void/20 border border-white/5'}`}
+        />
+        <span
+          className={`text-[10px] font-black tracking-widest ${active ? 'text-gold' : 'text-white/10'}`}
+        >
           {active ? 'ONLINE_LINK' : 'OFFLINE_CORE'}
         </span>
       </div>

@@ -32,7 +32,9 @@ export default function ExportModal({ isOpen, onClose, summary }) {
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-raised">
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5 text-gold" />
-                <h3 className="text-xl font-display text-white italic uppercase tracking-tighter">STRATEGY_SUMMARY_REPORT</h3>
+                <h3 className="text-xl font-display text-white italic uppercase tracking-tighter">
+                  STRATEGY_SUMMARY_REPORT
+                </h3>
               </div>
               <button
                 onClick={onClose}

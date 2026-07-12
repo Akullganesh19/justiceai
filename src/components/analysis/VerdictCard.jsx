@@ -49,9 +49,7 @@ export function VerdictCard({ verdict, confidence }) {
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl rounded-full opacity-10 group-hover:opacity-20 transition-all pointer-events-none" />
 
       <div className="flex items-center justify-between border-b border-white/5 pb-8">
-        <div
-          className={`p-5 rounded-sm bg-midnight border ${config.border} shadow-hard`}
-        >
+        <div className={`p-5 rounded-sm bg-midnight border ${config.border} shadow-hard`}>
           <Icon className={`w-8 h-8 ${config.color}`} />
         </div>
         <div className="text-right">
