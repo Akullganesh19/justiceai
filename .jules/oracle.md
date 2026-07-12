@@ -1,0 +1,6 @@
+## 2024-05-24 — Predictive Route Prefetching Engine
+**Product understood as:** A comprehensive React-based Legal Co-pilot application for Indian Citizens combining RAG chat, case tracking, and calculators with dynamic code splitting for routes.
+**Prediction invented:** A background engine (`OraclePredictor`) that anticipates the user's next navigation step based on their current location and intelligent state inspection (e.g., active conversation history) and prefetches those chunked routes using dynamic `import()`s during idle time.
+**Data used:** The current route location (via `useLocation`), a hardcoded transition likelihood matrix, and client-side history state stored in `localStorage` under `justice_ai_history`.
+**Impact:** Eliminates the UI loading state ("INITIALIZING_SYSTEM_CORE...") when transitioning between high-frequency paths (like `/dashboard` to `/chat`), making navigation instantaneous by ensuring the JS bundle chunk is already cached.
+**Next opportunity:** Expand prediction to proactively pre-warm the backend LLM or pre-fetch case tracking data before the user actually navigates to the tracker page.
