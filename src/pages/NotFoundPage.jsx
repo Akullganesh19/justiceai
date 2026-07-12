@@ -57,7 +57,8 @@ export default function NotFoundPage() {
             </p>
           </div>
           <p className="text-sm text-text-tertiary font-body uppercase tracking-[0.15em] max-w-lg mx-auto leading-relaxed italic opacity-80">
-            THE REQUESTED DATA STRATUM HAS BEEN ADJOURNED INDEFINITELY. SYSTEM REGISTRIES INDICATE NO ACTIVE PROXIES AT THIS COORDINATE.
+            THE REQUESTED DATA STRATUM HAS BEEN ADJOURNED INDEFINITELY. SYSTEM REGISTRIES INDICATE
+            NO ACTIVE PROXIES AT THIS COORDINATE.
           </p>
         </motion.div>
 

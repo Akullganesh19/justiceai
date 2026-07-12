@@ -59,7 +59,8 @@ export default function ShowcasePage() {
                 JUSTICE <span className="text-gold">CORE</span>
               </h1>
               <p className="text-lg text-text-tertiary font-body uppercase tracking-wider italic leading-relaxed">
-                FEBRUARY_CYCLE_V4.2.0: FOUR FUNDAMENTAL SYSTEM LAYERS ACTIVE FOR 1.4B CITIZEN ACCESS. 
+                FEBRUARY_CYCLE_V4.2.0: FOUR FUNDAMENTAL SYSTEM LAYERS ACTIVE FOR 1.4B CITIZEN
+                ACCESS.
               </p>
             </div>
             <div className="hidden lg:block relative group">
@@ -81,7 +82,7 @@ export default function ShowcasePage() {
           <div className="py-16 bg-void border-2 border-white/5 shadow-inner relative overflow-hidden group">
             {/* Institutional Grid Pattern */}
             <div className="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-            
+
             <div className="max-w-4xl mx-auto py-12 relative z-10">
               <MorphingCardStack cards={pillarCards} defaultLayout="stack" />
             </div>
@@ -91,7 +92,7 @@ export default function ShowcasePage() {
                 ANALYSIS_INTERFACE_ACTIVE
               </p>
               <p className="text-xs text-text-tertiary font-mono italic opacity-60">
-                 // TOGGLE ARCHITECTURE VIEWS TO EXPLORE SYSTEM HIERARCHY protocols.
+                // TOGGLE ARCHITECTURE VIEWS TO EXPLORE SYSTEM HIERARCHY protocols.
               </p>
             </div>
           </div>
@@ -99,14 +100,16 @@ export default function ShowcasePage() {
           {/* Detailed Breakdown */}
           <div className="grid md:grid-cols-2 gap-10">
             <div className="p-10 rounded bg-void border-2 border-white/5 shadow-hard space-y-6 relative group overflow-hidden">
-               <div className="absolute top-0 right-0 p-4 opacity-5">
-                 <Zap className="w-12 h-12 text-white" />
-               </div>
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Zap className="w-12 h-12 text-white" />
+              </div>
               <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tighter italic">
                 ADAPTIVE-INTERFACE_FRAMEWORK
               </h3>
               <p className="text-sm text-text-tertiary leading-relaxed font-body uppercase tracking-wider italic opacity-80">
-                OUR INTERFACE ADAPTS TO COGNITIVE LOAD PARAMETERS. EMPLOY THE **STACK** MODE FOR FOCUSED DATA EXPLORATION, **GRID** FOR COMPARATIVE METRICS, AND **LIST** FOR RAPID REVIEW.
+                OUR INTERFACE ADAPTS TO COGNITIVE LOAD PARAMETERS. EMPLOY THE **STACK** MODE FOR
+                FOCUSED DATA EXPLORATION, **GRID** FOR COMPARATIVE METRICS, AND **LIST** FOR RAPID
+                REVIEW.
               </p>
             </div>
             <div className="p-10 rounded bg-void border-2 border-gold/[0.15] shadow-luxe space-y-6 relative overflow-hidden">
@@ -117,7 +120,8 @@ export default function ShowcasePage() {
                 BNS_COMPLIANCE_LEVEL
               </h3>
               <p className="text-sm text-gold-light/60 leading-relaxed font-body uppercase tracking-wider italic">
-                EVERY MODULE IN THIS STACK REPRESENTS A REAL-WORLD CAPABILITY OF THE JUSTICEAI ENGINE, VERIFIED FOR THE BHARATIYA NYAYA SANHITA TRANSITION CYCLE.
+                EVERY MODULE IN THIS STACK REPRESENTS A REAL-WORLD CAPABILITY OF THE JUSTICEAI
+                ENGINE, VERIFIED FOR THE BHARATIYA NYAYA SANHITA TRANSITION CYCLE.
               </p>
             </div>
           </div>

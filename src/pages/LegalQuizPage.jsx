@@ -427,7 +427,11 @@ export default function LegalQuizPage() {
         msg: 'EXCEPTIONAL_MASTERY_OF_INDIAN_JURISPRUDENCE!',
       };
     if (percentage >= 75)
-      return { label: 'ADVOCATE_LEVEL', color: 'text-blue', msg: 'SOLID_LEGAL_FOUNDATION_VERIFIED.' };
+      return {
+        label: 'ADVOCATE_LEVEL',
+        color: 'text-blue',
+        msg: 'SOLID_LEGAL_FOUNDATION_VERIFIED.',
+      };
     if (percentage >= 50)
       return {
         label: 'LAW_PROBATIONER',
@@ -456,7 +460,8 @@ export default function LegalQuizPage() {
             LEGAL <span className="text-gold">MASTERY</span>
           </h1>
           <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] italic opacity-60">
-            MODERNIZED FOR 2024 STANDARDS. ASSESSING READINESS FOR BNS, BNSS, AND BSA PROCEDURES WITH VERIFIED INDICES.
+            MODERNIZED FOR 2024 STANDARDS. ASSESSING READINESS FOR BNS, BNSS, AND BSA PROCEDURES
+            WITH VERIFIED INDICES.
           </p>
         </div>
 
@@ -527,9 +532,9 @@ export default function LegalQuizPage() {
             {/* Question Card */}
             {filteredQuestions.length > 0 ? (
               <div className="bg-void rounded-sm border-2 border-white/5 p-12 md:p-16 shadow-hard relative overflow-hidden group">
-               {/* Institutional Grid Pattern */}
+                {/* Institutional Grid Pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                
+
                 <div className="absolute top-0 right-0 w-48 h-48 bg-gold/5 -mr-24 -mt-24 rotate-45 group-hover:bg-gold/10 transition-all pointer-events-none border border-gold/10" />
                 <AnimatePresence mode="wait">
                   <QuizCard
@@ -608,16 +613,16 @@ export default function LegalQuizPage() {
             className="space-y-16"
           >
             <div className="bg-void rounded-sm border-2 border-white/10 p-16 text-center space-y-12 relative overflow-hidden shadow-hard">
-               {/* Institutional Grid Pattern */}
-               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
-              
+              {/* Institutional Grid Pattern */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
               <div className="absolute top-0 left-0 w-full h-[3px] bg-gold shadow-[0_0_30px_rgba(212,175,55,0.5)]" />
 
               <div className="relative">
                 <div className="w-32 h-32 rounded-sm bg-void border-4 border-gold flex items-center justify-center mx-auto shadow-hard animate-pulse">
                   <Trophy className="w-16 h-16 text-gold" />
                 </div>
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 border-4 border-gold rounded-sm opacity-0 pointer-events-none"
                   animate={{ scale: [1, 1.4], opacity: [0.3, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
@@ -638,15 +643,33 @@ export default function LegalQuizPage() {
                 </p>
               </div>
 
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto pt-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto pt-8">
                 {[
                   { val: score, label: 'VERIFIED_RESPONSES', color: 'text-white' },
-                  { val: filteredQuestions.length - score, label: 'INCORRECT_RESPONSES', color: 'text-gold' },
+                  {
+                    val: filteredQuestions.length - score,
+                    label: 'INCORRECT_RESPONSES',
+                    color: 'text-gold',
+                  },
                   { val: `${percentage}%`, label: 'PRECISION_INDEX', color: 'text-blue' },
-                  { val: 'FAST', label: 'RESPONSE_TYPE', color: 'text-gold animate-pulse', icon: Zap }
+                  {
+                    val: 'FAST',
+                    label: 'RESPONSE_TYPE',
+                    color: 'text-gold animate-pulse',
+                    icon: Zap,
+                  },
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-void p-8 rounded-sm border-2 border-white/5 shadow-hard flex flex-col items-center justify-center space-y-2">
-                    {stat.icon ? <stat.icon className={`w-8 h-8 ${stat.color}`} /> : <p className={`text-4xl font-display font-bold italic ${stat.color}`}>{stat.val}</p>}
+                  <div
+                    key={idx}
+                    className="bg-void p-8 rounded-sm border-2 border-white/5 shadow-hard flex flex-col items-center justify-center space-y-2"
+                  >
+                    {stat.icon ? (
+                      <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                    ) : (
+                      <p className={`text-4xl font-display font-bold italic ${stat.color}`}>
+                        {stat.val}
+                      </p>
+                    )}
                     <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">
                       {stat.label}
                     </p>
@@ -659,7 +682,8 @@ export default function LegalQuizPage() {
                   onClick={shareResults}
                   className="flex items-center justify-center gap-4 bg-void border-2 border-white/10 hover:border-white text-white px-12 py-5 rounded-sm font-extrabold uppercase tracking-[0.4em] transition-all w-full sm:w-auto italic shadow-hard active:translate-y-[2px]"
                 >
-                  <Share2 className="w-5 h-5 text-blue" /> {shared ? 'RESULTS_COPIED' : 'SHARE_RESULTS'}
+                  <Share2 className="w-5 h-5 text-blue" />{' '}
+                  {shared ? 'RESULTS_COPIED' : 'SHARE_RESULTS'}
                 </button>
                 <button
                   onClick={handleRestart}
@@ -699,23 +723,31 @@ export default function LegalQuizPage() {
                           </p>
                           <div className="flex flex-wrap gap-x-12 gap-y-3 border-t-2 border-white/5 pt-5">
                             <div className="space-y-1">
-                               <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">USER_INPUT_PROTOCOL</p>
-                               <p className={`text-xs uppercase font-extrabold italic tracking-wider ${isCorrect ? 'text-blue' : 'text-gold'}`}>
-                                 {q.options[userAnswer] || 'TERMINATED_NO_INPUT'}
-                               </p>
+                              <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">
+                                USER_INPUT_PROTOCOL
+                              </p>
+                              <p
+                                className={`text-xs uppercase font-extrabold italic tracking-wider ${isCorrect ? 'text-blue' : 'text-gold'}`}
+                              >
+                                {q.options[userAnswer] || 'TERMINATED_NO_INPUT'}
+                              </p>
                             </div>
                             {!isCorrect && (
                               <div className="space-y-1">
-                                 <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">MANDATED_INDEX_REFERENCE</p>
-                                 <p className="text-xs text-blue uppercase font-extrabold italic tracking-wider">{q.options[q.correct]}</p>
+                                <p className="text-[8px] uppercase font-extrabold tracking-[0.3em] text-white/20 italic">
+                                  MANDATED_INDEX_REFERENCE
+                                </p>
+                                <p className="text-xs text-blue uppercase font-extrabold italic tracking-wider">
+                                  {q.options[q.correct]}
+                                </p>
                               </div>
                             )}
                           </div>
                           <div className="flex items-center gap-2 pt-2 pb-1">
-                             <div className="w-4 h-[2px] bg-gold/20" />
-                             <p className="text-[9px] text-white/20 font-mono italic uppercase tracking-[0.3em]">
-                               // VERIFICATION_SOURCE_NODE: {q.source}
-                             </p>
+                            <div className="w-4 h-[2px] bg-gold/20" />
+                            <p className="text-[9px] text-white/20 font-mono italic uppercase tracking-[0.3em]">
+                              // VERIFICATION_SOURCE_NODE: {q.source}
+                            </p>
                           </div>
                         </div>
                       </div>

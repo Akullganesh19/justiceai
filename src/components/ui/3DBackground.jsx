@@ -58,8 +58,14 @@ export default function Background3D({ particleCount = 50 }) {
             top: `${particle.y}%`,
             width: `${particle.size}px`,
             height: `${particle.size}px`,
-            background: i % 2 === 0 ? `rgba(225, 29, 72, ${Math.random() * 0.4 + 0.2})` : `rgba(37, 99, 235, ${Math.random() * 0.4 + 0.2})`,
-            boxShadow: i % 2 === 0 ? `0 0 ${particle.size * 6}px rgba(225, 29, 72, 0.4)` : `0 0 ${particle.size * 6}px rgba(37, 99, 235, 0.4)`,
+            background:
+              i % 2 === 0
+                ? `rgba(225, 29, 72, ${Math.random() * 0.4 + 0.2})`
+                : `rgba(37, 99, 235, ${Math.random() * 0.4 + 0.2})`,
+            boxShadow:
+              i % 2 === 0
+                ? `0 0 ${particle.size * 6}px rgba(225, 29, 72, 0.4)`
+                : `0 0 ${particle.size * 6}px rgba(37, 99, 235, 0.4)`,
             transform: `translateZ(${particle.z}px)`,
             animation: `float3d ${particle.duration}s ease-in-out ${particle.delay}s infinite`,
           }}

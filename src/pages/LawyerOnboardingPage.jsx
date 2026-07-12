@@ -116,15 +116,16 @@ export default function LawyerOnboardingPage() {
             Lawyer <span className="text-gold">Registration</span>
           </h1>
           <p className="text-sm text-text-tertiary leading-relaxed max-w-xl mx-auto font-body opacity-80 decoration-gold/30">
-            Verify your professional credentials to join our trusted network and access high-tier legal opportunities.
+            Verify your professional credentials to join our trusted network and access high-tier
+            legal opportunities.
           </p>
         </div>
 
         {!isSuccess ? (
           <div className="bg-void border-2 border-white/5 shadow-hard relative overflow-hidden">
-             {/* Statutory Grid Background Overlay */}
+            {/* Statutory Grid Background Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
-            
+
             {/* Progress Bar */}
             <div className="bg-void p-10 border-b-2 border-white/5 flex items-center justify-between relative z-10">
               {STEPS.map((step) => (
@@ -261,12 +262,13 @@ export default function LawyerOnboardingPage() {
                       </div>
                       <AlertCircle className="w-6 h-6 text-red shrink-0 mt-1" />
                       <div className="space-y-2">
-                         <p className="text-[12px] text-gold font-bold uppercase tracking-widest">
-                           // DATA_VERIFICATION_NOTICE
-                         </p>
-                         <p className="text-[10px] text-red-light/60 leading-relaxed font-mono uppercase tracking-wider">
-                           CREDENTIALS MATCHED AGAINST BAR COUNCIL OF INDIA REGISTRIES. MOCK ENROLLMENT NUMBERS (E.G. D/422/1986) AUTO-BYPASS FOR DEMO STREAM.
-                         </p>
+                        <p className="text-[12px] text-gold font-bold uppercase tracking-widest">
+                          // DATA_VERIFICATION_NOTICE
+                        </p>
+                        <p className="text-[10px] text-red-light/60 leading-relaxed font-mono uppercase tracking-wider">
+                          CREDENTIALS MATCHED AGAINST BAR COUNCIL OF INDIA REGISTRIES. MOCK
+                          ENROLLMENT NUMBERS (E.G. D/422/1986) AUTO-BYPASS FOR DEMO STREAM.
+                        </p>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
@@ -395,10 +397,10 @@ export default function LawyerOnboardingPage() {
                         RETAINER_STREAM_VALUATION
                       </label>
                       <div className="relative">
-                          <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
-                          <input
-                            type="text"
-                            placeholder="Expected Fee Range"
+                        <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
+                        <input
+                          type="text"
+                          placeholder="Expected Fee Range"
                           value={formData.feeRange}
                           onChange={(e) => updateFormData('feeRange', e.target.value)}
                           className="input-field-onboarding pl-11"
@@ -509,28 +511,31 @@ export default function LawyerOnboardingPage() {
             className="space-y-12"
           >
             <div className="bg-void border-2 border-gold/40 p-16 text-center space-y-10 shadow-hard relative overflow-hidden">
-               {/* Statutory Grid Background Overlay */}
-               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-              
+              {/* Statutory Grid Background Overlay */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
               <div className="w-24 h-24 bg-void border-2 border-gold/40 rounded-sm mx-auto flex items-center justify-center relative shadow-hard">
                 <CheckCircle2 className="w-12 h-12 text-gold" />
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 border-2 border-gold rounded-sm"
                   animate={{ scale: [1, 1.3, 1], opacity: [1, 0, 0] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
               </div>
               <div className="space-y-4">
-                <h2 className="text-5xl font-display font-bold text-white uppercase tracking-tight">Registration Complete</h2>
+                <h2 className="text-5xl font-display font-bold text-white uppercase tracking-tight">
+                  Registration Complete
+                </h2>
                 <p className="text-sm text-text-tertiary font-body max-w-sm mx-auto opacity-80">
-                  Your credentials have been submitted for verification. We will notify you once your profile is live in the directory.
+                  Your credentials have been submitted for verification. We will notify you once
+                  your profile is live in the directory.
                 </p>
               </div>
 
               {/* Profile Preview */}
               <div className="bg-void border-2 border-white/5 p-10 max-w-xl mx-auto shadow-hard text-left space-y-8 relative group">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
-                   <ShieldCheck className="w-10 h-10 text-white" />
+                  <ShieldCheck className="w-10 h-10 text-white" />
                 </div>
                 <div className="flex items-center gap-8">
                   <div className="w-24 h-24 rounded-sm bg-void border-2 border-gold/40 flex items-center justify-center text-5xl font-display text-gold font-extrabold shadow-hard italic">
@@ -582,7 +587,9 @@ export default function LawyerOnboardingPage() {
                   <Linkedin className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-extrabold text-white uppercase tracking-widest">Profile Badge Sync</p>
+                  <p className="text-sm font-extrabold text-white uppercase tracking-widest">
+                    Profile Badge Sync
+                  </p>
                   <p className="text-[10px] text-text-tertiary uppercase tracking-wider opacity-60 max-w-md">
                     Share your achievement as a "Founding Advocate" on your professional networks.
                   </p>

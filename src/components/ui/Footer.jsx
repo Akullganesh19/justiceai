@@ -47,7 +47,7 @@ export default function Footer() {
     <footer className="border-t-2 border-gold/20 bg-void mt-16 px-6 py-20 relative overflow-hidden font-mono">
       {/* Industrial Hairline */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gold/40" />
-      
+
       <div className="max-w-7xl mx-auto">
         {/* Main Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-12 mb-20">
@@ -110,32 +110,34 @@ export default function Footer() {
         {/* Global Legal Disclaimer */}
         <div className="py-10 mb-12 border-2 border-gold/[0.15] bg-gold/[0.02] rounded shadow-hard group hover:border-gold/30 transition-all active:translate-y-[2px]">
           <div className="flex flex-col md:flex-row items-center gap-8 px-10">
-             <div className="flex-shrink-0 w-12 h-12 rounded bg-gold text-white flex items-center justify-center shadow-hard-red">
-                <ShieldCheck className="w-6 h-6" />
-             </div>
-             <p className="text-[10px] text-text-tertiary max-w-5xl text-center md:text-left font-body leading-relaxed uppercase tracking-widest italic">
-                <span className="font-extrabold text-gold mr-3 bg-gold/10 px-2 py-1 rounded-sm border border-gold/20 shadow-hard-red/5">
-                  MANDATORY_DISCLAIMER:
-                </span>
-                JUSTICEAI OPERATES AS AN ANALYTICAL INFORMATION VECTOR AND{' '}
-                <strong className="text-white font-bold opacity-100">
-                  DOES NOT CONSTITUTE BINDING LEGAL COUNSEL
-                </strong>
-                . GENERATED DATASETS ARE FOR EDUCATIONAL_STRATEGIC REFERENCE ONLY. CONSULT FORMALLY LICENSED ADVOCATES FOR JURIDICAL FINALITY.
-             </p>
+            <div className="flex-shrink-0 w-12 h-12 rounded bg-gold text-white flex items-center justify-center shadow-hard-red">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <p className="text-[10px] text-text-tertiary max-w-5xl text-center md:text-left font-body leading-relaxed uppercase tracking-widest italic">
+              <span className="font-extrabold text-gold mr-3 bg-gold/10 px-2 py-1 rounded-sm border border-gold/20 shadow-hard-red/5">
+                MANDATORY_DISCLAIMER:
+              </span>
+              JUSTICEAI OPERATES AS AN ANALYTICAL INFORMATION VECTOR AND{' '}
+              <strong className="text-white font-bold opacity-100">
+                DOES NOT CONSTITUTE BINDING LEGAL COUNSEL
+              </strong>
+              . GENERATED DATASETS ARE FOR EDUCATIONAL_STRATEGIC REFERENCE ONLY. CONSULT FORMALLY
+              LICENSED ADVOCATES FOR JURIDICAL FINALITY.
+            </p>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-10 border-t-2 border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60 hover:opacity-100 transition-opacity">
           <p className="text-[9px] text-text-tertiary uppercase tracking-[0.4em] font-extrabold flex items-center gap-3 italic">
-            © 2026 AUTHORITY_NET <span className="w-1.5 h-1.5 rounded-full bg-gold/40" /> DIGITAL_INDIA_INITIATIVE
+            © 2026 AUTHORITY_NET <span className="w-1.5 h-1.5 rounded-full bg-gold/40" />{' '}
+            DIGITAL_INDIA_INITIATIVE
           </p>
           <div className="flex gap-10">
             {[
               { label: 'PRIVACY_PROTOCOL', to: '/privacy' },
               { label: 'DISCLAIMER_INDEX', to: '/disclaimer' },
-              { label: 'TERMS_OF_ENGAGEMENT', to: '#' }
+              { label: 'TERMS_OF_ENGAGEMENT', to: '#' },
             ].map((link, idx) => (
               <Link
                 key={idx}
@@ -148,7 +150,8 @@ export default function Footer() {
             ))}
           </div>
           <p className="text-[9px] text-text-tertiary flex items-center gap-2 uppercase font-bold tracking-[0.4em] italic">
-            BUILT WITH PRECISION FOR CITIZENS <Heart className="w-3 h-3 text-gold fill-red animate-pulse" />
+            BUILT WITH PRECISION FOR CITIZENS{' '}
+            <Heart className="w-3 h-3 text-gold fill-red animate-pulse" />
           </p>
         </div>
       </div>

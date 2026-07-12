@@ -51,7 +51,8 @@ export default function DisclaimerPage() {
               SERVICE <span className="text-gold">DISCLOSURE</span>
             </h1>
             <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.4em] italic opacity-60">
-              CRITICAL OPERATIONAL BOUNDARIES OF AI_DRIVEN LEGAL INTELLIGENCE AND SYSTEM_LIMITATIONS.
+              CRITICAL OPERATIONAL BOUNDARIES OF AI_DRIVEN LEGAL INTELLIGENCE AND
+              SYSTEM_LIMITATIONS.
             </p>
           </div>
 
@@ -66,12 +67,14 @@ export default function DisclaimerPage() {
               >
                 {/* Statutory Accent */}
                 <div className="absolute top-0 left-0 w-2 h-full bg-gold/10 group-hover:bg-gold transition-all" />
-                
+
                 <div className="w-16 h-16 rounded-sm bg-void border-2 border-white/10 flex items-center justify-center flex-shrink-0 group-hover:border-gold/40 transition-all shadow-inner">
                   <section.icon className="w-8 h-8 text-gold" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-lg font-display font-bold text-white uppercase tracking-tighter italic">{section.title}</h3>
+                  <h3 className="text-lg font-display font-bold text-white uppercase tracking-tighter italic">
+                    {section.title}
+                  </h3>
                   <p className="text-[11px] text-text-tertiary leading-loose uppercase tracking-widest italic opacity-60">
                     {section.content}
                   </p>
@@ -81,9 +84,9 @@ export default function DisclaimerPage() {
           </div>
 
           <div className="p-12 rounded-sm bg-gold/[0.03] border-2 border-gold/15 text-center space-y-6 shadow-hard relative overflow-hidden">
-             {/* Diagonal Stripes */}
-             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#d4af37_10px,#d4af37_11px)]" />
-             
+            {/* Diagonal Stripes */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#d4af37_10px,#d4af37_11px)]" />
+
             <p className="text-[12px] text-text-tertiary uppercase tracking-[0.6em] italic font-bold opacity-80 relative z-10 leading-relaxed">
               "JUSTICE IS THE CONSTANT AND PERPETUAL WILL TO ALLOT TO EVERY MAN HIS DUE."
             </p>

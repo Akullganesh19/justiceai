@@ -200,7 +200,10 @@ export default function CommandPalette() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Handle Cmd/Ctrl + K, or the '/' key
-      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+      if (
+        ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') ||
+        (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')
+      ) {
         e.preventDefault();
         setIsOpen((prev) => !prev);
         setQuery('');
