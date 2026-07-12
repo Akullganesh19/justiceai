@@ -7,7 +7,11 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { initInvisibleInfrastructure } from './lib/infrastructure';
 import './index.css';
+
+// Initialize invisible infrastructure
+initInvisibleInfrastructure();
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
