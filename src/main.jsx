@@ -51,6 +51,59 @@ function PageLoader() {
   );
 }
 
+// Global Predictive Chunk Prefetching Engine (Oracle)
+// Anticipate user navigation by prefetching lazy-loaded chunks on hover/touch intent
+const routeImports = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+};
+
+const prefetchedRoutes = new Set();
+
+const handlePrefetchIntent = (e) => {
+  const target = e.target.closest('a[href]');
+  if (!target) return;
+
+  const url = new URL(target.href, window.location.href);
+  // Only prefetch same-origin routes
+  if (url.origin !== window.location.origin) return;
+
+  const path = url.pathname;
+  if (routeImports[path] && !prefetchedRoutes.has(path)) {
+    prefetchedRoutes.add(path);
+    // Execute dynamic import to prefetch the chunk, swallowing any loading errors
+    routeImports[path]().catch(() => {
+      // Gracefully handle chunk loading failures
+      prefetchedRoutes.delete(path);
+    });
+  }
+};
+
+// Listen for navigation intent on both desktop (hover) and mobile (touchstart)
+if (typeof window !== 'undefined') {
+  window.addEventListener('mouseover', handlePrefetchIntent, { passive: true });
+  window.addEventListener('touchstart', handlePrefetchIntent, { passive: true });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
