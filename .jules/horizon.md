@@ -1,0 +1,6 @@
+## 2024-07-13 — React Router v6+ Data Router Migration
+**Risk identified:** The project is using React Router's legacy `<BrowserRouter>` and `<Routes>` pattern. This pattern is obsolete for modern applications and React Router v7+ compatibility, lacking support for crucial future-proofing features like route-level data fetching (loaders) and actions. This would cause significant technical debt and refactoring cost to adopt these features or upgrade React Router in the future.
+**Migration target:** Modern Data Router API (`createBrowserRouter`, `<RouterProvider>`) to enable loaders, actions, and v7 compatibility.
+**Migrated this session:** Migrated the root application router in `src/main.jsx` to use `createBrowserRouter` and `RouterProvider`. Created an `AppLayout` component to handle global layout wrappers. Updated tests in `src/test/App.test.jsx` to use `createMemoryRouter`.
+**Remaining:** Migrate any nested routing patterns (if they exist) to use the new data router API, and eventually start utilizing route-level loaders and actions instead of component-level data fetching where appropriate.
+**Next session:** Investigate the codebase for nested routing implementations and refactor component-level data fetching to use React Router loaders.
