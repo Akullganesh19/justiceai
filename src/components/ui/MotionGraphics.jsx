@@ -4,6 +4,133 @@ import React, { useEffect, useRef } from 'react';
  * Motion Graphics Component - Creates animated visual elements
  * inspired by string-tune.fiddle.digital style
  */
+
+// Particle class for floating particles
+class Particle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.reset();
+  }
+
+  reset() {
+    this.x = Math.random() * this.width;
+    this.y = Math.random() * this.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 2 + 0.5;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.hue = Math.random() > 0.5 ? 345 : 220;
+  }
+
+  update(mouse) {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    if (this.x < 0 || this.x > this.width || this.y < 0 || this.y > this.height) {
+      this.reset();
+    }
+
+    // Mouse interaction
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 100) {
+      const force = (100 - dist) / 100;
+      this.vx -= dx * force * 0.001;
+      this.vy -= dy * force * 0.001;
+    }
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+    ctx.fill();
+  }
+}
+
+// Line class for connecting lines
+class Line {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.reset();
+  }
+
+  reset() {
+    this.x = Math.random() * this.width;
+    this.y = Math.random() * this.height;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.length = Math.random() * 100 + 50;
+    this.angle = Math.random() * Math.PI * 2;
+    this.opacity = Math.random() * 0.15 + 0.05;
+    this.hue = Math.random() > 0.5 ? 345 : 220;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.angle += 0.005;
+
+    if (this.x < 0 || this.x > this.width || this.y < 0 || this.y > this.height) {
+      this.reset();
+    }
+  }
+
+  draw(ctx) {
+    const x2 = this.x + Math.cos(this.angle) * this.length;
+    const y2 = this.y + Math.sin(this.angle) * this.length;
+
+    const gradient = ctx.createLinearGradient(this.x, this.y, x2, y2);
+    gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, 0)`);
+    gradient.addColorStop(0.5, `hsla(${this.hue}, 70%, 60%, ${this.opacity})`);
+    gradient.addColorStop(1, `hsla(${this.hue}, 70%, 60%, 0)`);
+
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+// Wave class for flowing waves
+class Wave {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.reset();
+  }
+
+  reset() {
+    this.y = Math.random() * this.height;
+    this.amplitude = Math.random() * 50 + 20;
+    this.frequency = Math.random() * 0.02 + 0.005;
+    this.speed = Math.random() * 0.02 + 0.01;
+    this.phase = Math.random() * Math.PI * 2;
+    this.opacity = Math.random() * 0.1 + 0.05;
+    this.hue = Math.random() > 0.5 ? 345 : 220;
+  }
+
+  draw(ctx, time) {
+    ctx.beginPath();
+    for (let x = 0; x < this.width; x += 5) {
+      const y = this.y + Math.sin(x * this.frequency + time * this.speed + this.phase) * this.amplitude;
+      if (x === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.strokeStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
 export default function MotionGraphics({ type = 'particles', className = '' }) {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
@@ -20,142 +147,22 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
     const lines = [];
     const mouse = { x: width / 2, y: height / 2 };
 
-    // Particle class for floating particles
-    class Particle {
-      constructor() {
-        this.reset();
-      }
-
-      reset() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.radius = Math.random() * 2 + 0.5;
-        this.opacity = Math.random() * 0.5 + 0.1;
-        this.hue = Math.random() > 0.5 ? 345 : 220; // STATUTORY_PROTOCOL_COLOR_SPACE
-      }
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-
-        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-          this.reset();
-        }
-
-        // Mouse interaction
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 100) {
-          const force = (100 - dist) / 100;
-          this.vx -= dx * force * 0.001;
-          this.vy -= dy * force * 0.001;
-        }
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
-        ctx.fill();
-      }
-    }
-
-    // Line class for connecting lines
-    class Line {
-      constructor() {
-        this.reset();
-      }
-
-      reset() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.length = Math.random() * 100 + 50;
-        this.angle = Math.random() * Math.PI * 2;
-        this.opacity = Math.random() * 0.15 + 0.05;
-        this.hue = Math.random() > 0.5 ? 345 : 220;
-      }
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.angle += 0.005;
-
-        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-          this.reset();
-        }
-      }
-
-      draw() {
-        const x2 = this.x + Math.cos(this.angle) * this.length;
-        const y2 = this.y + Math.sin(this.angle) * this.length;
-
-        const gradient = ctx.createLinearGradient(this.x, this.y, x2, y2);
-        gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, 0)`);
-        gradient.addColorStop(0.5, `hsla(${this.hue}, 70%, 60%, ${this.opacity})`);
-        gradient.addColorStop(1, `hsla(${this.hue}, 70%, 60%, 0)`);
-
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-    }
-
-    // Wave class for flowing waves
-    class Wave {
-      constructor() {
-        this.reset();
-      }
-
-      reset() {
-        this.y = Math.random() * height;
-        this.amplitude = Math.random() * 50 + 20;
-        this.frequency = Math.random() * 0.02 + 0.005;
-        this.speed = Math.random() * 0.02 + 0.01;
-        this.phase = Math.random() * Math.PI * 2;
-        this.opacity = Math.random() * 0.1 + 0.05;
-        this.hue = Math.random() > 0.5 ? 345 : 220;
-      }
-
-      draw(time) {
-        ctx.beginPath();
-        for (let x = 0; x < width; x += 5) {
-          const y = this.y + Math.sin(x * this.frequency + time * this.speed + this.phase) * this.amplitude;
-          if (x === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.strokeStyle = `hsla(${this.hue}, 70%, 60%, ${this.opacity})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
-
     // Initialize particles
     const particleCount = Math.min(100, Math.floor(width * height / 10000));
     for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+      particles.push(new Particle(width, height));
     }
 
     // Initialize lines
     const lineCount = Math.min(30, Math.floor(width * height / 30000));
     for (let i = 0; i < lineCount; i++) {
-      lines.push(new Line());
+      lines.push(new Line(width, height));
     }
 
     // Initialize waves
     const waves = [];
     for (let i = 0; i < 3; i++) {
-      waves.push(new Wave());
+      waves.push(new Wave(width, height));
     }
 
     let time = 0;
@@ -164,18 +171,27 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
       ctx.clearRect(0, 0, width, height);
 
       // Draw waves
-      waves.forEach(wave => wave.draw(time));
+      waves.forEach(wave => {
+        // We pass the current width/height incase it resized (though they aren't updated on resize yet, but good practice)
+        wave.width = width;
+        wave.height = height;
+        wave.draw(ctx, time)
+      });
 
       // Draw lines
       lines.forEach(line => {
+        line.width = width;
+        line.height = height;
         line.update();
-        line.draw();
+        line.draw(ctx);
       });
 
       // Draw particles
       particles.forEach(particle => {
-        particle.update();
-        particle.draw();
+        particle.width = width;
+        particle.height = height;
+        particle.update(mouse);
+        particle.draw(ctx);
       });
 
       // Draw connections between close particles
@@ -201,6 +217,7 @@ export default function MotionGraphics({ type = 'particles', className = '' }) {
     }
 
     animate();
+
 
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
