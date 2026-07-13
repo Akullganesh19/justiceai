@@ -1,0 +1,6 @@
+## 2024-05-24 — [Structured Log Redaction Added]
+**Data traced:** PII including emails, SSNs, phone numbers, addresses, passwords, API keys.
+**Exposure found:** Plaintext logs of request payloads via `console.log(\`[ROUTE] Incoming POST /api/chat - Body Keys: \${Object.keys(req.body || {}).join(', ')}\`)` and routing messages (`console.log(\`Routing query to Ollama: "\${latestUserMessage.substring(0, 50)}..."\`));` which can leak exact chat contents containing PII like SSNs or emails directly into application stdout/logs.
+**Fix:** Implemented a custom Winston format (`redactFormat`) that structurally deep-redacts sensitive keys (like email, password, ssn, apikeys) and applies regex-based masking for emails and SSNs within generic string payloads. Intercepted `console.log`, `console.info`, `console.warn`, and `console.error` and forwarded them to the Winston logger.
+**Coverage confirmed:** Tested regex string redaction for emails and SSNs and structured redaction for PII fields. Verified logs output in structurally safe JSON without dropping standard log message symbols.
+**Still exposed elsewhere:** Potential frontend client-side telemetry/logs may still leak PII if not intercepted there, though server-side stdout is now safe.
