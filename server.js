@@ -7,6 +7,7 @@ import hpp from 'hpp';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import util from 'util';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
@@ -22,10 +23,98 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ================= REDACTION CONFIGURATION =================
+const SENSITIVE_KEYS = ['email', 'password', 'phone', 'address', 'apikeys', 'messages', 'content', 'text', 'credentials', 'ssn'];
+
+const redactEmail = (email) => {
+  if (typeof email !== 'string') return '[REDACTED]';
+  const parts = email.split('@');
+  if (parts.length !== 2) return '[REDACTED]';
+  const [local, domain] = parts;
+  const maskedLocal = local.length > 1 ? `${local[0]}***` : `*`;
+  return `${maskedLocal}@${domain}`;
+};
+
+const redactString = (str) => {
+  if (typeof str !== 'string') return str;
+  let redacted = str.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, (match) => redactEmail(match));
+  redacted = redacted.replace(/\b\d{3}-\d{2}-\d{4}\b/g, '***-**-****');
+  redacted = redacted.replace(/\b(?:\d[ -]*?){13,16}\b/g, '****-****-****-****');
+  return redacted;
+};
+
+const deepRedact = (obj, seen = new WeakSet()) => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') return redactString(obj);
+  if (typeof obj !== 'object') return obj;
+
+  if (
+    obj instanceof Date ||
+    obj instanceof RegExp ||
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof Buffer ||
+    obj instanceof String ||
+    obj instanceof Number ||
+    obj instanceof Boolean
+  ) {
+    return obj;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepRedact(item, seen));
+  }
+
+  if (obj instanceof Error) {
+    const redactedError = new Error(redactString(obj.message));
+    redactedError.name = obj.name;
+    redactedError.stack = redactString(obj.stack);
+    for (const key of Object.getOwnPropertyNames(obj)) {
+      if (!['name', 'message', 'stack'].includes(key)) {
+        redactedError[key] = deepRedact(obj[key], seen);
+      }
+    }
+    return redactedError;
+  }
+
+  const redactedObj = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (SENSITIVE_KEYS.includes(key.toLowerCase())) {
+        if (key.toLowerCase() === 'email' && typeof obj[key] === 'string') {
+          redactedObj[key] = redactEmail(obj[key]);
+        } else {
+          redactedObj[key] = '[REDACTED]';
+        }
+      } else {
+        redactedObj[key] = deepRedact(obj[key], seen);
+      }
+    }
+  }
+  return redactedObj;
+};
+
+const redactFormat = winston.format((info) => {
+  const seen = new WeakSet();
+  const redactedInfo = deepRedact(info, seen);
+
+  const symbols = Object.getOwnPropertySymbols(info);
+  for (const sym of symbols) {
+    redactedInfo[sym] = deepRedact(info[sym], seen);
+  }
+
+  return redactedInfo;
+});
+// ==========================================================
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -35,6 +124,13 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+// ================= CONSOLE INTERCEPTION =================
+console.log = (...args) => logger.info(util.format(...args));
+console.info = (...args) => logger.info(util.format(...args));
+console.warn = (...args) => logger.warn(util.format(...args));
+console.error = (...args) => logger.error(util.format(...args));
+// ========================================================
 
 const app = express();
 
