@@ -1,0 +1,6 @@
+## 2024-07-13 — [Auto-Retry for External APIs]
+**Failure point found:** External API calls (Ollama, Gemini, DeepSeek, Bhashini) were unprotected and prone to fail silently or loudly on transient network errors or 5xx responses.
+**Why it existed:** Native `fetch` was used without any retry mechanisms, assuming network requests will always succeed or explicitly handling single failures only.
+**Recovery built:** Implemented `fetchWithRetry`, an auto-retry mechanism with exponential backoff (up to 3 attempts). It handles `TypeError`, `AbortError`, explicitly thrown 'fetch failed' errors, and HTTP 5xx responses while adhering to expected error boundaries and `Response` object behavior.
+**Blast radius before:** Users would experience failed responses or silent breaks on temporary networking hiccups or brief downstream service outages. Frequent outages affected all functionalities relying on external providers like AI Chat or STT.
+**Watch for:** Other external dependencies that may require similar retries (e.g. Database queries, any other third party fetch missing wrapper).
