@@ -225,6 +225,15 @@ export default function ChatPage() {
 
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // Dispatch event for Synapse Bridge
+        const analysisEvent = new CustomEvent('justice-ai-analysis-complete', {
+          detail: {
+            caseId: activeCaseId,
+            analysis: newAnalysis
+          }
+        });
+        window.dispatchEvent(analysisEvent);
       }
 
       // Auto-save to history

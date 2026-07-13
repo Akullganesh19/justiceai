@@ -114,6 +114,16 @@ export function ToastProvider({ children }) {
   const warning = useCallback((data) => addToast('warning', data), [addToast]);
   const info = useCallback((data) => addToast('info', data), [addToast]);
 
+  React.useEffect(() => {
+    const handleGlobalToast = (e) => {
+      const { type = 'info', title, message, duration } = e.detail;
+      addToast(type, { title, message, duration });
+    };
+
+    window.addEventListener('justice-ai-toast', handleGlobalToast);
+    return () => window.removeEventListener('justice-ai-toast', handleGlobalToast);
+  }, [addToast]);
+
   const value = {
     toasts,
     addToast,
