@@ -22,10 +22,91 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// --- WARDEN DATA GOVERNANCE ---
+// Structural deep redaction for logs
+const SENSITIVE_KEYS = new Set(['email', 'phone', 'ssn', 'address', 'dob', 'date_of_birth', 'password', 'card_number', 'api_key', 'apikey', 'token', 'authorization']);
+const EMAIL_REGEX = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+const PHONE_REGEX = /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g;
+const SSN_REGEX = /\b\d{3}-\d{2}-\d{4}\b/g;
+
+function maskString(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(EMAIL_REGEX, '***@***.***')
+    .replace(PHONE_REGEX, '***-***-****')
+    .replace(SSN_REGEX, '***-**-****');
+}
+
+function deepRedact(obj, seen = new WeakSet()) {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') return maskString(obj);
+  if (typeof obj !== 'object') return obj;
+
+  // Bypass built-in objects to prevent corruption
+  if (obj instanceof Date || obj instanceof RegExp || obj instanceof Map || obj instanceof Set || obj instanceof Buffer || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
+    return obj;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepRedact(item, seen));
+  }
+
+  // Handle Errors explicitly so they retain message and stack
+  if (obj instanceof Error) {
+    const redactedErr = new Error(maskString(obj.message));
+    redactedErr.name = obj.name;
+    if (obj.stack) redactedErr.stack = maskString(obj.stack);
+    Reflect.ownKeys(obj).forEach(key => {
+      if (key !== 'message' && key !== 'stack' && key !== 'name') {
+        if (typeof key === 'string' && SENSITIVE_KEYS.has(key.toLowerCase())) {
+          redactedErr[key] = '[REDACTED]';
+        } else {
+          redactedErr[key] = deepRedact(obj[key], seen);
+        }
+      }
+    });
+    return redactedErr;
+  }
+
+  // Preserve prototypes and symbols (crucial for Winston info objects)
+  const redacted = Object.create(Object.getPrototypeOf(obj));
+
+  Reflect.ownKeys(obj).forEach(key => {
+    if (typeof key === 'string' && SENSITIVE_KEYS.has(key.toLowerCase())) {
+      redacted[key] = '[REDACTED]';
+    } else {
+      redacted[key] = deepRedact(obj[key], seen);
+    }
+  });
+
+  return redacted;
+}
+
+// Intercept global console methods to ensure no PII leaks in standard output
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+  info: console.info
+};
+
+['log', 'error', 'warn', 'info'].forEach(method => {
+  console[method] = (...args) => {
+    originalConsole[method](...args.map(arg => deepRedact(arg)));
+  };
+});
+// ------------------------------
+
 // Initialize Winston logger
+const redactFormat = winston.format((info) => deepRedact(info))();
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat,
     winston.format.timestamp(),
     winston.format.json()
   ),

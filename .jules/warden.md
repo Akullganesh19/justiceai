@@ -1,0 +1,6 @@
+## 2024-05-24 — Structural Log Redaction Added
+**Data traced:** PII (Email, Phone, SSN, DOB), Credentials (API Keys, Tokens, Passwords).
+**Exposure found:** `server.js` was using plain `console.log` and `console.error` for raw incoming requests (`req.body` payload keys were logged) and generic objects that could leak PII directly to standard output or log files.
+**Fix:** Created a `deepRedact` masking utility that runs against any object or string passed through standard `console.log`, `console.error`, `console.warn`, and `console.info`, as well as adding it directly to the Winston logger format in `server.js`.
+**Coverage confirmed:** Tested the `deepRedact` logic to ensure built-in types (Dates, RegExps) are skipped and don't corrupt logs, and that circular references are handled while successfully masking emails, SSNs, and explicit sensitive keys.
+**Still exposed elsewhere:** This relies on key names (`email`, `api_key`) and regex matches. If data is stored in a weird key like `user_contact_info` and formatted without matching standard regex (e.g., custom phone formatting), it may bypass the redaction. Also, third-party libraries dumping stack traces or making network requests independently might bypass this global patch if they don't use the standard console.
