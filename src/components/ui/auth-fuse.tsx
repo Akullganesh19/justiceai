@@ -188,6 +188,12 @@ function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign In form submitted');
+
+    // Synapse: Auth emits an event when user signs in, allowing decoupled systems to react.
+    const email = event.currentTarget.email?.value || 'user';
+    window.dispatchEvent(
+      new CustomEvent('justice-ai-user-login', { detail: { email } })
+    );
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
@@ -230,6 +236,12 @@ function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign Up form submitted');
+
+    // Synapse: Auth emits an event when user signs up, allowing decoupled systems to react.
+    const name = event.currentTarget.name?.value || 'user';
+    window.dispatchEvent(
+      new CustomEvent('justice-ai-user-login', { detail: { email: name } })
+    );
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-10">
