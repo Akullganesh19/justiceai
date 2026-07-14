@@ -1,0 +1,6 @@
+## 2024-07-14 — LLM and External API Fragility
+**Failure point found:** 6 unprotected outbound HTTP requests to LLM providers (Gemini, DeepSeek, Ollama) and external APIs (Bhashini) that fail immediately on any transient network error (e.g., connection reset, DNS lookup failure) or HTTP 5xx response.
+**Why it existed:** The backend was designed assuming external APIs and local LLM servers are 100% reliable, favoring simple `await fetch()` calls over robust request management.
+**Recovery built:** Implemented `fetchWithRetry`, an automatic retry mechanism with exponential backoff. It transparently retries up to 3 times on HTTP 5xx errors and transient native Node `fetch` network errors (`TypeError` where `err.message` includes 'fetch failed' or 'network'), while correctly respecting `AbortError` cancellations.
+**Blast radius before:** Any temporary hiccup (like a 502 from Bhashini or a brief timeout from a local Ollama instance) would crash the request, forcing the user to manually retry the entire operation (e.g., losing their progress in a voice interaction or chat).
+**Watch for:** Other third-party integrations or internal microservice communications that might be using plain `fetch` without wrapper protection, especially in the frontend where user connectivity might be spotty.
