@@ -192,7 +192,21 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+
+        // Synapse: Dispatch cross-system intelligence event
+        const title = currentMsgs[1]?.content?.substring(0, 40) + '...' || 'Sample Case';
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-generated', {
+            detail: {
+              analysis: newAnalysis,
+              caseId: activeCaseId,
+              title: title,
+            },
+          }),
+        );
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -223,12 +237,24 @@ export default function ChatPage() {
       const finaleMsgs = [...updatedMessages, aiMsg];
       setMessages(finaleMsgs);
 
+      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // Synapse: Dispatch cross-system intelligence event
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-generated', {
+            detail: {
+              analysis: newAnalysis,
+              caseId: activeCaseId,
+              title: title,
+            },
+          }),
+        );
       }
 
       // Auto-save to history
-      const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
       const caseData = {
         id: activeCaseId,
         title,

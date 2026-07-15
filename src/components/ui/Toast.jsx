@@ -114,6 +114,17 @@ export function ToastProvider({ children }) {
   const warning = useCallback((data) => addToast('warning', data), [addToast]);
   const info = useCallback((data) => addToast('info', data), [addToast]);
 
+  // Listen for background toast events from the event bridge
+  React.useEffect(() => {
+    const handleBackgroundToast = (event) => {
+      const { type = 'info', title, message, duration } = event.detail;
+      addToast(type, { title, message, duration });
+    };
+
+    window.addEventListener('justice-ai-toast', handleBackgroundToast);
+    return () => window.removeEventListener('justice-ai-toast', handleBackgroundToast);
+  }, [addToast]);
+
   const value = {
     toasts,
     addToast,
