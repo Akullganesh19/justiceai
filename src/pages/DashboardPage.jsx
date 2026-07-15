@@ -85,6 +85,7 @@ function QuickActionCard({ icon: Icon, title, description, path, accent }) {
   return (
     <button
       onClick={() => navigate(path)}
+      data-prefetch-route={path}
       className="group w-full text-left p-8 rounded-sm bg-void border-2 border-white/5 hover:border-gold/40 transition-all duration-500 flex items-center gap-6 shadow-hard hover:translate-y-[-4px]"
     >
       <div
@@ -118,6 +119,7 @@ function RecentCaseCard({ caseData }) {
   return (
     <button
       onClick={() => navigate('/chat')}
+      data-prefetch-route="/chat"
       className="group w-full text-left p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 shadow-hard"
     >
       <div className="flex items-start justify-between gap-4">
