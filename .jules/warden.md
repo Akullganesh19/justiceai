@@ -1,0 +1,6 @@
+## 2026-07-15 — Structural PII Redaction in Logging
+**Data traced:** PII/Contact details (email, password, phone, dob, ssn, address, ip) and user prompts (messages, prompt) which could contain sensitive legal scenarios.
+**Exposure found:** Actively leaked via `server.js` request logging (`logger.log(level, ... { ip: req.ip })`), route debugging logs (`console.log(..., Object.keys(req.body...))`), and potentially within unhandled error traces containing user payloads.
+**Fix:** Implemented a robust `deepRedact` utility that structurally redacts sensitive keys and applies regex-based masking to emails embedded within strings. Wrapped all native `console` methods and the `winston` JSON format to apply this redaction globally across the application.
+**Coverage confirmed:** Wrote an integration test script that spawned `server.js`, sent a request with sensitive fields (`ip`, `email`) and an email embedded in a string, and verified that both `stdout` and `stderr` showed only redacted values (`[REDACTED]` and `c***@secret.com`).
+**Still exposed elsewhere:** Data retention policies for uploaded documents (which may contain PII) are currently not strictly defined or enforced beyond temporary chunk storage.

@@ -22,10 +22,80 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Winston logger
+// Deep redaction utility for compliance
+const deepRedact = (obj, seen = new WeakSet(), depth = 0) => {
+  if (obj === null || typeof obj !== 'object') {
+    if (typeof obj === 'string') {
+      return obj.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, (match) => {
+        const parts = match.split('@');
+        return `${parts[0][0]}***@${parts[1]}`;
+      });
+    }
+    return obj;
+  }
+
+  if (
+    obj instanceof Date ||
+    obj instanceof RegExp ||
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof Buffer ||
+    obj instanceof String ||
+    obj instanceof Number ||
+    obj instanceof Boolean
+  ) {
+    return obj;
+  }
+
+  if (seen.has(obj)) return '[Circular]';
+  if (depth >= 3) return '[Max Depth Reached]';
+
+  seen.add(obj);
+
+  // Preserve prototype chain for debugging
+  const redacted = Array.isArray(obj) ? [] : Object.create(Object.getPrototypeOf(obj));
+
+  if (obj instanceof Error) {
+    redacted.name = obj.name;
+    redacted.message = deepRedact(obj.message, seen, depth + 1);
+    redacted.stack = deepRedact(obj.stack, seen, depth + 1);
+  }
+
+  for (const key of Reflect.ownKeys(obj)) {
+    if (typeof key === 'string' && /^(email|password|phone|dob|ssn|address|ip|messages|prompt)$/i.test(key)) {
+      redacted[key] = '[REDACTED]';
+    } else {
+      try {
+        redacted[key] = deepRedact(obj[key], seen, depth + 1);
+      } catch (err) {
+        redacted[key] = '[Unreadable Getter]';
+      }
+    }
+  }
+
+  return redacted;
+};
+
+// Wrap native console methods to ensure redaction everywhere
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+  info: console.info,
+  debug: console.debug
+};
+
+for (const method in originalConsole) {
+  console[method] = (...args) => {
+    originalConsole[method](...args.map(arg => deepRedact(arg)));
+  };
+}
+
+// Initialize Winston logger with redaction format
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    winston.format((info) => deepRedact(info))(),
     winston.format.timestamp(),
     winston.format.json()
   ),
