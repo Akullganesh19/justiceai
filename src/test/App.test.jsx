@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { ToastProvider, useToast } from '../components/ui/Toast';
 
 // Simple test component
@@ -9,11 +9,13 @@ function TestComponent() {
 }
 
 function renderWithProviders(component) {
-  return render(
-    <BrowserRouter>
-      <ToastProvider>{component}</ToastProvider>
-    </BrowserRouter>,
-  );
+  const router = createMemoryRouter([
+    {
+      path: '*',
+      element: <ToastProvider>{component}</ToastProvider>,
+    },
+  ]);
+  return render(<RouterProvider router={router} />);
 }
 
 describe('App Tests', () => {
