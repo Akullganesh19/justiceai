@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import OraclePrefetcher from './components/ui/OraclePrefetcher';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -15,29 +16,55 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Route definitions map for prefetching and lazy loading
+export const routeImports = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+  '*': () => import('./pages/NotFoundPage.jsx'),
+};
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const LandingPage = lazy(routeImports['/']);
+const ChatPage = lazy(routeImports['/chat']);
+const AboutPage = lazy(routeImports['/about']);
+const FAQPage = lazy(routeImports['/faq']);
+const SamplesPage = lazy(routeImports['/samples']);
+const DocumentsPage = lazy(routeImports['/documents']);
+const RightsPage = lazy(routeImports['/rights']);
+const EstimatorPage = lazy(routeImports['/estimator']);
+const LawyerFinderPage = lazy(routeImports['/lawyers']);
+const CaseTrackerPage = lazy(routeImports['/tracker']);
+const LegalQuizPage = lazy(routeImports['/quiz']);
+const LimitationCalculatorPage = lazy(routeImports['/limitation']);
+const LegalAidCheckerPage = lazy(routeImports['/legal-aid']);
+const DashboardPage = lazy(routeImports['/dashboard']);
+const GlossaryPage = lazy(routeImports['/glossary']);
+const LawyerOnboardingPage = lazy(routeImports['/lawyer-onboarding']);
+const DisclaimerPage = lazy(routeImports['/disclaimer']);
+const PrivacyPage = lazy(routeImports['/privacy']);
+const AuthPage = lazy(routeImports['/auth']);
+const ShowcasePage = lazy(routeImports['/showcase']);
+const IntelligenceSelectionTerminal = lazy(routeImports['/settings']);
+const NotFoundPage = lazy(routeImports['*']);
 
 // Loading fallback component
 function PageLoader() {
@@ -60,6 +87,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+          <OraclePrefetcher />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
