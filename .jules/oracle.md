@@ -1,0 +1,6 @@
+## 2024-05-18 — Predictive Route Chunk Prefetcher
+**Product understood as:** A React-based legal co-pilot SPA for Indian citizens using lazy-loaded chunks for large route features (like Chat, Case Tracker).
+**Prediction invented:** A background engine (`oracle.js`) that performs intent-based prefetching (listening to `mouseover`/`touchstart` on navigation links) and behavioral session warm-up (prefetching `/chat` or `/tracker` immediately on app load if historical `localStorage` data indicates intent to return there).
+**Data used:** Hover/touch intent signals from the DOM and existing `justice_ai_history` / `justice_ai_case_tracker_v2` keys in `localStorage`.
+**Impact:** Eliminates the ~200-400ms network latency of fetching dynamic route chunks upon navigation click. By the time a user completes their click, the chunk is already cached or actively downloading, resulting in instantaneous perceived navigation.
+**Next opportunity:** Predicting the *first question* a returning user might ask in Chat based on their Case Tracker status or last viewed Rights document, and pre-loading those RAG context documents before they even type.
