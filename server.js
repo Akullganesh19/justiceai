@@ -22,10 +22,108 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Deep Redaction Utility
+const SENSITIVE_KEYS = /^(email|password|ssn|phone|card_number|dob|date_of_birth|address|apikey|token|secret)$/i;
+const EMAIL_PATTERN = /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+
+function maskString(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(EMAIL_PATTERN, (match, local, domain) => {
+    const maskedLocal = local.length > 1 ? local[0] + '***' : '***';
+    return `${maskedLocal}@${domain}`;
+  });
+}
+
+function isPlainObject(obj) {
+  if (Object.prototype.toString.call(obj) !== '[object Object]') return false;
+  const proto = Object.getPrototypeOf(obj);
+  return proto === null || proto === Object.prototype;
+}
+
+function redact(obj, depth = 0) {
+  if (depth >= 10) return '[MAX_DEPTH]';
+  if (obj == null) return obj;
+  if (typeof obj === 'string') return maskString(obj);
+  if (typeof obj !== 'object' && typeof obj !== 'function') return obj;
+
+  let copy;
+  if (obj instanceof Error) {
+    // Preserve Error object correctly for Winston, only redacting its properties
+    copy = Object.create(Object.getPrototypeOf(obj));
+    const keys = Reflect.ownKeys(obj);
+    for (const key of keys) {
+      try {
+        let val = obj[key];
+        if (typeof key === 'string' && SENSITIVE_KEYS.test(key)) {
+          copy[key] = '[REDACTED]';
+        } else {
+          copy[key] = redact(val, depth + 1);
+        }
+      } catch (e) {
+        // Ignore getter errors on errors
+        copy[key] = '[GETTER_ERROR]';
+      }
+    }
+    return copy;
+  } else if (Array.isArray(obj)) {
+    copy = [];
+    for (let i = 0; i < obj.length; i++) {
+      copy[i] = redact(obj[i], depth + 1);
+    }
+    return copy;
+  } else if (isPlainObject(obj)) {
+    copy = Object.create(Object.getPrototypeOf(obj));
+    const keys = Reflect.ownKeys(obj);
+    for (const key of keys) {
+      let val;
+      try {
+        val = obj[key];
+      } catch (e) {
+        copy[key] = '[GETTER_ERROR]';
+        continue;
+      }
+
+      if (typeof key === 'string' && SENSITIVE_KEYS.test(key)) {
+        copy[key] = '[REDACTED]';
+      } else {
+        copy[key] = redact(val, depth + 1);
+      }
+    }
+    return copy;
+  } else {
+    // For native instances (Date, Buffer, Map, Set, Request, Response, etc.), return as-is
+    // Trying to clone them generically strips internal C++ slots and causes TypeErrors
+    return obj;
+  }
+}
+
+// Wrap global console methods structurally
+const originalConsole = {
+  log: console.log,
+  info: console.info,
+  warn: console.warn,
+  error: console.error,
+  debug: console.debug
+};
+
+for (const method of ['log', 'info', 'warn', 'error', 'debug']) {
+  if (originalConsole[method]) {
+    console[method] = (...args) => {
+      const redactedArgs = args.map(arg => redact(arg));
+      originalConsole[method].apply(console, redactedArgs);
+    };
+  }
+}
+
+const redactFormat = winston.format((info) => {
+  return redact(info);
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
