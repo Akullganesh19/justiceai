@@ -1,0 +1,6 @@
+## 2024-05-24 — Add Auto-Retry with Exponential Backoff for External API Calls
+**Failure point found:** External HTTP calls to AI providers (Gemini, DeepSeek, Ollama) and Voice processing services (Bhashini) were unprotected against transient network errors (e.g., 502 Bad Gateway, 429 Too Many Requests, or sudden connection resets). A single failure caused the entire RAG pipeline or voice transcription request to fail abruptly.
+**Why it existed:** The backend historically relied on simple `try/catch` blocks which are only effective for catching errors, not recovering from temporary network instability inherent to remote API communication.
+**Recovery built:** Created an `withRetry` asynchronous wrapper mechanism injecting an automatic 3-attempt exponential backoff (100ms, 200ms, 400ms) for transient HTTP errors before bubbling up the failure. Wrapped all direct `fetch` calls to Gemini, DeepSeek, Ollama, and Bhashini APIs.
+**Blast radius before:** Any transient API instability or rate-limiting caused immediate failure for all users interacting with the AI chat or voice transcription systems, severely degrading the UX in high-latency or unstable connectivity scenarios.
+**Watch for:** Similar unprotected external interactions or database calls across the platform, specifically when invoking other microservices or integrating future third-party APIs.
