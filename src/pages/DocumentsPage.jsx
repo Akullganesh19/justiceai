@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Clock,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -377,15 +379,61 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('justice_ai_saved_documents');
+        return saved ? JSON.parse(saved) : [];
+      } catch (_e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
+    // Scroll to top when form opens
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save to Vault
+    if (typeof window !== 'undefined') {
+      const newDoc = {
+        id: Date.now().toString(),
+        templateId: selectedTemplate.id,
+        title: selectedTemplate.title,
+        content: doc,
+        timestamp: new Date().toISOString(),
+      };
+      const updatedDocs = [newDoc, ...savedDocuments].slice(0, 20); // Keep last 20
+      setSavedDocuments(updatedDocs);
+      localStorage.setItem('justice_ai_saved_documents', JSON.stringify(updatedDocs));
+    }
+  };
+
+  const handleRestore = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setGeneratedDoc(doc.content);
+      setStage('preview');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleDelete = (id) => {
+    const updatedDocs = savedDocuments.filter((d) => d.id !== id);
+    setSavedDocuments(updatedDocs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_saved_documents', JSON.stringify(updatedDocs));
+    }
   };
 
   const handleReset = () => {
@@ -422,7 +470,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +480,65 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-16 border-t border-white/5 pt-12">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-widest text-white italic">
+                      DOCUMENT <span className="text-gold">VAULT</span>
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="bg-void border-2 border-white/5 p-6 rounded-sm shadow-hard hover:border-gold/30 transition-all flex flex-col"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest italic mb-1">
+                              {doc.title}
+                            </h3>
+                            <p className="text-[9px] text-text-tertiary uppercase tracking-widest">
+                              {new Date(doc.timestamp).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="text-text-tertiary hover:text-red-400 transition-colors p-1"
+                            title="Delete Document"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex-1 mb-4">
+                          <p className="text-xs text-text-secondary font-mono line-clamp-3 opacity-60">
+                            {doc.content.substring(0, 150)}...
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleRestore(doc)}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-gold hover:text-midnight text-white text-[10px] uppercase font-extrabold tracking-widest transition-all rounded-sm shadow-inner"
+                        >
+                          <FileSearch className="w-3.5 h-3.5" />
+                          <span>VIEW_DOCUMENT</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
