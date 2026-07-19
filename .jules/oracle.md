@@ -1,0 +1,6 @@
+## 2024-06-25 — Intelligent Route Prefetching
+**Product understood as:** An AI-powered legal co-pilot for Indian citizens. It includes several single-page React views (e.g. Chat, Case Tracker, Lawyer Finder) utilizing lazy-loaded routing chunks for optimal bundle splitting.
+**Prediction invented:** Predictive Intent-based Route Prefetching.
+**Data used:** User mouse hover events (`mouseover`) on navigational anchor (`<a>`) tags, mapping their destination to predefined internal route chunks.
+**Impact:** Before, chunk fetching was strictly deferred until a user clicked a link, incurring standard network delay. Now, background fetching begins the moment the user hovers over the link, dropping the perceived loading time closer to zero without adding runtime rendering overhead.
+**Next opportunity:** Behavior-based auto-prefetching. After common tasks (e.g. finishing an AI Chat query), predictively fetch the user's highest probability next action (e.g. downloading a document or viewing case tracker) directly in the background.
