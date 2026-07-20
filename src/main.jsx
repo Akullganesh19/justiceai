@@ -39,6 +39,42 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
+const routeChunks = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('mouseover', (e) => {
+    const a = e.target.closest('a');
+    if (a && a.href && a.origin === window.location.origin) {
+      const path = new URL(a.href).pathname.split('?')[0].split('#')[0];
+      if (routeChunks[path]) {
+        routeChunks[path]().catch(() => {});
+      }
+    }
+  });
+}
+
 // Loading fallback component
 function PageLoader() {
   return (
