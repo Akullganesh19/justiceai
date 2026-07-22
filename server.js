@@ -55,6 +55,47 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/chat/completions';
 
+// Auto-retry fetch wrapper with exponential backoff
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  const urlForLogs = url.split('?')[0]; // Sanitize URL for logging
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // Don't retry client errors (except 429), success, or redirects
+      if (response.ok || (response.status < 500 && response.status !== 429)) {
+        return response; // Return the response directly
+      }
+
+      // If we reach here, it's a 5xx or 429
+      if (attempt === maxRetries) {
+        return response; // Return the bad response on the last attempt
+      }
+
+      // We will retry, so wait
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`[Genesis] Transient HTTP Error ${response.status} from ${urlForLogs}. Retrying in ${backoffMs}ms (Attempt ${attempt}/${maxRetries}).`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw err; // Never retry user cancellations
+      }
+
+      // Check if it's a network issue / connection error
+      const isNetworkError = err.name === 'TypeError' || (err.message && (err.message.includes('fetch failed') || err.message.includes('network')));
+
+      if (attempt === maxRetries || !isNetworkError) {
+        throw err;
+      }
+
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`[Genesis] Network Error calling ${urlForLogs}: ${err.message}. Retrying in ${backoffMs}ms (Attempt ${attempt}/${maxRetries}).`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
+  }
+}
+
 // Security: Validate required environment variables
 const requiredEnvVars = ['PORT', 'NODE_ENV', 'OLLAMA_BASE_URL', 'EMBEDDING_MODEL', 'CHAT_MODEL'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -318,7 +359,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +395,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +608,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +639,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,7 +871,7 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
@@ -856,7 +897,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
