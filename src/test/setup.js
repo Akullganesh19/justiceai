@@ -1,6 +1,12 @@
 import { vi, expect } from 'vitest';
 import '@testing-library/jest-dom';
 
+// Polyfills for pdfjs-dist used by pdf-parse in node environments
+global.DOMMatrix = global.DOMMatrix || class DOMMatrix {};
+global.ImageData = global.ImageData || class ImageData {};
+global.Path2D = global.Path2D || class Path2D {};
+window.DOMMatrix = global.DOMMatrix;
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
