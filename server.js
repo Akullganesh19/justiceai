@@ -645,8 +645,8 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
     const failedFiles = [];
 
     for (const file of req.files) {
+      const filePath = file.path;
       try {
-        const filePath = file.path;
         const fileName = file.originalname;
         const ext = path.extname(fileName).toLowerCase();
         let text = '';
@@ -682,11 +682,13 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
           chunks: chunksEmbedded
         });
 
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-
       } catch (err) {
         failedFiles.push({ name: file.originalname, error: err.message });
+      } finally {
+        // Clean up uploaded file securely
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       }
     }
 
@@ -994,16 +996,20 @@ app.use((req, res) => {
 // Keep process alive if event loop becomes empty (Express should handle this, but adding a fail-safe)
 setInterval(() => {}, 1000 * 60 * 60); // 1 hour tick
 
-app.listen(PORT, () => {
-  console.log(`\n⚖️  JusticeAI RAG Server running on port ${PORT}`);
-  console.log(`📡 API available at: http://localhost:${PORT}/api`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`\nMake sure Ollama is running:`);
-  console.log(`  ollama serve`);
-  console.log(`\nRequired models:`);
-  console.log(`  ollama pull ${EMBEDDING_MODEL}`);
-  console.log(`  ollama pull ${CHAT_MODEL}\n`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`\n⚖️  JusticeAI RAG Server running on port ${PORT}`);
+    console.log(`📡 API available at: http://localhost:${PORT}/api`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`\nMake sure Ollama is running:`);
+    console.log(`  ollama serve`);
+    console.log(`\nRequired models:`);
+    console.log(`  ollama pull ${EMBEDDING_MODEL}`);
+    console.log(`  ollama pull ${CHAT_MODEL}\n`);
+  });
+}
+
+export default app;
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
