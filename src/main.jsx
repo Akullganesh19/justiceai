@@ -15,29 +15,82 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Predictive route chunk prefetching mapping
+const routeChunks = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+  '*': () => import('./pages/NotFoundPage.jsx'),
+};
+
+// Global prefetch listener
+if (typeof window !== 'undefined') {
+  const prefetchRoute = (e) => {
+    const link = e.target.closest('a');
+    if (!link || !link.href) return;
+
+    try {
+      const url = new URL(link.href);
+      if (url.origin !== window.location.origin) return;
+
+      const path = url.pathname;
+      const matchedKey = Object.keys(routeChunks).find(
+        key => path === key || (key !== '/' && key !== '*' && path.startsWith(key + '/'))
+      );
+      const chunk = routeChunks[matchedKey];
+      if (chunk) {
+        chunk().catch(() => {});
+      }
+    } catch (_err) {
+      // Ignore URL parsing errors
+    }
+  };
+
+  window.addEventListener('mouseover', prefetchRoute, { passive: true });
+  window.addEventListener('touchstart', prefetchRoute, { passive: true });
+}
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const LandingPage = lazy(routeChunks['/']);
+const ChatPage = lazy(routeChunks['/chat']);
+const AboutPage = lazy(routeChunks['/about']);
+const FAQPage = lazy(routeChunks['/faq']);
+const SamplesPage = lazy(routeChunks['/samples']);
+const DocumentsPage = lazy(routeChunks['/documents']);
+const RightsPage = lazy(routeChunks['/rights']);
+const EstimatorPage = lazy(routeChunks['/estimator']);
+const LawyerFinderPage = lazy(routeChunks['/lawyers']);
+const CaseTrackerPage = lazy(routeChunks['/tracker']);
+const LegalQuizPage = lazy(routeChunks['/quiz']);
+const LimitationCalculatorPage = lazy(routeChunks['/limitation']);
+const LegalAidCheckerPage = lazy(routeChunks['/legal-aid']);
+const DashboardPage = lazy(routeChunks['/dashboard']);
+const GlossaryPage = lazy(routeChunks['/glossary']);
+const LawyerOnboardingPage = lazy(routeChunks['/lawyer-onboarding']);
+const DisclaimerPage = lazy(routeChunks['/disclaimer']);
+const PrivacyPage = lazy(routeChunks['/privacy']);
+const AuthPage = lazy(routeChunks['/auth']);
+const ShowcasePage = lazy(routeChunks['/showcase']);
+const IntelligenceSelectionTerminal = lazy(routeChunks['/settings']);
+const NotFoundPage = lazy(routeChunks['*']);
 
 // Loading fallback component
 function PageLoader() {
