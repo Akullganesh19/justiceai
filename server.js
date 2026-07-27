@@ -22,10 +22,86 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// --- PII Redaction ---
+const REDACTED = '[REDACTED]';
+const SENSITIVE_KEYS_REGEX = /^(email|password|ssn|api_?key|phone|card_?number|address|dob|date_of_birth|ip)$/i;
+
+const PII_STRING_REGEXES = [
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, // Email
+  /\b\d{3}-\d{2}-\d{4}\b/g, // SSN
+];
+
+function redactString(str) {
+  let redactedStr = str;
+  for (const regex of PII_STRING_REGEXES) {
+    redactedStr = redactedStr.replace(regex, REDACTED);
+  }
+  return redactedStr;
+}
+
+function redact(obj, depth = 0) {
+  if (depth >= 10) return obj;
+
+  if (typeof obj === 'string') {
+    return redactString(obj);
+  }
+
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (obj instanceof Error) {
+    const newErr = new Error(redactString(obj.message));
+    newErr.name = obj.name;
+    if (obj.stack) newErr.stack = redactString(obj.stack);
+
+    for (const key of Reflect.ownKeys(obj)) {
+      if (key !== 'message' && key !== 'stack' && key !== 'name') {
+        try {
+          if (typeof key === 'string' && SENSITIVE_KEYS_REGEX.test(key)) {
+             newErr[key] = REDACTED;
+          } else {
+             newErr[key] = redact(obj[key], depth + 1);
+          }
+        } catch (_err) {}
+      }
+    }
+    return newErr;
+  }
+
+  const isPlainObject = Object.prototype.toString.call(obj) === '[object Object]';
+  const isArray = Array.isArray(obj);
+
+  if (!isPlainObject && !isArray) {
+    return obj;
+  }
+
+  const result = isArray ? [] : {};
+
+  for (const key of Reflect.ownKeys(obj)) {
+    try {
+      if (typeof key === 'string' && SENSITIVE_KEYS_REGEX.test(key)) {
+        result[key] = REDACTED;
+      } else {
+        result[key] = redact(obj[key], depth + 1);
+      }
+    } catch (_err) {
+      result[key] = '[REDACTION_ERROR]';
+    }
+  }
+
+  return result;
+}
+
+const redactFormat = winston.format((info) => {
+  return redact(info);
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
@@ -728,7 +804,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  logger.info(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
   try {
     const { 
       messages, 
@@ -821,7 +897,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    logger.info(`Routing query to Ollama`, { query: latestUserMessage.substring(0, 50) });
     
     try {
       if (stream) {
@@ -940,7 +1016,7 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    logger.error("Chat Error:", err);
     res.status(500).json({ 
       error: err.message,
       details: process.env.NODE_ENV === 'development' ? err.stack : undefined
