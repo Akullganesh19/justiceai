@@ -124,6 +124,16 @@ export function ToastProvider({ children }) {
     info,
   };
 
+  React.useEffect(() => {
+    const handleGlobalToast = (e) => {
+      const { type = 'info', title, message, duration } = e.detail;
+      addToast(type, { title, message, duration });
+    };
+
+    window.addEventListener('justice-ai-toast', handleGlobalToast);
+    return () => window.removeEventListener('justice-ai-toast', handleGlobalToast);
+  }, [addToast]);
+
   return (
     <ToastContext.Provider value={value}>
       {children}
