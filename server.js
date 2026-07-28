@@ -22,10 +22,85 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Deep Object & String Redaction Utility
+const REDACTED = '[REDACTED]';
+const SENSITIVE_KEYS = /^(email|password|apiKeys?|token|secret|ssn|phone|card_number|authorization)$/i;
+const SENSITIVE_PATTERNS = [
+  { regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: '[REDACTED EMAIL]' },
+  { regex: /\b\d{3}-\d{2}-\d{4}\b/g, replacement: '[REDACTED SSN]' },
+  { regex: /\b(?:\d{4}[-\s]?){3}\d{4}\b/g, replacement: '[REDACTED CARD]' },
+  { regex: /\b\d{10}\b/g, replacement: '[REDACTED PHONE]' }
+];
+
+function redactString(str) {
+  let redacted = str;
+  for (const { regex, replacement } of SENSITIVE_PATTERNS) {
+    redacted = redacted.replace(regex, replacement);
+  }
+  return redacted;
+}
+
+function redact(obj, depth = 0) {
+  if (depth >= 10) return obj;
+  if (typeof obj === 'string') return redactString(obj);
+
+  if (obj instanceof Error) {
+    const redactedError = new Error(redactString(obj.message));
+    redactedError.stack = redactString(obj.stack || '');
+    redactedError.name = obj.name;
+    Reflect.ownKeys(obj).forEach(key => {
+      if (key !== 'message' && key !== 'stack' && key !== 'name') {
+        try {
+          redactedError[key] = redact(obj[key], depth + 1);
+        } catch (_err) {
+          redactedError[key] = '[REDACTION_ERROR]';
+        }
+      }
+    });
+    return redactedError;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => redact(item, depth + 1));
+  }
+
+  if (Object.prototype.toString.call(obj) === '[object Object]') {
+    const redactedObj = {};
+    Reflect.ownKeys(obj).forEach(key => {
+      if (typeof key === 'string' && SENSITIVE_KEYS.test(key)) {
+        redactedObj[key] = REDACTED;
+      } else {
+        try {
+          redactedObj[key] = redact(obj[key], depth + 1);
+        } catch (_err) {
+          redactedObj[key] = '[REDACTION_ERROR]';
+        }
+      }
+    });
+    return redactedObj;
+  }
+
+  return obj;
+}
+
+// Wrap global console methods
+['log', 'info', 'warn', 'error'].forEach(method => {
+  const original = console[method];
+  console[method] = (...args) => {
+    const redactedArgs = args.map(arg => redact(arg));
+    original.apply(console, redactedArgs);
+  };
+});
+
+const redactFormat = winston.format((info, opts) => {
+  return redact(info);
+});
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
