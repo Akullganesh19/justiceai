@@ -821,7 +821,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    console.log(`Routing query to Ollama: [REDACTED] (length: ${latestUserMessage?.length || 0})`);
     
     try {
       if (stream) {
