@@ -1,7 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LoadingSpinner from './components/ui/LoadingSpinner';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -15,29 +14,86 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
-// Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const routeChunks = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+  '*': () => import('./pages/NotFoundPage.jsx')
+};
+
+// Prefetching logic
+const prefetchedPaths = new Set();
+const prefetchRoute = (urlPathname) => {
+  for (const [key, importFn] of Object.entries(routeChunks)) {
+    if (urlPathname === key || (key !== '/' && key !== '*' && urlPathname.startsWith(key + '/'))) {
+      if (!prefetchedPaths.has(key)) {
+        prefetchedPaths.add(key);
+        importFn().catch(() => {});
+      }
+      break;
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  const handleInteraction = (e) => {
+    const target = e.target.closest('a');
+    if (target && target.href) {
+      try {
+        const url = new URL(target.href);
+        if (url.origin === window.location.origin) {
+          prefetchRoute(url.pathname);
+        }
+      } catch (_err) {
+        // invalid URL, ignore
+      }
+    }
+  };
+  document.addEventListener('mouseover', handleInteraction, { passive: true });
+  document.addEventListener('touchstart', handleInteraction, { passive: true });
+}
+
+// Lazy load components
+const LazyLandingPage = lazy(routeChunks['/']);
+const LazyDashboardPage = lazy(routeChunks['/dashboard']);
+const LazyChatPage = lazy(routeChunks['/chat']);
+const LazyDocumentsPage = lazy(routeChunks['/documents']);
+const LazyRightsPage = lazy(routeChunks['/rights']);
+const LazyEstimatorPage = lazy(routeChunks['/estimator']);
+const LazyLawyerFinderPage = lazy(routeChunks['/lawyers']);
+const LazyCaseTrackerPage = lazy(routeChunks['/tracker']);
+const LazyLegalQuizPage = lazy(routeChunks['/quiz']);
+const LazyLimitationCalculatorPage = lazy(routeChunks['/limitation']);
+const LazyLegalAidCheckerPage = lazy(routeChunks['/legal-aid']);
+const LazyGlossaryPage = lazy(routeChunks['/glossary']);
+const LazyAboutPage = lazy(routeChunks['/about']);
+const LazyFAQPage = lazy(routeChunks['/faq']);
+const LazySamplesPage = lazy(routeChunks['/samples']);
+const LazyLawyerOnboardingPage = lazy(routeChunks['/lawyer-onboarding']);
+const LazyDisclaimerPage = lazy(routeChunks['/disclaimer']);
+const LazyPrivacyPage = lazy(routeChunks['/privacy']);
+const LazyAuthPage = lazy(routeChunks['/auth']);
+const LazyShowcasePage = lazy(routeChunks['/showcase']);
+const LazySettingsPage = lazy(routeChunks['/settings']);
+const LazyNotFoundPage = lazy(routeChunks['*']);
 
 // Loading fallback component
 function PageLoader() {
@@ -51,43 +107,57 @@ function PageLoader() {
   );
 }
 
+const AppLayout = () => {
+  return (
+    <>
+      <div className="grain-overlay" aria-hidden="true" />
+      <ScrollToTop />
+      <CommandPalette />
+      <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </>
+  );
+};
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AppLayout />,
+    children: [
+      { index: true, element: <LazyLandingPage /> },
+      { path: 'dashboard', element: <LazyDashboardPage /> },
+      { path: 'chat', element: <LazyChatPage /> },
+      { path: 'documents', element: <LazyDocumentsPage /> },
+      { path: 'rights', element: <LazyRightsPage /> },
+      { path: 'estimator', element: <LazyEstimatorPage /> },
+      { path: 'lawyers', element: <LazyLawyerFinderPage /> },
+      { path: 'tracker', element: <LazyCaseTrackerPage /> },
+      { path: 'quiz', element: <LazyLegalQuizPage /> },
+      { path: 'limitation', element: <LazyLimitationCalculatorPage /> },
+      { path: 'legal-aid', element: <LazyLegalAidCheckerPage /> },
+      { path: 'glossary', element: <LazyGlossaryPage /> },
+      { path: 'about', element: <LazyAboutPage /> },
+      { path: 'faq', element: <LazyFAQPage /> },
+      { path: 'samples', element: <LazySamplesPage /> },
+      { path: 'lawyer-onboarding', element: <LazyLawyerOnboardingPage /> },
+      { path: 'disclaimer', element: <LazyDisclaimerPage /> },
+      { path: 'privacy', element: <LazyPrivacyPage /> },
+      { path: 'auth', element: <LazyAuthPage /> },
+      { path: 'showcase', element: <LazyShowcasePage /> },
+      { path: 'settings', element: <LazySettingsPage /> },
+      { path: '*', element: <LazyNotFoundPage /> }
+    ]
+  }
+]);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/rights" element={<RightsPage />} />
-              <Route path="/estimator" element={<EstimatorPage />} />
-              <Route path="/lawyers" element={<LawyerFinderPage />} />
-              <Route path="/tracker" element={<CaseTrackerPage />} />
-              <Route path="/quiz" element={<LegalQuizPage />} />
-              <Route path="/limitation" element={<LimitationCalculatorPage />} />
-              <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
-              <Route path="/glossary" element={<GlossaryPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/samples" element={<SamplesPage />} />
-              <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
-              <Route path="/disclaimer" element={<DisclaimerPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+        <RouterProvider router={router} />
       </ToastProvider>
     </ErrorBoundary>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
