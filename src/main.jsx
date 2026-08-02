@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
@@ -15,29 +15,132 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Route chunks mapped to dynamic imports for predictive prefetching
+const routeChunks = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+};
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
+const LandingPage = lazy(routeChunks['/']);
+const DashboardPage = lazy(routeChunks['/dashboard']);
+const ChatPage = lazy(routeChunks['/chat']);
+const DocumentsPage = lazy(routeChunks['/documents']);
+const RightsPage = lazy(routeChunks['/rights']);
+const EstimatorPage = lazy(routeChunks['/estimator']);
+const LawyerFinderPage = lazy(routeChunks['/lawyers']);
+const CaseTrackerPage = lazy(routeChunks['/tracker']);
+const LegalQuizPage = lazy(routeChunks['/quiz']);
+const LimitationCalculatorPage = lazy(routeChunks['/limitation']);
+const LegalAidCheckerPage = lazy(routeChunks['/legal-aid']);
+const GlossaryPage = lazy(routeChunks['/glossary']);
+const AboutPage = lazy(routeChunks['/about']);
+const FAQPage = lazy(routeChunks['/faq']);
+const SamplesPage = lazy(routeChunks['/samples']);
+const LawyerOnboardingPage = lazy(routeChunks['/lawyer-onboarding']);
+const DisclaimerPage = lazy(routeChunks['/disclaimer']);
+const PrivacyPage = lazy(routeChunks['/privacy']);
+const AuthPage = lazy(routeChunks['/auth']);
+const ShowcasePage = lazy(routeChunks['/showcase']);
+const IntelligenceSelectionTerminal = lazy(routeChunks['/settings']);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+
+const RootLayout = () => (
+  <>
+    <div className="grain-overlay" aria-hidden="true" />
+    <ScrollToTop />
+    <CommandPalette />
+    <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+    <Suspense fallback={<PageLoader />}>
+      <Outlet />
+    </Suspense>
+  </>
+);
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      { path: '/', element: <LandingPage /> },
+      { path: '/dashboard', element: <DashboardPage /> },
+      { path: '/chat', element: <ChatPage /> },
+      { path: '/documents', element: <DocumentsPage /> },
+      { path: '/rights', element: <RightsPage /> },
+      { path: '/estimator', element: <EstimatorPage /> },
+      { path: '/lawyers', element: <LawyerFinderPage /> },
+      { path: '/tracker', element: <CaseTrackerPage /> },
+      { path: '/quiz', element: <LegalQuizPage /> },
+      { path: '/limitation', element: <LimitationCalculatorPage /> },
+      { path: '/legal-aid', element: <LegalAidCheckerPage /> },
+      { path: '/glossary', element: <GlossaryPage /> },
+      { path: '/about', element: <AboutPage /> },
+      { path: '/faq', element: <FAQPage /> },
+      { path: '/samples', element: <SamplesPage /> },
+      { path: '/lawyer-onboarding', element: <LawyerOnboardingPage /> },
+      { path: '/disclaimer', element: <DisclaimerPage /> },
+      { path: '/privacy', element: <PrivacyPage /> },
+      { path: '/auth', element: <AuthPage /> },
+      { path: '/showcase', element: <ShowcasePage /> },
+      { path: '/settings', element: <IntelligenceSelectionTerminal /> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+]);
+
+// Predictive Route Prefetching Engine
+if (typeof window !== 'undefined') {
+  window.addEventListener('mouseover', (e) => {
+    const anchor = e.target.closest('a[href]');
+    if (anchor && anchor.href) {
+      try {
+        const url = new URL(anchor.href, window.location.origin);
+        // Ensure the link is internal
+        if (url.origin === window.location.origin) {
+          const path = url.pathname;
+
+          // Try an exact match first, then a directory prefix match
+          let prefetchFn = routeChunks[path];
+          if (!prefetchFn) {
+            for (const key of Object.keys(routeChunks)) {
+              if (key !== '/' && path.startsWith(key + '/')) {
+                prefetchFn = routeChunks[key];
+                break;
+              }
+            }
+          }
+
+          if (prefetchFn) {
+            prefetchFn().catch((_err) => {
+              // Swallow chunk loading errors silently to prevent interrupting UX
+            });
+          }
+        }
+      } catch (_err) {
+        // Ignore URL parsing errors
+      }
+    }
+  }, { passive: true });
+}
 
 // Loading fallback component
 function PageLoader() {
@@ -55,38 +158,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/rights" element={<RightsPage />} />
-              <Route path="/estimator" element={<EstimatorPage />} />
-              <Route path="/lawyers" element={<LawyerFinderPage />} />
-              <Route path="/tracker" element={<CaseTrackerPage />} />
-              <Route path="/quiz" element={<LegalQuizPage />} />
-              <Route path="/limitation" element={<LimitationCalculatorPage />} />
-              <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
-              <Route path="/glossary" element={<GlossaryPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/samples" element={<SamplesPage />} />
-              <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
-              <Route path="/disclaimer" element={<DisclaimerPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+        <RouterProvider router={router} />
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
