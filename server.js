@@ -22,6 +22,40 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Helper: Exponential backoff delay
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper: Fetch with exponential backoff for transient errors
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // Retry on specific transient HTTP status codes
+      if (!response.ok && [429, 500, 502, 503, 504].includes(response.status)) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return response; // Successful response (or non-transient error)
+    } catch (err) {
+      // Never retry if explicitly aborted
+      if (err.name === 'AbortError') throw err;
+
+      // Check if the error is retryable (HTTP transient or network failure)
+      const isRetryable = err.message.includes('fetch failed') || err.message.includes('HTTP 5') || err.message.includes('HTTP 429');
+
+      if (!isRetryable || attempt === maxAttempts) {
+        throw err;
+      }
+
+      // Exponential backoff: 100ms, 200ms, 400ms...
+      const delay = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`Genesis: Retrying external API call to ${url.split('?')[0]} (attempt ${attempt + 1}/${maxAttempts}) after ${delay}ms delay... Error: ${err.message}`);
+      await sleep(delay);
+    }
+  }
+}
+
 // Initialize Winston logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -318,7 +352,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +388,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +601,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +632,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -856,7 +890,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
