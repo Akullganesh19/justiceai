@@ -36,6 +36,56 @@ const logger = winston.createLogger({
   ]
 });
 
+
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  const isRetryable = (error, response) => {
+    if (error) {
+      if (error.name === 'AbortError') return false;
+      if (error.message && (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED'))) return true;
+      return false; // other errors
+    }
+    if (response && !response.ok) {
+      const status = response.status;
+      return status === 429 || status >= 500;
+    }
+    return false;
+  };
+
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  let attempt = 1;
+  while (attempt <= maxRetries) {
+    let response = null;
+    let error = null;
+    try {
+      response = await fetch(url, options);
+      if (!isRetryable(null, response)) {
+        if (!response.ok) {
+           // Will be thrown by the caller
+        }
+        return response;
+      }
+    } catch (e) {
+      error = e;
+      if (!isRetryable(e, null)) {
+        throw e;
+      }
+    }
+
+    if (attempt === maxRetries) {
+      if (error) throw error;
+      return response;
+    }
+
+    const delay = 200 * Math.pow(2, attempt - 1);
+    const sanitizedUrl = (typeof url === 'string' ? url : url.url || '').split('?')[0];
+    logger.warn(`Transient error on ${sanitizedUrl}, retrying in ${delay}ms (Attempt ${attempt}/${maxRetries})`);
+
+    await sleep(delay);
+    attempt++;
+  }
+}
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
@@ -318,7 +368,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +404,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +617,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +648,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
