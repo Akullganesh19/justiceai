@@ -19,6 +19,7 @@ import {
   UserPlus,
   ArrowRight,
   AlertCircle,
+  Bookmark,
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -212,7 +213,7 @@ const LAWYERS_DATA = [
   },
 ];
 
-function LawyerCard({ lawyer, index }) {
+function LawyerCard({ lawyer, index, isSaved, onToggleSave }) {
   const [expanded, setExpanded] = useState(false);
   const specLabel =
     SPECIALIZATIONS.find((s) => s.id === lawyer.specialization)?.label || lawyer.specialization;
@@ -234,7 +235,7 @@ function LawyerCard({ lawyer, index }) {
             <div>
               <h3 className="text-xl font-display font-bold text-white tracking-tight group-hover:text-gold transition-colors">{lawyer.name}</h3>
               <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1 opacity-60">
-                {lawyer.court} // BCI ID: {lawyer.regNo}
+                {lawyer.court} {'//'} BCI ID: {lawyer.regNo}
               </p>
               {lawyer.verified && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/10 border-2 border-gold/20 rounded-sm mt-3 italic">
@@ -245,6 +246,11 @@ function LawyerCard({ lawyer, index }) {
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-void rounded-sm border-2 border-white/10 shadow-hard">
+            <button onClick={(e) => { e.stopPropagation(); onToggleSave(lawyer.id); }} className="hover:scale-110 transition-transform p-1 -m-1" title={isSaved ? "Remove from Saved" : "Save to Shortlist"}>
+              <Bookmark className={`w-4 h-4 transition-colors ${isSaved ? 'text-gold fill-gold' : 'text-white/20 hover:text-gold'}`} />
+            </button>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-void rounded-sm border-2 border-white/10 shadow-hard">
             <Star className="w-4 h-4 text-gold fill-gold" />
@@ -277,7 +283,7 @@ function LawyerCard({ lawyer, index }) {
               <Info className="w-4 h-4 text-white/10 hover:text-gold cursor-help transition-colors" />
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-void border-2 border-gold/20 rounded-sm shadow-hard opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center italic">
                 <p className="text-[10px] text-text-tertiary uppercase tracking-wider leading-relaxed">
-                  // Professional fee estimates may vary based on case complexity and jurisdiction.
+                  {'//'} Professional fee estimates may vary based on case complexity and jurisdiction.
                 </p>
               </div>
             </div>
@@ -347,9 +353,32 @@ export default function LawyerFinderPage() {
   const [selectedSpec, setSelectedSpec] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [savedLawyers, setSavedLawyers] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('justice_ai_saved_lawyers');
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+    return [];
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_saved_lawyers', JSON.stringify(savedLawyers));
+    }
+  }, [savedLawyers]);
+
+  const handleToggleSave = (lawyerId) => {
+    setSavedLawyers(prev =>
+      prev.includes(lawyerId) ? prev.filter(id => id !== lawyerId) : [...prev, lawyerId]
+    );
+  };
 
   const filteredLawyers = useMemo(() => {
     let results = LAWYERS_DATA;
+    if (showSavedOnly) results = results.filter((l) => savedLawyers.includes(l.id));
     if (selectedSpec !== 'all') results = results.filter((l) => l.specialization === selectedSpec);
     if (selectedCity !== 'all') results = results.filter((l) => l.city === selectedCity);
     if (searchQuery.trim()) {
@@ -364,7 +393,7 @@ export default function LawyerFinderPage() {
     else if (sortBy === 'experience') results.sort((a, b) => b.experience - a.experience);
     else if (sortBy === 'cases') results.sort((a, b) => b.cases - a.cases);
     return results;
-  }, [searchQuery, selectedSpec, selectedCity, sortBy]);
+  }, [searchQuery, selectedSpec, selectedCity, sortBy, showSavedOnly, savedLawyers]);
 
   return (
     <div className="min-h-screen bg-void pb-16 font-mono text-slate-200">
@@ -408,7 +437,7 @@ export default function LawyerFinderPage() {
 
         <div className="bg-void border-2 border-gold/20 rounded-sm px-6 py-4 flex items-center justify-center text-center -mt-4 shadow-inner italic">
           <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-[0.3em] font-extrabold">
-            <span className="text-gold mr-3 underline decoration-dotted">// INSTITUTIONAL_NOTICE:</span>
+            <span className="text-gold mr-3 underline decoration-dotted">{"//"} INSTITUTIONAL_NOTICE:</span>
             ADVOCATE PROFILES ARE FOR INFORMATIONAL PURPOSES. SYSTEM DOES NOT OFFICIALLY ENDORSE SPECIFIC COUNSEL.
           </p>
         </div>
@@ -462,6 +491,13 @@ export default function LawyerFinderPage() {
             </p>
           </div>
           <div className="flex items-center gap-6">
+            <button
+              onClick={() => setShowSavedOnly(!showSavedOnly)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border-2 transition-all shadow-hard text-[9px] font-extrabold uppercase tracking-widest italic ${showSavedOnly ? 'bg-gold/10 border-gold text-gold' : 'bg-void border-white/5 text-text-tertiary hover:border-gold/30 hover:text-white'}`}
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${showSavedOnly ? 'fill-gold' : ''}`} />
+              <span>{showSavedOnly ? 'Showing Saved' : 'Show Saved'}</span>
+            </button>
             <Filter className="w-5 h-5 text-text-tertiary" />
             <select
               value={sortBy}
@@ -477,7 +513,7 @@ export default function LawyerFinderPage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           {filteredLawyers.map((lawyer, i) => (
-            <LawyerCard key={lawyer.id} lawyer={lawyer} index={i} />
+            <LawyerCard key={lawyer.id} lawyer={lawyer} index={i} isSaved={savedLawyers.includes(lawyer.id)} onToggleSave={handleToggleSave} />
           ))}
         </div>
 
@@ -487,7 +523,7 @@ export default function LawyerFinderPage() {
             <div className="space-y-4">
               <p className="text-3xl font-display font-bold text-white uppercase tracking-tight leading-none">No Lawyers Found</p>
               <p className="text-[10px] text-text-tertiary uppercase tracking-widest opacity-40 max-w-lg mx-auto">
-                 We couldn't find any lawyers matching your current search parameters.
+                 {showSavedOnly ? 'You haven\'t saved any lawyers to your shortlist yet.' : 'We couldn\'t find any lawyers matching your current search parameters.'}
               </p>
             </div>
             <button
