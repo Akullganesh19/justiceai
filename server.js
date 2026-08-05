@@ -268,6 +268,44 @@ function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
 }
 
 // Native Cosine Similarity
+
+// Auto-Retry with Exponential Backoff for External API Calls
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      // Ensure we clone the body if we are going to retry, otherwise fetch consumes it.
+      // fetch options don't easily allow body cloning for strings, but we stringify before passing.
+      const response = await fetch(url, options);
+
+      // If it's a 429 (Rate Limit) or 5xx (Server Error), we retry
+      if (!response.ok && (response.status === 429 || response.status >= 500)) {
+        if (attempt === maxAttempts) {
+          console.error(`[Genesis Recovery Failed] Request to ${url.split('?')[0]} failed after ${maxAttempts} attempts.`);
+          return response; // Return final failed response to let caller handle it
+        }
+
+        const backoffMs = 200 * Math.pow(2, attempt - 1);
+        console.warn(`[Genesis Recovery] Request to ${url.split('?')[0]} failed with ${response.status} (Attempt ${attempt}/${maxAttempts}). Retrying in ${backoffMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        continue;
+      }
+
+      return response;
+    } catch (err) {
+      // Network errors
+      if (attempt === maxAttempts) {
+        console.error(`[Genesis Recovery Failed] Request to ${url.split('?')[0]} failed after ${maxAttempts} attempts.`);
+        throw err;
+      }
+
+      const backoffMs = 200 * Math.pow(2, attempt - 1);
+      console.warn(`[Genesis Recovery] Request to ${url.split('?')[0]} failed (Attempt ${attempt}/${maxAttempts}): ${err.message}. Retrying in ${backoffMs}ms...`);
+
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
+  }
+}
+
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
   let normA = 0;
@@ -318,7 +356,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +392,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +605,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +636,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
