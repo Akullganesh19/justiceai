@@ -36,6 +36,73 @@ const logger = winston.createLogger({
   ]
 });
 
+// Self-Healing: Auto-retry with exponential backoff for fetch calls (idempotent only unless safe)
+const originalFetch = global.fetch;
+global.fetch = async function fetchWithRetry(input, init) {
+  const maxAttempts = 3;
+  const baseDelay = 100;
+
+  // Extract method to check idempotency
+  let method = 'GET';
+  if (init && init.method) {
+    method = init.method.toUpperCase();
+  } else if (input instanceof Request) {
+    method = input.method.toUpperCase();
+  } else if (typeof input === 'object' && input.method) {
+    method = input.method.toUpperCase();
+  }
+
+  // Determine if it is safe to retry
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method);
+  // Allow POST if we are just querying LLM endpoints that don't change persistent state
+  let urlStr = '';
+  if (typeof input === 'string') {
+    urlStr = input;
+  } else if (input instanceof URL) {
+    urlStr = input.href;
+  } else if (input instanceof Request) {
+    urlStr = input.url;
+  } else if (typeof input === 'object' && input.url) {
+    urlStr = input.url;
+  }
+  const cleanUrl = urlStr.split('?')[0];
+
+  // For LLM APIs in this specific app, POSTs to completions/chat are functionally idempotent for retry purposes
+  const isSafeLLMQuery = urlStr.includes('/chat') || urlStr.includes('completions') || urlStr.includes('compute') || urlStr.includes('config');
+  const safeToRetry = isIdempotent || isSafeLLMQuery;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let request;
+    if (input instanceof Request) {
+      // Re-apply init if provided
+      request = new Request(input.clone(), init);
+    } else {
+      request = new Request(input, init);
+    }
+
+    try {
+      const response = await originalFetch(request);
+
+      if (!response.ok && (response.status >= 500 || response.status === 429)) {
+        if (!safeToRetry || attempt === maxAttempts) {
+          return response;
+        }
+        logger.warn(`[Genesis] Transient HTTP error ${response.status} from ${cleanUrl}. Retrying attempt ${attempt + 1}...`);
+        await new Promise(res => setTimeout(res, baseDelay * Math.pow(2, attempt - 1)));
+        continue;
+      }
+
+      return response;
+    } catch (err) {
+      if (!safeToRetry || attempt === maxAttempts) {
+        throw err;
+      }
+      logger.warn(`[Genesis] Network error ${err.message} connecting to ${cleanUrl}. Retrying attempt ${attempt + 1}...`);
+      await new Promise(res => setTimeout(res, baseDelay * Math.pow(2, attempt - 1)));
+    }
+  }
+};
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
