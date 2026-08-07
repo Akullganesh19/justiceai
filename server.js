@@ -281,6 +281,63 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  const method = (options.method || 'GET').toUpperCase();
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method);
+  const shouldRetry = isIdempotent || options.forceRetry === true;
+
+  // Clone request if it's a Request object (though usually it's string URL and options object)
+  let requestObj = null;
+  if (url instanceof Request) {
+    requestObj = url;
+  }
+
+  if (!shouldRetry) {
+    return fetch(url, options);
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // If it's a Request object, we must clone it before each fetch
+    const currentInput = requestObj ? requestObj.clone() : url;
+
+    // Explicitly stripping the body on subsequent attempts will corrupt POST/PUT requests
+    // So we don't do it. We pass options as is (or clone them if we were modifying).
+
+    // Inject abort signal dynamically per attempt if timeout is specified
+    const currentOptions = { ...options };
+    if (currentOptions.timeout) {
+      currentOptions.signal = AbortSignal.timeout(currentOptions.timeout);
+      delete currentOptions.timeout;
+    }
+
+    try {
+      const response = await fetch(currentInput, currentOptions);
+      if (!response.ok) {
+        const isRetryableStatus = response.status >= 500 || response.status === 429;
+        if (isRetryableStatus && attempt < maxAttempts) {
+          // manually throw so it can be caught and retried
+          throw Object.assign(new Error(`Retryable HTTP status: ${response.status}`), { response });
+        }
+        return response; // Final attempt or non-retryable
+      }
+      return response;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        // Return the final failed Response object rather than throwing a generic error
+        if (error.response) return error.response;
+        throw error; // If it's a network error (like ENOTFOUND), throw it.
+      }
+      // sanitize URL for logging
+      const urlStr = typeof currentInput === 'string' ? currentInput : currentInput.url;
+      const cleanUrl = urlStr.split('?')[0];
+      console.warn(`Attempt ${attempt} failed for ${cleanUrl}: ${error.message}. Retrying...`);
+      await sleep(100 * Math.pow(2, attempt - 1));
+    }
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,10 +375,11 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    forceRetry: true
   });
 
   if (!response.ok) {
@@ -354,13 +412,14 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    forceRetry: true
   });
 
   if (!response.ok) {
@@ -567,14 +626,15 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'ulcaApiKey': BHASHINI_API_KEY,
         'userID': BHASHINI_USER_ID
       },
-      body: JSON.stringify(configPayload)
+      body: JSON.stringify(configPayload),
+      forceRetry: true
     });
 
     if (!configResponse.ok) {
@@ -598,14 +658,15 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
         'Accept': '*/*'
       },
-      body: JSON.stringify(computePayload)
+      body: JSON.stringify(computePayload),
+      forceRetry: true
     });
 
     if (!computeResponse.ok) {
@@ -830,11 +891,12 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000, // custom option handled by fetchWithRetry
+          forceRetry: true
         });
 
         if (!response.ok) {
@@ -856,11 +918,12 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000, // custom option handled by fetchWithRetry
+          forceRetry: true
         });
 
         if (!ollamaResponse.ok) {
