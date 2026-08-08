@@ -15,6 +15,7 @@ import winston from 'winston';
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
 import dotenv from 'dotenv';
+import { fetchWithRetry } from './src/lib/fetchWithRetry.js';
 
 // Load environment variables
 dotenv.config();
@@ -318,11 +319,11 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  });
+  }, { retryNonIdempotent: true, timeout: 60000 });
 
   if (!response.ok) {
     const errText = await response.text();
@@ -354,14 +355,14 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify(payload)
-  });
+  }, { retryNonIdempotent: true, timeout: 60000 });
 
   if (!response.ok) {
     const errText = await response.text();
@@ -567,7 +568,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -575,7 +576,7 @@ app.post('/api/voice/process', async (req, res) => {
         'userID': BHASHINI_USER_ID
       },
       body: JSON.stringify(configPayload)
-    });
+    }, { retryNonIdempotent: true, timeout: 30000 });
 
     if (!configResponse.ok) {
       const errorText = await configResponse.text();
@@ -598,7 +599,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -606,7 +607,7 @@ app.post('/api/voice/process', async (req, res) => {
         'Accept': '*/*'
       },
       body: JSON.stringify(computePayload)
-    });
+    }, { retryNonIdempotent: true, timeout: 60000 });
 
     if (!computeResponse.ok) {
       const errorText = await computeResponse.text();
@@ -830,12 +831,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
-        });
+          body: JSON.stringify(requestData)
+        }, { retryNonIdempotent: true, timeout: 10000 });
 
         if (!response.ok) {
           throw new Error(`Ollama Error: ${response.statusText}`);
@@ -856,12 +856,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
-        });
+          body: JSON.stringify(requestData)
+        }, { retryNonIdempotent: true, timeout: 15000 });
 
         if (!ollamaResponse.ok) {
           throw new Error(`Ollama Error: ${await ollamaResponse.text()}`);
