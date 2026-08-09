@@ -19,6 +19,10 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Apply Genesis Auto-Retry globally
+import { setupFetchInterceptor } from './src/lib/genesis/fetchInterceptor.js';
+setupFetchInterceptor();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
