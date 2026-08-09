@@ -8,6 +8,10 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+import { setupFetchInterceptor } from './lib/genesis/fetchInterceptor.js';
+
+// Apply Genesis Auto-Retry globally
+setupFetchInterceptor();
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
