@@ -1,3 +1,4 @@
+/* global process */
 import React from 'react';
 import { AlertTriangle, RefreshCw, Bug, FileText } from 'lucide-react';
 
@@ -18,6 +19,21 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Synapse: Error ↔ User (Toast Notification)
+    // Create an emergent intelligence link by translating system crashes into user-aware feedback
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('justice-ai-toast', {
+          detail: {
+            type: 'error',
+            title: 'System Destabilized',
+            message: 'A critical execution fault was recorded. Engineering telemetry has been enriched.',
+            duration: 8000
+          }
+        })
+      );
+    }
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
