@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Clock,
+  Trash2,
+  FileText
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -372,10 +375,47 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+
+function SavedDocumentCard({ doc, onSelect, onDelete }) {
+  const date = new Date(doc.timestamp).toLocaleDateString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  });
+  return (
+    <div className="bg-void border-2 border-white/5 hover:border-gold/30 p-5 rounded-sm transition-all group flex items-center justify-between shadow-hard">
+      <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => onSelect(doc)}>
+        <div className="w-10 h-10 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+          <FileText className="w-5 h-5 text-text-tertiary group-hover:text-gold transition-colors" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest truncate max-w-[200px]">{doc.title}</h3>
+          <div className="flex items-center gap-2 mt-1 opacity-60">
+            <Clock className="w-3 h-3 text-gold" />
+            <span className="text-[10px] text-text-tertiary uppercase tracking-widest">{date}</span>
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+        className="p-2 hover:bg-red-500/10 rounded-sm group/btn transition-colors border-2 border-transparent hover:border-red-500/20"
+      >
+        <Trash2 className="w-4 h-4 text-text-tertiary group-hover/btn:text-red-400 transition-colors" />
+      </button>
+    </div>
+  );
+}
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +426,31 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      formData,
+      content: doc,
+      timestamp: new Date().toISOString()
+    };
+    const newHistory = [newDoc, ...savedDocuments];
+    setSavedDocuments(newHistory);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(newHistory));
+  };
+
+  const handleLoadSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const newHistory = savedDocuments.filter(d => d.id !== id);
+    setSavedDocuments(newHistory);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(newHistory));
   };
 
   const handleReset = () => {
@@ -422,7 +487,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +497,28 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocuments.length > 0 && (
+                <div className="space-y-6 border-t border-white/5 pt-16">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-2 h-6 bg-gold shadow-luxe" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc) => (
+                      <SavedDocumentCard
+                        key={doc.id}
+                        doc={doc}
+                        onSelect={handleLoadSaved}
+                        onDelete={handleDeleteSaved}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
