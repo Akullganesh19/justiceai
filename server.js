@@ -64,6 +64,67 @@ if (missingEnvVars.length > 0) {
 
 logger.info('Environment validation passed', { nodeEnv: NODE_ENV, port: PORT });
 
+// ==== AUTO-RECOVERY MECHANISM ====
+async function fetchWithRetry(url, options = {}, maxAttempts = 3, timeoutMs = 15000) {
+  // We allow retrying POST here because our interactions with LLM APIs and Bhashini are stateless
+  // and generally idempotent, or the impact of a retry is acceptable (just generating another response).
+  // Ideally, only GET/HEAD/OPTIONS/PUT/DELETE are idempotent.
+  // But since the primary failure point is 500/429 on these LLM calls, we will retry them.
+  const method = (options.method || 'GET').toUpperCase();
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'POST'].includes(method);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const isLastAttempt = attempt === maxAttempts;
+    try {
+      // Dynamic timeout for each attempt
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      const attemptOptions = { ...options, signal: controller.signal };
+
+      let response;
+      try {
+        response = await fetch(url, attemptOptions);
+      } finally {
+        clearTimeout(id);
+      }
+
+      if (response.ok) {
+        return response;
+      }
+
+      // If it's a 429 or 5xx error, and we have retries left, throw to trigger retry
+      if (isIdempotent && !isLastAttempt && (response.status === 429 || response.status >= 500)) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      // If it's a 4xx (other than 429) or we're on the last attempt, return the response
+      // so the caller can handle the error payload.
+      return response;
+    } catch (err) {
+      if (isLastAttempt || !isIdempotent) {
+        // If it's an abort error and we are out of attempts, we should throw it
+        // Or if it's the last attempt of a network error.
+        throw err;
+      }
+
+      const backoffMs = 500 * Math.pow(2, attempt - 1);
+
+      // Sanitize URL for logging to prevent leaking PII/tokens in query strings
+      let safeUrl = url;
+      if (typeof url === 'string') {
+        safeUrl = url.split('?')[0];
+      } else if (url && url.href) {
+        safeUrl = url.href.split('?')[0];
+      }
+
+      logger.warn(`[Genesis Recovery] Fetch failed for ${safeUrl}, attempt ${attempt}/${maxAttempts}. Retrying in ${backoffMs}ms. Error: ${err.message}`);
+
+      await new Promise(res => setTimeout(res, backoffMs));
+    }
+  }
+}
+
+
 // ===== SECURITY MIDDLEWARE =====
 
 // Security headers
@@ -318,11 +379,11 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  });
+  }, 3, 20000); // 3 attempts, 20s timeout
 
   if (!response.ok) {
     const errText = await response.text();
@@ -354,14 +415,14 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify(payload)
-  });
+  }, 3, 20000); // 3 attempts, 20s timeout
 
   if (!response.ok) {
     const errText = await response.text();
@@ -567,7 +628,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -575,7 +636,7 @@ app.post('/api/voice/process', async (req, res) => {
         'userID': BHASHINI_USER_ID
       },
       body: JSON.stringify(configPayload)
-    });
+    }, 3, 10000);
 
     if (!configResponse.ok) {
       const errorText = await configResponse.text();
@@ -598,7 +659,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -606,7 +667,7 @@ app.post('/api/voice/process', async (req, res) => {
         'Accept': '*/*'
       },
       body: JSON.stringify(computePayload)
-    });
+    }, 3, 15000);
 
     if (!computeResponse.ok) {
       const errorText = await computeResponse.text();
@@ -830,12 +891,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
-        });
+          body: JSON.stringify(requestData)
+        }, 3, 15000); // Handled by fetchWithRetry dynamic timeout
 
         if (!response.ok) {
           throw new Error(`Ollama Error: ${response.statusText}`);
@@ -856,12 +916,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
-        });
+          body: JSON.stringify(requestData)
+        }, 3, 20000); // Handled by fetchWithRetry dynamic timeout
 
         if (!ollamaResponse.ok) {
           throw new Error(`Ollama Error: ${await ollamaResponse.text()}`);
