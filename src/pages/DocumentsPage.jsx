@@ -1,6 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Save,
+  Trash2,
   FileWarning,
   ShoppingBag,
   FileSearch,
@@ -189,8 +191,9 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave }) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -332,6 +335,15 @@ function DocumentPreview({ document, template, onBack }) {
             )}
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
+          {onSave && (
+            <button
+              onClick={() => { onSave(); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+              className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+            >
+              {saved ? <Check className="w-4 h-4 text-gold" /> : <Save className="w-4 h-4" />}
+              <span>{saved ? 'SAVED!' : 'SAVE_VAULT'}</span>
+            </button>
+          )}
           <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-midnight px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all active:translate-y-[2px] italic shadow-hard border-2 border-gold/40"
@@ -372,10 +384,59 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [vaultDocs, setVaultDocs] = useState([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('justice_ai_documents');
+      if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setVaultDocs(JSON.parse(saved));
+      }
+    }
+  }, []);
+
+  const saveToVault = () => {
+    if (!generatedDoc || !selectedTemplate) return;
+    const newDoc = {
+      id: Date.now().toString(),
+      title: selectedTemplate.title,
+      templateId: selectedTemplate.id,
+      content: generatedDoc,
+      date: new Date().toISOString()
+    };
+
+    const updatedDocs = [newDoc, ...vaultDocs];
+    setVaultDocs(updatedDocs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    }
+  };
+
+  const deleteFromVault = (id) => {
+    const updatedDocs = vaultDocs.filter(d => d.id !== id);
+    setVaultDocs(updatedDocs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    }
+  };
+
+  const viewFromVault = (doc) => {
+    // Reconstruct a minimal template object so DocumentPreview works
+    const mockTemplate = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || {
+      id: doc.templateId,
+      title: doc.title,
+    };
+    setSelectedTemplate(mockTemplate);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -421,6 +482,7 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
@@ -432,6 +494,43 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {vaultDocs.length > 0 && (
+                <div className="mt-24">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Save className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display text-white italic">DOCUMENT_VAULT</h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {vaultDocs.map((doc) => (
+                      <div key={doc.id} className="bg-void border-2 border-white/5 hover:border-gold/30 p-6 rounded-sm shadow-hard transition-all group flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-white font-bold italic uppercase">{doc.title}</h3>
+                          <button
+                            onClick={() => deleteFromVault(doc.id)}
+                            className="text-text-tertiary hover:text-accent-error transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-tertiary font-mono mb-6">
+                          {new Date(doc.date).toLocaleDateString()}
+                        </p>
+                        <div className="mt-auto">
+                          <button
+                            onClick={() => viewFromVault(doc)}
+                            className="w-full py-2 bg-white/5 hover:bg-gold hover:text-midnight text-white text-[10px] font-extrabold uppercase tracking-widest transition-all italic border border-white/10 group-hover:border-gold/40 rounded-sm"
+                          >
+                            OPEN_DOCUMENT
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </motion.div>
           )}
 
@@ -461,6 +560,7 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={saveToVault}
               />
             </motion.div>
           )}
