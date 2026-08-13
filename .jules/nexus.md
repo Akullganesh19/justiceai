@@ -1,0 +1,6 @@
+## 2024-05-15 — Document Vault
+**Product understood as:** An AI legal assistant that helps citizens understand rights and draft procedural documents.
+**Derivation reasoning:** This product has document templates that generate legal notices, complaints, RTI applications, and FIR drafts. Users do repeatedly fill in forms to generate documents, copy them to clipboard, or export them to PDF. Therefore users obviously need a way to save generated documents directly in the app. It doesn't exist because it was likely assumed users would immediately download the PDF, but browser crashes or accidental navigation causes data loss. I'm building it because currently if a user generates a document, copies it, and accidentally closes the tab or navigates away, the document is lost forever.
+**Feature built:** Added a Document Vault to the Documents page that uses localStorage to save generated documents. Users can save from the preview screen, and view/delete saved documents from the main Documents screen.
+**User impact:** Users can now safely store their generated procedural drafts in the app without fear of losing them, and access them later for copying or PDF export.
+**Next logical feature:** Version history or auto-saving for form wizard steps to prevent progress loss mid-drafting.
