@@ -8,12 +8,11 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
 
-const require = createRequire(import.meta.url);
-const { PDFParse: pdfParse } = require('pdf-parse');
+import * as pdfParseModule from 'pdf-parse';
+const pdfParse = pdfParseModule.PDFParse || pdfParseModule.default;
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -35,6 +34,88 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' })
   ]
 });
+
+
+// ===== GENESIS: AUTO-RETRY WITH EXPONENTIAL BACKOFF =====
+const originalFetch = global.fetch;
+global.fetch = async function fetchWithRetry(input, init = {}) {
+  const maxAttempts = init.retries || 3;
+  // Default timeout if signal not provided by caller.
+  const timeoutMs = init.timeout || 15000;
+
+  let urlStr = '';
+  if (typeof input === 'string') {
+    urlStr = input;
+  } else if (input instanceof URL) {
+    urlStr = input.toString();
+  } else if (input instanceof Request) {
+    urlStr = input.url;
+  }
+
+  const method = (init.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+
+  // Consider LLM endpoints as stateless/idempotent for POST retries
+  const isLLMOrBhashini = urlStr.includes('googleapis') ||
+                          urlStr.includes('deepseek') ||
+                          urlStr.includes('ollama') ||
+                          urlStr.includes('bhashini');
+
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method) ||
+                       (method === 'POST' && isLLMOrBhashini);
+
+  const actualAttempts = isIdempotent ? maxAttempts : 1;
+
+  for (let attempt = 1; attempt <= actualAttempts; attempt++) {
+    let clonedInput = input;
+    if (input instanceof Request) {
+      clonedInput = input.clone();
+    }
+
+    const abortController = new AbortController();
+    let timeoutId;
+
+    // We only apply our timeout if no caller signal is present,
+    // or we can wrap the caller's signal. Let's wrap.
+    if (init.signal) {
+      if (init.signal.aborted) {
+         abortController.abort(init.signal.reason);
+      } else {
+         init.signal.addEventListener('abort', () => abortController.abort(init.signal.reason), { once: true });
+      }
+    }
+
+    if (timeoutMs) {
+      timeoutId = setTimeout(() => abortController.abort(new Error('Timeout')), timeoutMs);
+    }
+
+    const fetchOptions = { ...init };
+    delete fetchOptions.timeout;
+    delete fetchOptions.retries;
+    fetchOptions.signal = abortController.signal;
+
+    try {
+      const response = await originalFetch(clonedInput, fetchOptions);
+
+      // Treat specific HTTP errors as retryable
+      if (!response.ok && [429, 500, 502, 503, 504].includes(response.status)) {
+        if (attempt === actualAttempts) return response; // Return final failed Response object
+        throw new Error(`Retryable HTTP status: ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      if (attempt === actualAttempts) {
+        throw error;
+      }
+      const delay = 100 * Math.pow(2, attempt - 1);
+      const sanitizedUrl = urlStr.split('?')[0];
+      logger.warn(`Fetch retry attempt ${attempt} for ${sanitizedUrl} due to error: ${error.message}`);
+      await new Promise(res => setTimeout(res, delay));
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+};
+// =========================================================
 
 const app = express();
 
@@ -834,7 +915,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -860,7 +941,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
