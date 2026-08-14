@@ -267,6 +267,74 @@ function splitTextIntoChunks(text, chunkSize = 1000, overlap = 200) {
   return chunks;
 }
 
+// 🧬 Genesis: Auto-retry with exponential backoff for external API calls
+// Protects against transient network failures, 429s, and 5xx errors from LLM providers
+const fetchWithRetry = async (input, init = {}, maxAttempts = 3) => {
+  const { timeout, retryable = false, ...fetchOptions } = init;
+
+  // Only retry idempotent methods by default, or if explicitly flagged as retryable
+  const method = (fetchOptions.method || 'GET').toUpperCase();
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method) || retryable;
+
+  if (!isIdempotent) {
+    maxAttempts = 1; // Don't retry non-idempotent unsafe requests
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController();
+    let timeoutId;
+    if (timeout) {
+      timeoutId = setTimeout(() => controller.abort(), timeout);
+    }
+
+    // Properly clone the request if input is a Request object
+    let fetchInput = input;
+    if (input instanceof Request) {
+      fetchInput = input.clone();
+    }
+
+    try {
+      const response = await fetch(fetchInput, {
+        ...fetchOptions,
+        signal: controller.signal
+      });
+
+      // If response is successful or it's a non-retryable error (e.g. 400 Bad Request, 401 Auth), return it
+      if (response.ok || (response.status !== 429 && response.status < 500)) {
+        return response;
+      }
+
+      // If it's the last attempt, return the final failed response so callers can read .text()
+      if (attempt === maxAttempts) {
+        return response;
+      }
+
+      // It's a retryable error (429 or 5xx), throw to trigger retry catch block
+      throw new Error(`Retryable status code: ${response.status}`);
+
+    } catch (error) {
+      // If we've exhausted all retries or it's a hard abort
+      if (attempt === maxAttempts) {
+        // If we caught an error (e.g. network failure/timeout),
+        // synthesize a Response object to maintain the fetch contract
+        return new Response(error.message, {
+          status: error.name === 'AbortError' ? 408 : 502,
+          statusText: error.name === 'AbortError' ? 'Request Timeout' : 'Bad Gateway'
+        });
+      }
+
+      // Calculate exponential backoff
+      const backoffDelay = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`[Genesis] External API call failed (attempt ${attempt}/${maxAttempts}). Retrying in ${backoffDelay}ms... Error: ${error.message}`);
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+};
+
 // Native Cosine Similarity
 function cosineSimilarity(vecA, vecB) {
   let dotProduct = 0;
@@ -318,10 +386,12 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000,
+    retryable: true // LLM calls are stateless and safe to retry
   });
 
   if (!response.ok) {
@@ -354,13 +424,15 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000,
+    retryable: true // LLM calls are stateless and safe to retry
   });
 
   if (!response.ok) {
@@ -567,14 +639,16 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'ulcaApiKey': BHASHINI_API_KEY,
         'userID': BHASHINI_USER_ID
       },
-      body: JSON.stringify(configPayload)
+      body: JSON.stringify(configPayload),
+      timeout: 10000,
+      retryable: true
     });
 
     if (!configResponse.ok) {
@@ -598,14 +672,16 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
         'Accept': '*/*'
       },
-      body: JSON.stringify(computePayload)
+      body: JSON.stringify(computePayload),
+      timeout: 10000,
+      retryable: true
     });
 
     if (!computeResponse.ok) {
@@ -830,11 +906,12 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000, // 10s timeout for local Ollama
+          retryable: true
         });
 
         if (!response.ok) {
@@ -856,11 +933,12 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000, // 15s timeout
+          retryable: true
         });
 
         if (!ollamaResponse.ok) {

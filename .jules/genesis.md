@@ -1,0 +1,6 @@
+## 2024-08-14 — Auto-retry with exponential backoff for external APIs
+**Failure point found:** Unprotected external API calls (Gemini, DeepSeek, Ollama, Bhashini) using native `fetch()` which would hard-fail on single transient network errors (like HTTP 429, 500, 502, 503, 504) or brief connection timeouts.
+**Why it existed:** Native `fetch` lacks built-in retry mechanisms, and standard error handling only caught the failure after it occurred without re-attempting, causing user disruption if a provider was temporarily unstable.
+**Recovery built:** Created a robust `fetchWithRetry` wrapper leveraging exponential backoff (100ms, 200ms, 400ms delay between retries) and custom `setTimeout` abort controllers per request attempt. It catches retryable status codes and abort errors, clones the original requests safely, and integrates seamlessly into the 5 core API routes without breaking idempotency guarantees.
+**Blast radius before:** Any temporary API blip, load balancer timeout, or rate-limit resulted in a complete request failure surfaced directly to the user as a 500 server error, stopping their workflow immediately. Very high frequency on lower-tier LLM API endpoints.
+**Watch for:** Other integrations with new API providers that might bypass the `fetchWithRetry` wrapper, or missing explicit request cloning for non-string bodies.
