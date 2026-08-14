@@ -39,6 +39,61 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
+const routeChunks = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx')
+};
+
+
+// 🌀 Phantom: Intelligent Route Prefetcher
+// Predictively loads chunk assets when user hovers/touches links before click
+if (typeof window !== 'undefined') {
+  const prefetchRoute = (e) => {
+    const target = e.target.closest('a');
+    if (!target || !target.href) return;
+
+    try {
+      const url = new URL(target.href, window.location.origin);
+      if (url.origin !== window.location.origin) return; // External link
+
+      const path = url.pathname;
+
+      // Exact match or prefix match for nested routes
+      for (const [routePath, importFn] of Object.entries(routeChunks)) {
+        if (path === routePath || (routePath !== '/' && path.startsWith(routePath + '/'))) {
+          importFn().catch(() => {}); // Pre-execute the dynamic import, swallow chunk errors
+          break;
+        }
+      }
+    } catch (_err) {
+      // Ignore URL parsing errors
+    }
+  };
+
+  // Passive listeners to avoid blocking main thread scrolling
+  window.addEventListener('mouseover', prefetchRoute, { passive: true });
+  window.addEventListener('touchstart', prefetchRoute, { passive: true });
+}
+
 // Loading fallback component
 function PageLoader() {
   return (
