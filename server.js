@@ -55,6 +55,67 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/chat/completions';
 
+// ===== GLOBAL FETCH INTERCEPTOR WITH EXPONENTIAL BACKOFF =====
+const originalFetch = global.fetch;
+global.fetch = async function (input, options = {}) {
+  const maxAttempts = 3;
+  let lastResponse = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const isRequest = input instanceof Request;
+    const url = isRequest ? input.url : input;
+    const method = (options.method || (isRequest ? input.method : 'GET')).toUpperCase();
+
+    // Check if idempotent or matches allowed AI/external APIs for retry
+    const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method);
+    const isAllowedPost = method === 'POST' && (
+      url.includes(OLLAMA_BASE_URL) ||
+      url.includes('generativelanguage.googleapis.com') ||
+      url.includes('api.deepseek.com') ||
+      url.includes(BHASHINI_BASE_URL)
+    );
+    const shouldRetry = isIdempotent || isAllowedPost;
+
+    // Must clone Request objects before consumption if retrying
+    const fetchInput = isRequest ? input.clone() : input;
+
+    let timeoutId;
+    let fetchOptions = { ...options };
+
+    // Convert custom `timeout` property to dynamic `AbortSignal`
+    if (fetchOptions.timeout) {
+      const controller = new AbortController();
+      fetchOptions.signal = controller.signal;
+      timeoutId = setTimeout(() => controller.abort(), fetchOptions.timeout);
+      delete fetchOptions.timeout; // Do not pass to native fetch
+    }
+
+    try {
+      const response = await originalFetch(fetchInput, fetchOptions);
+      lastResponse = response;
+
+      if (!response.ok) {
+        // Only retry retryable status codes
+        const isRetryableStatus = response.status === 429 || (response.status >= 500 && response.status <= 599);
+        if (isRetryableStatus && shouldRetry) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+      }
+      return response; // Success or non-retryable error (caller handles)
+    } catch (err) {
+      if (attempt === maxAttempts || !shouldRetry) {
+        if (lastResponse) return lastResponse; // Return last response to allow caller error parsing
+        throw err; // Network error or aborted without response
+      }
+      // Wait before retrying (exponential backoff: 100ms, 200ms)
+      logger.warn(`Fetch attempt ${attempt} failed for ${url}: ${err.message}. Retrying...`);
+      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+};
+
 // Security: Validate required environment variables
 const requiredEnvVars = ['PORT', 'NODE_ENV', 'OLLAMA_BASE_URL', 'EMBEDDING_MODEL', 'CHAT_MODEL'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -834,7 +895,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -860,7 +921,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
