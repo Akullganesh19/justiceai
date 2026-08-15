@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
+  Archive,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -189,7 +192,7 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave, saved, isViewingSaved }) {
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
 
@@ -321,6 +324,19 @@ function DocumentPreview({ document, template, onBack }) {
         </div>
 
         <div className="flex items-center gap-3">
+          {!isViewingSaved && (
+            <button
+              onClick={onSave}
+              className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+            >
+              {saved ? (
+                <Check className="w-4 h-4 text-gold" />
+              ) : (
+                <Archive className="w-4 h-4" />
+              )}
+              <span>{saved ? 'SAVED_VAULT' : 'SAVE_VAULT'}</span>
+            </button>
+          )}
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
@@ -376,6 +392,45 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+  const [isViewingSaved, setIsViewingSaved] = useState(false);
+  const [docSaved, setDocSaved] = useState(false);
+
+  const handleSaveDoc = () => {
+    if (!generatedDoc || !selectedTemplate) return;
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: generatedDoc,
+      timestamp: new Date().toISOString(),
+    };
+    const updatedDocs = [newDoc, ...savedDocs];
+    setSavedDocs(updatedDocs);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    setDocSaved(true);
+    setTimeout(() => setDocSaved(false), 2000);
+  };
+
+  const handleDeleteDoc = (id) => {
+    const updatedDocs = savedDocs.filter((doc) => doc.id !== id);
+    setSavedDocs(updatedDocs);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+  };
+
+  const handleViewSaved = (doc) => {
+    const fullTemplate = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId);
+    setSelectedTemplate(fullTemplate || { id: doc.templateId, title: doc.title, fields: [] });
+    setGeneratedDoc(doc.content);
+    setIsViewingSaved(true);
+    setStage('preview');
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -392,6 +447,8 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+    setIsViewingSaved(false);
+    setDocSaved(false);
   };
 
   return (
@@ -422,7 +479,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +489,58 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="space-y-6 border-t-2 border-white/5 pt-16">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-sm bg-gold/10 flex items-center justify-center border-2 border-gold/20 shadow-luxe">
+                        <Archive className="w-4 h-4 text-gold" />
+                      </div>
+                      <h2 className="text-2xl font-display font-bold uppercase tracking-tight italic text-white">
+                        DOCUMENT_VAULT
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocs.map((doc, i) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="bg-void border-2 border-white/5 rounded-sm p-6 hover:border-gold/30 transition-colors shadow-hard group flex flex-col"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <h3 className="text-lg font-display font-bold text-white group-hover:text-gold transition-colors truncate pr-4">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={() => handleDeleteDoc(doc.id)}
+                            className="p-2 -mt-2 -mr-2 text-text-tertiary hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-mono uppercase mb-6 flex-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(doc.timestamp).toLocaleDateString()}
+                        </div>
+
+                        <button
+                          onClick={() => handleViewSaved(doc)}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-gold/10 border-2 border-white/5 hover:border-gold/30 text-text-secondary hover:text-gold rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic"
+                        >
+                          RESTORE_DOCUMENT
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -461,6 +570,9 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={handleSaveDoc}
+                saved={docSaved}
+                isViewingSaved={isViewingSaved}
               />
             </motion.div>
           )}
