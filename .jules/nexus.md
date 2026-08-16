@@ -1,0 +1,6 @@
+## 2024-05-20 — Document Vault
+**Product understood as:** An AI-powered legal co-pilot that helps citizens understand rights and draft legal documents.
+**Derivation reasoning:** We have a feature to generate legal documents (DocumentsPage / DocumentGeneratorPage). Users spend time filling out forms to generate notices, complaints, and applications. However, after generation, they can only copy or download the PDF. Once they navigate away, the document is lost. Therefore, users obviously need a way to save and view their previously generated documents — because legal matters span months, and re-drafting from scratch is a poor experience. It likely doesn't exist because the initial focus was on the generation capability itself. I am building it because saving work is a fundamental requirement for a productivity tool, and we already use localStorage for chat history and case tracking.
+**Feature built:** Added a "Document Vault" feature that automatically saves generated documents to localStorage. Added a UI section on the Documents page to view, open, and delete previously generated documents.
+**User impact:** Users can now retain their generated drafts across sessions, review them later, and download them again without re-entering all information.
+**Next logical feature:** Version history for documents or exporting directly to an email client.
