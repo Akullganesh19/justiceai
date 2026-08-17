@@ -1,0 +1,6 @@
+## 2024-05-19 — Document Vault
+**Product understood as:** An AI-powered legal co-pilot that helps Indian citizens understand rights, track cases, and draft legal documents.
+**Derivation reasoning:** We have a feature to generate legal procedural documents (notices, etc.) using templates, but users couldn't save them. This falls into Pattern 3 (Actions Without Memory) and Pattern 1 (Data Without Insight). The user generates a document, views/downloads it, but if they leave the page, the generated text is lost. They would have to fill the form again. By allowing users to save the generated documents locally in their browser, they can build up a history of drafts they've created.
+**Feature built:** Added a "Save to Vault" capability within the Document Preview stage, which persists the generated document to `localStorage`. Added a "Document Vault" section on the main Documents page to list saved documents, view them again, or delete them.
+**User impact:** Users can now save their drafted documents, return to them later, and manage their collection of generated templates without losing their work.
+**Next logical feature:** Ability to connect saved documents to specific cases in the Case Tracker, or bulk export the vault.

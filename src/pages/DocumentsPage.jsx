@@ -12,6 +12,11 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Archive,
+  Trash2,
+  Eye,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -189,8 +194,57 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
+function SavedDocCard({ doc, onOpen, onDelete, index }) {
+  const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+  const Icon = ICONS[template.icon] || FileWarning;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="bg-void border-2 border-white/10 rounded-sm p-4 hover:border-gold/30 transition-all flex items-center justify-between group shadow-hard"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center group-hover:border-gold/20">
+          <Icon className="w-5 h-5 text-gold/70" />
+        </div>
+        <div>
+          <h4 className="text-white font-display text-sm truncate max-w-[200px] md:max-w-[400px]">
+            {template.title}
+          </h4>
+          <div className="flex items-center gap-2 mt-1">
+            <Clock className="w-3 h-3 text-text-tertiary" />
+            <span className="text-[10px] text-text-tertiary font-mono uppercase">
+              {new Date(doc.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={() => onOpen(doc)}
+          className="p-2 hover:bg-white/5 text-text-secondary hover:text-white rounded-sm transition-colors"
+          title="View Document"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onDelete(doc.id)}
+          className="p-2 hover:bg-accent-error/10 text-text-secondary hover:text-accent-error rounded-sm transition-colors"
+          title="Delete Document"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 function DocumentPreview({ document, template, onBack }) {
   const [copied, setCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(''); // '' | 'saving' | 'saved'
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -208,6 +262,30 @@ function DocumentPreview({ document, template, onBack }) {
       window.document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleSave = () => {
+    if (typeof window === 'undefined') return;
+    setSaveStatus('saving');
+
+    try {
+      const existingStr = localStorage.getItem('justice_ai_documents');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+
+      const newDoc = {
+        id: crypto.randomUUID(),
+        templateId: template.id,
+        content: document,
+        createdAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...existing]));
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(''), 2000);
+    } catch (e) {
+      console.error('Failed to save document', e);
+      setSaveStatus('');
     }
   };
 
@@ -322,6 +400,20 @@ function DocumentPreview({ document, template, onBack }) {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={handleSave}
+            disabled={saveStatus === 'saved'}
+            className={`flex items-center gap-2 bg-void border-2 border-white/10 ${
+              saveStatus === 'saved' ? 'border-accent-success/50 text-accent-success' : 'hover:border-gold/30 text-text-secondary hover:text-white'
+            } px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard`}
+          >
+            {saveStatus === 'saved' ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{saveStatus === 'saved' ? 'SAVED' : 'SAVE_VAULT'}</span>
+          </button>
+          <button
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
           >
@@ -376,10 +468,39 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  React.useEffect(() => {
+    if (stage === 'select' && typeof window !== 'undefined') {
+      try {
+        const existingStr = localStorage.getItem('justice_ai_documents');
+        if (existingStr) {
+          setSavedDocs(JSON.parse(existingStr));
+        }
+      } catch (e) {
+        console.error('Failed to load saved documents', e);
+      }
+    }
+  }, [stage]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
+  };
+
+  const handleOpenSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const updatedDocs = savedDocs.filter((d) => d.id !== id);
+    setSavedDocs(updatedDocs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    }
   };
 
   const handleGenerate = (formData) => {
@@ -432,6 +553,27 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="mt-24">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Archive className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display text-white italic uppercase">DOCUMENT_VAULT</h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {savedDocs.map((doc, i) => (
+                      <SavedDocCard
+                        key={doc.id}
+                        doc={doc}
+                        onOpen={handleOpenSaved}
+                        onDelete={handleDeleteSaved}
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
