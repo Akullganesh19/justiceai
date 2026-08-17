@@ -64,6 +64,114 @@ if (missingEnvVars.length > 0) {
 
 logger.info('Environment validation passed', { nodeEnv: NODE_ENV, port: PORT });
 
+// Genesis: Self-healing infrastructure added to automatically retry failing external API requests
+const retryableMethods = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
+const retryableExternalHosts = new Set([
+  'generativelanguage.googleapis.com', // Gemini
+  'api.deepseek.com', // DeepSeek
+  'dhruva-api.bhashini.gov.in', // Bhashini
+  'localhost:11434', // Local Ollama
+  '127.0.0.1:11434'
+]);
+
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  let attempt = 1;
+  const timeoutMs = options.timeout; // Custom timeout prop
+
+  // Clone options and remove custom timeout before passing to native fetch
+  const fetchOptions = { ...options };
+  delete fetchOptions.timeout;
+
+  while (attempt <= maxAttempts) {
+    let timeoutId;
+    let abortController;
+    let currentOptions = { ...fetchOptions };
+
+    if (timeoutMs) {
+      abortController = new AbortController();
+      currentOptions.signal = abortController.signal;
+      timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+    }
+
+    try {
+      // Re-clone request objects if they are passed as inputs
+      let inputUrl = url;
+      if (url instanceof Request) {
+        inputUrl = url.clone();
+      }
+
+      // Important: Do not dynamically alter POST bodies (e.g. `body: attempt === 1 ? ... : undefined`)
+      // as that destroys the request payload on retries.
+
+      const response = await fetch(inputUrl, currentOptions);
+
+      if (!response.ok) {
+        // Only retry on transient failures: 429 Too Many Requests, or 5xx Server Errors
+        if (response.status === 429 || response.status >= 500) {
+          // Determine if we should retry based on method and host
+          let canRetry = false;
+          const parsedUrl = new URL(typeof url === 'string' ? url : url.url);
+          const method = options.method ? options.method.toUpperCase() : 'GET';
+
+          if (retryableMethods.has(method)) {
+            canRetry = true;
+          } else if (method === 'POST' && retryableExternalHosts.has(parsedUrl.host)) {
+            // These specific AI/LLM POST requests are considered stateless/idempotent
+            canRetry = true;
+          }
+
+          if (attempt === maxAttempts || !canRetry) {
+             logger.error(`fetchWithRetry exhausted on attempt ${attempt} with status ${response.status}`, { url: parsedUrl.origin + parsedUrl.pathname });
+             return response; // Return the final failed response so the caller can parse it
+          }
+
+          const backoffMs = 100 * Math.pow(2, attempt - 1);
+          logger.warn(`API call failed with ${response.status}, retrying (${attempt}/${maxAttempts}) in ${backoffMs}ms`, { url: parsedUrl.origin + parsedUrl.pathname });
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          attempt++;
+          continue;
+        }
+        // For 4xx (except 429), the request is invalid and shouldn't be retried
+        return response;
+      }
+
+      return response;
+
+    } catch (err) {
+      // This catches network errors and AbortError (timeouts)
+      // Determine if we should retry based on method and host
+      let canRetry = false;
+      const parsedUrl = new URL(typeof url === 'string' ? url : url.url);
+      const method = options.method ? options.method.toUpperCase() : 'GET';
+
+      if (retryableMethods.has(method)) {
+        canRetry = true;
+      } else if (method === 'POST' && retryableExternalHosts.has(parsedUrl.host)) {
+        // These specific AI/LLM POST requests are considered stateless/idempotent
+        canRetry = true;
+      }
+
+      if (attempt === maxAttempts || !canRetry) {
+         if (err.name === 'AbortError') {
+           logger.error(`fetchWithRetry Aborted due to timeout after ${attempt} attempts`, { url: parsedUrl.origin + parsedUrl.pathname });
+         } else {
+           logger.error(`fetchWithRetry exhausted on attempt ${attempt}`, { error: err.message, url: parsedUrl.origin + parsedUrl.pathname });
+         }
+         throw err;
+      }
+
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`Network/Timeout error, retrying (${attempt}/${maxAttempts}) in ${backoffMs}ms`, { url: parsedUrl.origin + parsedUrl.pathname, error: err.message });
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      attempt++;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+}
+
 // ===== SECURITY MIDDLEWARE =====
 
 // Security headers
@@ -318,10 +426,11 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000 // 15s timeout
   });
 
   if (!response.ok) {
@@ -354,13 +463,14 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000 // 15s timeout
   });
 
   if (!response.ok) {
@@ -567,14 +677,15 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'ulcaApiKey': BHASHINI_API_KEY,
         'userID': BHASHINI_USER_ID
       },
-      body: JSON.stringify(configPayload)
+      body: JSON.stringify(configPayload),
+      timeout: 10000 // 10s timeout
     });
 
     if (!configResponse.ok) {
@@ -598,14 +709,15 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
         'Accept': '*/*'
       },
-      body: JSON.stringify(computePayload)
+      body: JSON.stringify(computePayload),
+      timeout: 20000 // 20s timeout
     });
 
     if (!computeResponse.ok) {
@@ -830,11 +942,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +968,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
