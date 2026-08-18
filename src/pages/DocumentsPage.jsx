@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -47,6 +49,40 @@ function TemplateCard({ template, onSelect, index }) {
           <span>INITIALIZE</span>
           <ChevronRight className="w-4 h-4" />
         </div>
+      </div>
+    </motion.div>
+  );
+}
+
+
+function VaultCard({ doc, onView, onDelete, index }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      onClick={onView}
+      className="group relative cursor-pointer"
+    >
+      <div className="h-full p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 overflow-hidden flex flex-col shadow-hard">
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-10 h-10 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center group-hover:border-gold/40 transition-all duration-500 shadow-hard">
+            <FileSearch className="w-5 h-5 text-gold" />
+          </div>
+          <button
+            onClick={onDelete}
+            className="p-2 bg-void border-2 border-white/5 hover:border-accent-error/30 hover:text-accent-error text-text-tertiary rounded-sm transition-all shadow-hard"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        <h3 className="text-lg font-display font-bold text-white mb-2 group-hover:text-gold transition-colors uppercase tracking-tight italic line-clamp-2">
+          {doc.title}
+        </h3>
+        <p className="text-[10px] text-text-tertiary leading-relaxed font-mono mt-auto opacity-60 italic uppercase tracking-wider">
+          SAVED: {new Date(doc.date).toLocaleDateString()}
+        </p>
       </div>
     </motion.div>
   );
@@ -189,9 +225,18 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave }) {
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveDoc = () => {
+    if (onSave) {
+      onSave(document, template);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -333,6 +378,17 @@ function DocumentPreview({ document, template, onBack }) {
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
           <button
+            onClick={handleSaveDoc}
+            className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+          >
+            {saved ? (
+              <Check className="w-4 h-4 text-accent-success" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{saved ? 'SAVED' : 'SAVE_VAULT'}</span>
+          </button>
+          <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-midnight px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all active:translate-y-[2px] italic shadow-hard border-2 border-gold/40"
           >
@@ -376,6 +432,65 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('justice_ai_documents');
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  const handleSaveToVault = (documentText, template) => {
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: template.id,
+      title: template.title,
+      date: new Date().toISOString(),
+      content: documentText,
+    };
+    setSavedDocuments((prev) => {
+      // Avoid duplicate saves if title and content match, or if just title matches replace it
+      const existingIdx = prev.findIndex(d => d.templateId === template.id);
+      let updated;
+      if (existingIdx !== -1) {
+        updated = [...prev];
+        updated[existingIdx] = { ...updated[existingIdx], content: documentText, date: new Date().toISOString() };
+      } else {
+        updated = [newDoc, ...prev];
+      }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const handleViewVaultDoc = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || {
+      title: doc.title,
+      id: doc.templateId,
+      generate: () => doc.content,
+    };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteVaultDoc = (id, e) => {
+    e.stopPropagation();
+    setSavedDocuments((prev) => {
+      const updated = prev.filter((doc) => doc.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -421,7 +536,35 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+              {savedDocuments.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-tight">
+                      DOCUMENT VAULT
+                    </h2>
+                    <div className="h-px bg-white/10 flex-1" />
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {savedDocuments.map((doc, i) => (
+                      <VaultCard
+                        key={doc.id}
+                        doc={doc}
+                        onView={() => handleViewVaultDoc(doc)}
+                        onDelete={(e) => handleDeleteVaultDoc(doc.id, e)}
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Template Grid */}
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-xl font-display font-bold text-white uppercase tracking-tight">
+                  AVAILABLE TEMPLATES
+                </h2>
+                <div className="h-px bg-white/10 flex-1" />
+              </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
@@ -461,6 +604,7 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={handleSaveToVault}
               />
             </motion.div>
           )}

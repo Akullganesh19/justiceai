@@ -1,0 +1,6 @@
+## 2024-05-24 — Document Vault
+**Product understood as:** An AI-powered legal co-pilot helping Indian citizens navigate the legal system with privacy and confidence.
+**Derivation reasoning:** This product has a procedural drafting engine that generates notices and applications. Users invest time filling out forms to generate these documents. Therefore users obviously need a way to save these generated documents to access or review them later — because regenerating the same document requires re-entering all the facts and details. It doesn't exist yet because the drafting engine was likely built as a stateless utility first. I'm building it because giving users a persistent "Vault" turns the app from a temporary utility into a reliable legal workspace.
+**Feature built:** A client-side "Document Vault" in the Documents tab that lets users save generated documents to `localStorage`, view past documents, and delete them, complete with a new VaultCard UI.
+**User impact:** Users can now generate a document, save it, leave the page, and come back later to retrieve or export their drafted legal notices without losing their work.
+**Next logical feature:** The ability to edit saved documents in the vault.
