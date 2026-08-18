@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, Outlet } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
@@ -51,17 +51,24 @@ function PageLoader() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+
+function Layout() {
+  return (
+    <>
+      <div className="grain-overlay" aria-hidden="true" />
+      <ScrollToTop />
+      <CommandPalette />
+      <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </>
+  );
+}
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<Layout />}>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/chat" element={<ChatPage />} />
@@ -84,9 +91,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/showcase" element={<ShowcasePage />} />
               <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
               <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
+            </Route>
+  )
+);
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <ToastProvider>
+        <RouterProvider router={router} />
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
