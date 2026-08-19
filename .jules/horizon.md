@@ -1,0 +1,6 @@
+## 2024-05-18 — React Router Data API & Native ESM Migration
+**Risk identified:** The application relies on legacy `<BrowserRouter>` with nested `<Routes>`, missing out on React Router 6.4+ Data APIs which are required for React Router v7 compatibility. Concurrently, `server.js` was using CommonJS `createRequire` within an ESM (`"type": "module"`) codebase, which breaks in modern strict Node/bundler setups.
+**Migration target:** Modern React Router Data API (`createBrowserRouter`, `RouterProvider`) and native ESM namespace imports for commonjs modules.
+**Migrated this session:** Refactored `src/main.jsx` to define routing centrally using `createBrowserRouter` and nested `<Route>` structures with a `RootLayout` and `<Outlet>`. Refactored `server.js` to replace `createRequire` for `pdf-parse` with a standard ESM namespace import `import * as pdfParseModule from 'pdf-parse'`.
+**Remaining:** Migrate all data fetching and mutation logic from inline React hooks (`useEffect`) within components to route-level `loader` and `action` functions to fully leverage the Data Router architecture.
+**Next session:** Identify a key data-fetching page (e.g., Dashboard or Document Vault) and migrate its `useEffect` fetching to a React Router `loader` function.

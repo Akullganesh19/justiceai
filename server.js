@@ -8,12 +8,12 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import * as pdfParseModule from 'pdf-parse';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
 
-const require = createRequire(import.meta.url);
-const { PDFParse: pdfParse } = require('pdf-parse');
+
+const pdfParse = pdfParseModule.PDFParse || pdfParseModule.default;
 import dotenv from 'dotenv';
 
 // Load environment variables
