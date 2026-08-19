@@ -1,0 +1,7 @@
+## 2024-06-25 — External API Resilience
+
+**Failure point found:** All external API calls in `server.js` (Gemini, DeepSeek, Bhashini, Ollama) were made with native `fetch` but had no auto-retry mechanism or centralized connection/timeout error handling.
+**Why it existed:** The backend historically assumed that third-party endpoints and network routes would remain stable or it relied on the frontend clients to handle explicit retries manually on receiving a 500 error.
+**Recovery built:** Created a centralized `fetchWithRetry` utility and wrapped all external API calls. It implements dynamic exponential backoff for transient failures (e.g., HTTP 5xx, 429) or network aborts/timeouts, returning the failed Response object on exhausting max retries instead of aggressively swallowing it. It is also intelligent enough to automatically avoid retrying non-idempotent operations (POSTs) unless strictly instructed or structurally assessed. Custom `AbortSignal.timeout` instances are dynamically re-generated inside the loop for timeout-dependent requests like Ollama to avoid immediate failures upon retry.
+**Blast radius before:** Any transient API drop (e.g., Bhashini 500 during transcription, DeepSeek rate limits) would immediately propagate back to the end user as a hard error, forcing them to explicitly re-submit their input.
+**Watch for:** Other integrations across node-layer services or frontend generic `fetch` components missing explicit retries.
