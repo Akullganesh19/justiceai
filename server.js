@@ -37,6 +37,7 @@ const logger = winston.createLogger({
 });
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Configuration from environment variables with fallbacks
 const PORT = process.env.PORT || 3001;
@@ -117,10 +118,10 @@ const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
     if (!str) return str;
     return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   };
 
