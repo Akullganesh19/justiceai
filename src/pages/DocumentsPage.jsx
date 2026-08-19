@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Clock,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -190,8 +193,26 @@ function FormWizard({ template, onBack, onGenerate }) {
 }
 
 function DocumentPreview({ document, template, onBack }) {
+  const [isSaved, setIsSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
+
+
+  const handleSave = () => {
+    const savedDocs = JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+    // Deduplicate: remove identical content if it already exists
+    const filteredDocs = savedDocs.filter(d => d.content !== document);
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: template.id,
+      title: template.title,
+      content: document,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...filteredDocs]));
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
 
   const handleCopy = async () => {
     try {
@@ -320,7 +341,19 @@ function DocumentPreview({ document, template, onBack }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+          >
+            {isSaved ? (
+              <Check className="w-4 h-4 text-gold" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{isSaved ? 'SAVED_TO_VAULT' : 'SAVE_TO_VAULT'}</span>
+          </button>
+
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
@@ -376,7 +409,14 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+    }
+    return [];
+  });
 
+  // When stage changes back to select, refresh from storage
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -392,6 +432,21 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+    if (typeof window !== 'undefined') {
+      setSavedDocs(JSON.parse(localStorage.getItem('justice_ai_documents') || '[]'));
+    }
+  };
+
+  const handleDeleteSavedDoc = (id) => {
+    const updatedDocs = savedDocs.filter(doc => doc.id !== id);
+    setSavedDocs(updatedDocs);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+  };
+
+  const handleViewSavedDoc = (doc) => {
+    setGeneratedDoc(doc.content);
+    setSelectedTemplate(DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title, id: doc.templateId });
+    setStage('preview');
   };
 
   return (
@@ -432,6 +487,53 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center gap-3 mb-8 border-b border-white/5 pb-4">
+                    <Save className="w-6 h-6 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white italic">
+                      DOCUMENT <span className="text-gold">VAULT</span>
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocs.map((doc) => (
+                      <div key={doc.id} className="p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all shadow-hard flex flex-col">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="p-3 bg-gold/5 rounded-sm border border-gold/20">
+                            <FileSearch className="w-5 h-5 text-gold" />
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSavedDoc(doc.id)}
+                            className="p-2 text-text-tertiary hover:text-red-400 transition-colors"
+                            title="Delete from Vault"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{doc.title}</h3>
+                        <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-mono uppercase tracking-widest opacity-60 mb-6">
+                          <Clock className="w-3 h-3" />
+                          <span>{new Date(doc.timestamp).toLocaleDateString()}</span>
+                        </div>
+
+                        <div className="mt-auto">
+                          <button
+                            onClick={() => handleViewSavedDoc(doc)}
+                            className="w-full py-3 bg-void border-2 border-white/5 hover:border-gold/30 hover:text-gold text-text-secondary rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all italic flex items-center justify-center gap-2"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                            <span>ACCESS_DOCUMENT</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </motion.div>
           )}
 
