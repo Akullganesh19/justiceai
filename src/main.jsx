@@ -39,6 +39,99 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
+
+// 🔮 Oracle: Predictive Intent & Session Warm-up Engine
+// Anticipates user actions and silently prefetches the data/chunks they'll need next.
+const routeImporters = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx')
+};
+
+function PredictiveEngine() {
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 1. Session Warm-up: Look at past user behavior to guess their first moves
+    try {
+      const history = localStorage.getItem('justice_ai_history');
+      if (history && history.length > 5) {
+        // High likelihood they are returning to continue a case
+        routeImporters['/chat']()?.catch(() => {});
+        routeImporters['/documents']()?.catch(() => {});
+      }
+
+      const tracker = localStorage.getItem('justice_ai_case_tracker_v2');
+      if (tracker && tracker.length > 5) {
+        // High likelihood they want to see case updates
+        routeImporters['/tracker']()?.catch(() => {});
+      }
+    } catch (_err) {
+      // Degrade gracefully if localStorage fails
+    }
+
+    // 2. Intent Prefetching: Detect where the user is going before they click
+    const prefetched = new Set();
+
+    const handleIntent = (e) => {
+      const link = e.target.closest('a');
+      if (!link || !link.href) return;
+
+      try {
+        const url = new URL(link.href);
+        // Only prefetch our own domain
+        if (url.origin !== window.location.origin) return;
+
+        const path = url.pathname;
+        if (prefetched.has(path)) return;
+
+        // Find the matching importer (exact match or prefix for parameterized routes)
+        let importer = routeImporters[path];
+        if (!importer) {
+          const match = Object.keys(routeImporters).find(k => k !== '/' && path.startsWith(k + '/'));
+          if (match) importer = routeImporters[match];
+        }
+
+        if (importer) {
+          prefetched.add(path);
+          importer().catch(() => {}); // Swallow chunk errors gracefully
+        }
+      } catch (_err) {
+        // Gracefully ignore parse errors
+      }
+    };
+
+    // Use passive listeners so we don't block the main thread / scrolling
+    window.addEventListener('mouseover', handleIntent, { passive: true });
+    window.addEventListener('touchstart', handleIntent, { passive: true });
+
+    return () => {
+      window.removeEventListener('mouseover', handleIntent);
+      window.removeEventListener('touchstart', handleIntent);
+    };
+  }, []);
+
+  return null;
+}
+
 // Loading fallback component
 function PageLoader() {
   return (
@@ -56,6 +149,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <ToastProvider>
         <Router>
+          <PredictiveEngine />
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
           <CommandPalette />
