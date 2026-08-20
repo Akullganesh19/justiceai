@@ -1,0 +1,6 @@
+## 2024-05-18 — Document Vault
+**Product understood as:** An AI-powered legal co-pilot that helps citizens understand their rights, build strategies, and generate complex legal documents.
+**Derivation reasoning:** The product allows drafting and generating complex legal documents (like Consumer Complaints and RTIs). Generating these forms takes time and effort. Currently, users must copy or download the document immediately, or it is lost upon navigation (Pattern 3: Actions Without Memory). Therefore, users obviously need a way to save and revisit these documents in a vault. It doesn't exist because the initial focus was solely on the document generation engine itself.
+**Feature built:** Added a "Document Vault" to the Documents page, allowing users to save their generated documents to `localStorage`, view them later, and manage (delete) them.
+**User impact:** Users can now safely generate multiple documents, store them securely in their browser, and return to view, copy, or export them as PDFs without having to regenerate them from scratch.
+**Next logical feature:** The next logical feature would be a "Document Editor" allowing users to modify the generated documents within the Vault before final export.
