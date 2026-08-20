@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -189,7 +191,8 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave }) {
+  const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
 
@@ -208,6 +211,14 @@ function DocumentPreview({ document, template, onBack }) {
       window.document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleVaultSave = () => {
+    if (onSave) {
+        onSave(document, template);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
     }
   };
 
@@ -333,6 +344,17 @@ function DocumentPreview({ document, template, onBack }) {
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
           <button
+            onClick={handleVaultSave}
+            className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+          >
+            {saved ? (
+              <Check className="w-4 h-4 text-gold" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{saved ? 'SAVED!' : 'SAVE_TO_VAULT'}</span>
+          </button>
+          <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-midnight px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all active:translate-y-[2px] italic shadow-hard border-2 border-gold/40"
           >
@@ -372,10 +394,79 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+function SavedDocumentCard({ doc, onView, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="p-4 rounded-sm bg-void border border-white/10 hover:border-gold/30 transition-all flex flex-col gap-3 shadow-hard"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <h4 className="text-sm font-bold text-white uppercase tracking-tight">{doc.title}</h4>
+          <p className="text-[10px] text-text-tertiary font-mono opacity-80">
+            {new Date(doc.timestamp).toLocaleString()}
+          </p>
+        </div>
+        <button
+          onClick={() => onDelete(doc.id)}
+          className="text-text-tertiary hover:text-accent-error transition-colors p-1"
+          title="Delete from Vault"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+      <button
+        onClick={() => onView(doc)}
+        className="w-full text-center py-2 bg-white/5 hover:bg-gold/10 text-white text-[10px] uppercase font-extrabold tracking-widest rounded-sm transition-colors border border-white/5"
+      >
+        VIEW DOCUMENT
+      </button>
+    </motion.div>
+  );
+}
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+    }
+    return [];
+  });
+
+  const handleSaveToVault = (docText, templateObj) => {
+    const newDoc = {
+      id: Date.now().toString(),
+      title: templateObj.title,
+      text: docText,
+      timestamp: Date.now(),
+      templateId: templateObj.id,
+    };
+    const updated = [newDoc, ...savedDocs];
+    setSavedDocs(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+    }
+  };
+
+  const handleDeleteSavedDoc = (id) => {
+    const updated = savedDocs.filter((d) => d.id !== id);
+    setSavedDocs(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+    }
+  };
+
+  const handleViewSavedDoc = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || { title: doc.title };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.text);
+    setStage('preview');
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -432,6 +523,30 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocs.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Shield className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-tight italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <AnimatePresence>
+                      {savedDocs.map((doc) => (
+                        <SavedDocumentCard
+                          key={doc.id}
+                          doc={doc}
+                          onView={handleViewSavedDoc}
+                          onDelete={handleDeleteSavedDoc}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -461,6 +576,7 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={handleSaveToVault}
               />
             </motion.div>
           )}
