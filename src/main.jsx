@@ -15,29 +15,92 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Oracle Predictive Routing Engine: Route map for chunk prefetching
+const routePrefetchMap = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx')
+};
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
+const LandingPage = lazy(routePrefetchMap['/']);
+const ChatPage = lazy(routePrefetchMap['/chat']);
+const AboutPage = lazy(routePrefetchMap['/about']);
+const FAQPage = lazy(routePrefetchMap['/faq']);
+const SamplesPage = lazy(routePrefetchMap['/samples']);
+const DocumentsPage = lazy(routePrefetchMap['/documents']);
+const RightsPage = lazy(routePrefetchMap['/rights']);
+const EstimatorPage = lazy(routePrefetchMap['/estimator']);
+const LawyerFinderPage = lazy(routePrefetchMap['/lawyers']);
+const CaseTrackerPage = lazy(routePrefetchMap['/tracker']);
+const LegalQuizPage = lazy(routePrefetchMap['/quiz']);
+const LimitationCalculatorPage = lazy(routePrefetchMap['/limitation']);
+const LegalAidCheckerPage = lazy(routePrefetchMap['/legal-aid']);
+const DashboardPage = lazy(routePrefetchMap['/dashboard']);
+const GlossaryPage = lazy(routePrefetchMap['/glossary']);
+const LawyerOnboardingPage = lazy(routePrefetchMap['/lawyer-onboarding']);
+const DisclaimerPage = lazy(routePrefetchMap['/disclaimer']);
+const PrivacyPage = lazy(routePrefetchMap['/privacy']);
+const AuthPage = lazy(routePrefetchMap['/auth']);
+const ShowcasePage = lazy(routePrefetchMap['/showcase']);
+const IntelligenceSelectionTerminal = lazy(routePrefetchMap['/settings']);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+
+// Oracle Predictive Intelligence: Detect user intent and prefetch route chunks before click
+if (typeof window !== 'undefined') {
+  const prefetched = new Set();
+
+  const handlePredictivePrefetch = (event) => {
+    const target = event.target.closest('a');
+    if (!target || !target.href) return;
+
+    try {
+      const url = new URL(target.href);
+      // Only predict/prefetch internal routes
+      if (url.origin !== window.location.origin) return;
+
+      // Use url.pathname directly, excludes query params and hash fragments
+      const path = url.pathname;
+
+      // Skip if already prefetched to save bandwidth
+      if (prefetched.has(path)) return;
+
+      for (const [routePath, importFn] of Object.entries(routePrefetchMap)) {
+        // Exact match or directory prefix matching for parameterized routes
+        if (path === routePath || (routePath !== '/' && path.startsWith(routePath + '/'))) {
+          prefetched.add(path);
+          // Execute background dynamic import. Swallow chunk errors to degrade gracefully.
+          importFn().catch(() => {});
+          break;
+        }
+      }
+    } catch (_err) {
+      // Graceful fallback for unparseable URLs
+    }
+  };
+
+  // Passive listeners ensure main thread and scrolling performance aren't degraded
+  window.addEventListener('mouseover', handlePredictivePrefetch, { passive: true });
+  window.addEventListener('touchstart', handlePredictivePrefetch, { passive: true });
+}
 
 // Loading fallback component
 function PageLoader() {
