@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import OraclePredictor from './components/ui/OraclePredictor';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -15,29 +16,56 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+
+// Oracle Predictive Mesh Chunks
+export const PREFETCH_CHUNKS = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+  '*': () => import('./pages/NotFoundPage.jsx')
+};
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const LandingPage = lazy(PREFETCH_CHUNKS['/']);
+const ChatPage = lazy(PREFETCH_CHUNKS['/chat']);
+const AboutPage = lazy(PREFETCH_CHUNKS['/about']);
+const FAQPage = lazy(PREFETCH_CHUNKS['/faq']);
+const SamplesPage = lazy(PREFETCH_CHUNKS['/samples']);
+const DocumentsPage = lazy(PREFETCH_CHUNKS['/documents']);
+const RightsPage = lazy(PREFETCH_CHUNKS['/rights']);
+const EstimatorPage = lazy(PREFETCH_CHUNKS['/estimator']);
+const LawyerFinderPage = lazy(PREFETCH_CHUNKS['/lawyers']);
+const CaseTrackerPage = lazy(PREFETCH_CHUNKS['/tracker']);
+const LegalQuizPage = lazy(PREFETCH_CHUNKS['/quiz']);
+const LimitationCalculatorPage = lazy(PREFETCH_CHUNKS['/limitation']);
+const LegalAidCheckerPage = lazy(PREFETCH_CHUNKS['/legal-aid']);
+const DashboardPage = lazy(PREFETCH_CHUNKS['/dashboard']);
+const GlossaryPage = lazy(PREFETCH_CHUNKS['/glossary']);
+const LawyerOnboardingPage = lazy(PREFETCH_CHUNKS['/lawyer-onboarding']);
+const DisclaimerPage = lazy(PREFETCH_CHUNKS['/disclaimer']);
+const PrivacyPage = lazy(PREFETCH_CHUNKS['/privacy']);
+const AuthPage = lazy(PREFETCH_CHUNKS['/auth']);
+const ShowcasePage = lazy(PREFETCH_CHUNKS['/showcase']);
+const IntelligenceSelectionTerminal = lazy(PREFETCH_CHUNKS['/settings']);
+const NotFoundPage = lazy(PREFETCH_CHUNKS['*']);
 
 // Loading fallback component
 function PageLoader() {
@@ -57,6 +85,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <ToastProvider>
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
+          <OraclePredictor chunks={PREFETCH_CHUNKS} />
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
