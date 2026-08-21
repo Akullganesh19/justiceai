@@ -55,6 +55,58 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/chat/completions';
 
+
+async function fetchWithRetry(url, options = {}, maxAttempts = 3, baseDelayMs = 500) {
+  const customTimeoutMs = options.timeout;
+  const isPostIdempotent = true; // For LLM/Bhashini API calls, POST is idempotent
+  const method = (options.method || 'GET').toUpperCase();
+  const isIdempotent = ['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'].includes(method) || (method === 'POST' && isPostIdempotent);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let timeoutId;
+    let signal = options.signal;
+
+    if (customTimeoutMs) {
+      const controller = new AbortController();
+      signal = controller.signal;
+      timeoutId = setTimeout(() => controller.abort(), customTimeoutMs);
+    }
+
+    try {
+      const fetchOptions = { ...options, signal };
+
+      const response = await fetch(url, fetchOptions);
+
+      const isTransient = response.status === 429 || (response.status >= 500 && response.status < 600);
+
+      if (!isTransient || attempt === maxAttempts || !isIdempotent) {
+        return response;
+      }
+
+      await response.text().catch(() => {});
+      const delay = baseDelayMs * Math.pow(2, attempt - 1);
+      console.warn(`[fetchWithRetry] Attempt ${attempt} failed with status ${response.status}. Retrying in ${delay}ms...`);
+      await new Promise(res => setTimeout(res, delay));
+
+    } catch (err) {
+      if (err.name === 'AbortError' || err.code === 'ECONNRESET' || err.code === 'ENOTFOUND' || err.type === 'system' || err.message.includes('fetch failed')) {
+        if (attempt < maxAttempts && isIdempotent) {
+          const delay = baseDelayMs * Math.pow(2, attempt - 1);
+          console.warn(`[fetchWithRetry] Attempt ${attempt} failed with ${err.name}: ${err.message}. Retrying in ${delay}ms...`);
+          await new Promise(res => setTimeout(res, delay));
+          continue;
+        }
+      }
+      throw err;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+}
+
+
 // Security: Validate required environment variables
 const requiredEnvVars = ['PORT', 'NODE_ENV', 'OLLAMA_BASE_URL', 'EMBEDDING_MODEL', 'CHAT_MODEL'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -318,7 +370,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +406,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +619,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +650,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,11 +882,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +908,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
