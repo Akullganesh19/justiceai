@@ -12,6 +12,10 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Archive,
+  Trash2,
+  Eye,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -160,7 +164,9 @@ function FormWizard({ template, onBack, onGenerate }) {
             </div>
           ))}
         </motion.div>
-      </AnimatePresence>
+
+
+        </AnimatePresence>
 
       {/* Navigation */}
       <div className="flex items-center justify-between mt-10 pt-8 border-t border-white/5">
@@ -189,8 +195,9 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave }) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -321,6 +328,21 @@ function DocumentPreview({ document, template, onBack }) {
         </div>
 
         <div className="flex items-center gap-3">
+
+          {onSave && (
+            <button
+              onClick={() => {
+                onSave(document, template);
+                setSaved(true);
+              }}
+              disabled={saved}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all italic shadow-hard border-2 ${saved ? 'bg-void border-emerald-500/40 text-emerald-400' : 'bg-void border-white/10 hover:border-gold/40 text-white'}`}
+            >
+              {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              <span>{saved ? 'SAVED_TO_VAULT' : 'SAVE_TO_VAULT'}</span>
+            </button>
+          )}
+
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
@@ -372,10 +394,46 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [viewMode, setViewMode] = useState('templates'); // 'templates' | 'vault'
+  const [viewingSavedDoc, setViewingSavedDoc] = useState(null);
+
+  const [savedDocs, setSavedDocs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('justice_ai_documents');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+    }
+  }, [savedDocs]);
+
+  const handleSaveToVault = (docText, template) => {
+    const newDoc = {
+      id: Date.now().toString(),
+      title: template.title,
+      content: docText,
+      date: new Date().toISOString(),
+    };
+    setSavedDocs(prev => [newDoc, ...prev]);
+  };
+
+  const handleDeleteSaved = (id) => {
+    setSavedDocs(prev => prev.filter(d => d.id !== id));
+  };
+
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -422,16 +480,90 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    onSelect={handleSelect}
-                    index={i}
-                  />
-                ))}
+
+              {/* Vault Toggle */}
+              <div className="flex justify-center mb-12">
+                <div className="flex p-1 bg-void border-2 border-white/10 rounded-sm shadow-hard">
+                  <button
+                    onClick={() => setViewMode('templates')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-sm text-xs font-bold uppercase tracking-widest transition-all italic ${viewMode === 'templates' ? 'bg-gold text-midnight shadow-hard' : 'text-text-tertiary hover:text-white'}`}
+                  >
+                    <FileWarning className="w-4 h-4" />
+                    Templates
+                  </button>
+                  <button
+                    onClick={() => setViewMode('vault')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-sm text-xs font-bold uppercase tracking-widest transition-all italic ${viewMode === 'vault' ? 'bg-gold text-midnight shadow-hard' : 'text-text-tertiary hover:text-white'}`}
+                  >
+                    <Archive className="w-4 h-4" />
+                    Vault ({savedDocs.length})
+                  </button>
+                </div>
               </div>
+
+              {viewMode === 'vault' ? (
+                <div className="space-y-6">
+                  {savedDocs.length === 0 ? (
+                    <div className="text-center py-20 bg-void border-2 border-white/5 rounded-sm">
+                      <Archive className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                      <p className="text-text-tertiary font-mono uppercase tracking-widest text-sm italic">Vault is empty</p>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {savedDocs.map(doc => (
+                        <div key={doc.id} className="bg-void border-2 border-white/10 rounded-sm p-6 shadow-hard flex flex-col justify-between group hover:border-gold/30 transition-colors">
+                          <div>
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 rounded-sm bg-white/5 flex items-center justify-center">
+                                <FileSearch className="w-5 h-5 text-gold" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-display font-bold text-white uppercase italic tracking-tight">{doc.title}</h3>
+                                <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest">
+                                  {new Date(doc.date).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm text-text-secondary font-body line-clamp-3 mb-6 opacity-80">
+                              {doc.content.substring(0, 150)}...
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 mt-auto">
+                            <button
+                              onClick={() => {
+                                setViewingSavedDoc(doc);
+                                setStage('view_saved');
+                              }}
+                              className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-gold hover:text-midnight text-white px-4 py-2.5 rounded-sm font-bold text-[10px] uppercase tracking-widest transition-all italic"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSaved(doc.id)}
+                              className="flex items-center justify-center w-10 h-10 bg-white/5 hover:bg-red/20 text-white/40 hover:text-red rounded-sm transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {DOCUMENT_TEMPLATES.map((template, i) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      onSelect={handleSelect}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              )}
+
             </motion.div>
           )}
 
@@ -461,6 +593,25 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={handleSaveToVault}
+              />
+            </motion.div>
+          )}
+
+          {stage === 'view_saved' && viewingSavedDoc && (
+            <motion.div
+              key="view_saved"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <DocumentPreview
+                document={viewingSavedDoc.content}
+                template={{ title: viewingSavedDoc.title }}
+                onBack={() => {
+                  setViewingSavedDoc(null);
+                  setStage('select');
+                }}
               />
             </motion.div>
           )}
