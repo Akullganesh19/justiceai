@@ -1,19 +1,8 @@
-import React, { Suspense, lazy } from 'react';
+import React, { lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LoadingSpinner from './components/ui/LoadingSpinner';
-import ScrollToTop from './components/ui/ScrollToTop';
-import CommandPalette from './components/ui/CommandPalette';
-import ErrorBoundary from './components/ui/ErrorBoundary';
-import { ToastProvider } from './components/ui/Toast';
-import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import RootLayout from './components/layout/RootLayout';
 import './index.css';
-
-const handleGlobalTranscription = (text) => {
-  // Dispatch a custom event that any page (like ChatPage) can listen for
-  const event = new CustomEvent('justice-ai-transcription', { detail: { text } });
-  window.dispatchEvent(event);
-};
 
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
@@ -39,55 +28,39 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
-// Loading fallback component
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-void flex flex-col items-center justify-center space-y-6 font-mono">
-      <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-sm animate-spin shadow-luxe" />
-      <p className="text-[10px] text-gold font-extrabold uppercase tracking-[0.4em] animate-pulse italic">
-        INITIALIZING_SYSTEM_CORE...
-      </p>
-    </div>
-  );
-}
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      { index: true, element: <LandingPage /> },
+      { path: "dashboard", element: <DashboardPage /> },
+      { path: "chat", element: <ChatPage /> },
+      { path: "documents", element: <DocumentsPage /> },
+      { path: "rights", element: <RightsPage /> },
+      { path: "estimator", element: <EstimatorPage /> },
+      { path: "lawyers", element: <LawyerFinderPage /> },
+      { path: "tracker", element: <CaseTrackerPage /> },
+      { path: "quiz", element: <LegalQuizPage /> },
+      { path: "limitation", element: <LimitationCalculatorPage /> },
+      { path: "legal-aid", element: <LegalAidCheckerPage /> },
+      { path: "glossary", element: <GlossaryPage /> },
+      { path: "about", element: <AboutPage /> },
+      { path: "faq", element: <FAQPage /> },
+      { path: "samples", element: <SamplesPage /> },
+      { path: "lawyer-onboarding", element: <LawyerOnboardingPage /> },
+      { path: "disclaimer", element: <DisclaimerPage /> },
+      { path: "privacy", element: <PrivacyPage /> },
+      { path: "auth", element: <AuthPage /> },
+      { path: "showcase", element: <ShowcasePage /> },
+      { path: "settings", element: <IntelligenceSelectionTerminal /> },
+      { path: "*", element: <NotFoundPage /> },
+    ]
+  }
+]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <ToastProvider>
-        <Router>
-          <div className="grain-overlay" aria-hidden="true" />
-          <ScrollToTop />
-          <CommandPalette />
-          <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/rights" element={<RightsPage />} />
-              <Route path="/estimator" element={<EstimatorPage />} />
-              <Route path="/lawyers" element={<LawyerFinderPage />} />
-              <Route path="/tracker" element={<CaseTrackerPage />} />
-              <Route path="/quiz" element={<LegalQuizPage />} />
-              <Route path="/limitation" element={<LimitationCalculatorPage />} />
-              <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
-              <Route path="/glossary" element={<GlossaryPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/samples" element={<SamplesPage />} />
-              <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
-              <Route path="/disclaimer" element={<DisclaimerPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </ToastProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
+    <RouterProvider router={router} />
+  </React.StrictMode>
 );
