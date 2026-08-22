@@ -192,7 +192,21 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+
+        // 🧠 Synapse connection: Dispatch event when analysis is generated to create a tracked case
+        const title = currentMsgs[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-generated', {
+            detail: {
+              caseId: activeCaseId,
+              title: title,
+              analysis: newAnalysis,
+            },
+          })
+        );
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -225,6 +239,18 @@ export default function ChatPage() {
 
       if (newAnalysis) {
         setAnalysis(newAnalysis);
+
+        // 🧠 Synapse connection: Dispatch event when analysis is generated to create a tracked case
+        const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+        window.dispatchEvent(
+          new CustomEvent('justice-ai-analysis-generated', {
+            detail: {
+              caseId: activeCaseId,
+              title: title,
+              analysis: newAnalysis,
+            },
+          })
+        );
       }
 
       // Auto-save to history
