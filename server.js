@@ -62,6 +62,82 @@ if (missingEnvVars.length > 0) {
   throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
+/**
+ * Enhanced fetch wrapper with auto-retry and exponential backoff
+ * for transient failures and timeouts.
+ */
+async function fetchWithRetry(url, options = {}, maxRetries = 3, baseDelayMs = 200) {
+  let attempt = 1;
+  const timeoutMs = options.timeout;
+
+  // Clone request object if it is a Request to prevent body consumption errors
+  const isRequest = url instanceof Request;
+
+  while (true) {
+    let abortController = null;
+    let timeoutId = null;
+    let fetchOptions = { ...options };
+
+    // Explicitly handle timeout by dynamically generating AbortController per attempt
+    if (timeoutMs) {
+      delete fetchOptions.timeout;
+      abortController = new AbortController();
+      fetchOptions.signal = abortController.signal;
+      timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+    }
+
+    let currentUrl = url;
+    if (isRequest) {
+       currentUrl = url.clone();
+    }
+
+    try {
+      const response = await fetch(currentUrl, fetchOptions);
+
+      const isTransient = [429, 500, 502, 503, 504].includes(response.status);
+
+      // If success, non-transient error, or max attempts reached, return response
+      // Do not throw generic error; allow caller to read response.text()
+      if (!isTransient || attempt >= maxRetries) {
+        return response;
+      }
+
+      // Explicitly consume the transient error response body to prevent memory leaks
+      await response.text().catch((_err) => {});
+
+      const logUrlObj = new URL(isRequest ? url.url : url);
+      const safeLogUrl = logUrlObj.origin + logUrlObj.pathname;
+
+      console.warn(`⚠️ [Retry ${attempt}/${maxRetries}] Transient error ${response.status} for ${safeLogUrl}. Retrying...`);
+
+    } catch (err) {
+      if (attempt >= maxRetries) {
+        throw err;
+      }
+
+      // Retry on network errors or AbortError (timeout)
+      if (err.name === 'AbortError' || err.name === 'TypeError') {
+
+      const logUrlObj = new URL(isRequest ? url.url : url);
+      const safeLogUrl = logUrlObj.origin + logUrlObj.pathname;
+
+        console.warn(`⚠️ [Retry ${attempt}/${maxRetries}] Network/Timeout error (${err.name}) for ${safeLogUrl}. Retrying...`);
+      } else {
+        throw err;
+      }
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    const delay = baseDelayMs * Math.pow(2, attempt - 1);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    attempt++;
+  }
+}
+
+
 logger.info('Environment validation passed', { nodeEnv: NODE_ENV, port: PORT });
 
 // ===== SECURITY MIDDLEWARE =====
@@ -318,7 +394,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +430,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +643,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +674,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,11 +906,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +932,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
