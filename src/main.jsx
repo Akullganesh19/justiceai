@@ -6,8 +6,12 @@ import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
+import { initSynapse } from './lib/synapse.js';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+
+// Initialize Synapse Intelligence Bridge
+initSynapse();
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
