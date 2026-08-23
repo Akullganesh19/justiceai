@@ -1,0 +1,6 @@
+## 2024-10-30 — Document Vault
+**Product understood as:** A comprehensive AI-powered legal co-pilot designed to give users drafting capabilities, statutory insights, and case strategy directly from their browser.
+**Derivation reasoning:** We store generated statutory documents (in preview) but never save them. Users repeatedly generate documents (Pattern 3: Actions Without Memory), requiring them to immediately copy or export them; otherwise, the draft is lost. They obviously need a localized way to save, review, and delete drafted documents within the app for an effective document lifecycle workflow.
+**Feature built:** A local-first "Document Vault" built into the Procedural Drafting module. Drafted documents can be saved, listed with excerpts and timestamps, retrieved into the preview interface, and deleted using `localStorage`.
+**User impact:** Users can now treat the drafting module as a persistent workspace, safely saving works-in-progress, retaining a library of generated notices, and recalling them without regenerating or relying solely on external PDF exports.
+**Next logical feature:** Exposing a historical view of past AI chats (Chat Vault) or integrating the Document Vault to allow users to link drafted documents as case context when starting new chat consultations.
