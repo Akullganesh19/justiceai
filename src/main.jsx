@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
+import OraclePredictor from './components/ui/OraclePredictor';
 import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
@@ -57,6 +58,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <ToastProvider>
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
+          <OraclePredictor />
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
