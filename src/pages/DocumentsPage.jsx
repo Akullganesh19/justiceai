@@ -9,9 +9,7 @@ import {
   ArrowRight,
   Copy,
   Download,
-  Check,
-  X,
-  ChevronRight,
+  Check, X, ChevronRight, Save, Archive, Trash2, Clock, Eye,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -192,6 +190,7 @@ function FormWizard({ template, onBack, onGenerate }) {
 function DocumentPreview({ document, template, onBack }) {
   const [copied, setCopied] = useState(false);
   const previewRef = useRef(null);
+  const [saved, setSaved] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -208,6 +207,26 @@ function DocumentPreview({ document, template, onBack }) {
       window.document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+
+  const handleSave = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const existing = JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+        const newDoc = {
+          id: Date.now().toString(),
+          title: template.title,
+          content: document,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...existing]));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (e) {
+      console.warn('Could not save to vault', e);
     }
   };
 
@@ -332,6 +351,18 @@ function DocumentPreview({ document, template, onBack }) {
             )}
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
+
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+          >
+            {saved ? (
+              <Check className="w-4 h-4 text-gold" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{saved ? 'SAVED_TO_VAULT' : 'SAVE_TO_VAULT'}</span>
+          </button>
           <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-midnight px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all active:translate-y-[2px] italic shadow-hard border-2 border-gold/40"
@@ -369,6 +400,87 @@ function DocumentPreview({ document, template, onBack }) {
         </p>
       </div>
     </motion.div>
+  );
+}
+
+
+function DocumentVault({ onOpenDocument }) {
+  const [vaultDocs, setVaultDocs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+      } catch (e) {
+        console.warn('Failed to load vault', e);
+        return [];
+      }
+    }
+    return [];
+  });
+
+  const handleDelete = (e, id) => {
+    e.stopPropagation();
+    try {
+      if (typeof window !== 'undefined') {
+        const filtered = vaultDocs.filter(d => d.id !== id);
+        localStorage.setItem('justice_ai_documents', JSON.stringify(filtered));
+        setVaultDocs(filtered);
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  if (vaultDocs.length === 0) return null;
+
+  return (
+    <div className="mt-24">
+      <div className="flex items-center gap-3 mb-8">
+        <Archive className="w-6 h-6 text-gold" />
+        <h2 className="text-2xl font-display font-bold text-white uppercase tracking-tight italic">
+          SECURE_DOCUMENT_VAULT
+        </h2>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {vaultDocs.map((doc, i) => (
+          <motion.div
+            key={doc.id}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            onClick={() => onOpenDocument(doc)}
+            className="group relative cursor-pointer p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all shadow-hard flex flex-col h-full"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-2 rounded-sm bg-white/5 border border-white/10 group-hover:border-gold/30 transition-colors">
+                <FileWarning className="w-5 h-5 text-gold" />
+              </div>
+              <button
+                onClick={(e) => handleDelete(e, doc.id)}
+                className="p-1.5 text-text-tertiary hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 group-hover:text-gold transition-colors">
+              {doc.title}
+            </h3>
+
+            <div className="mt-auto pt-6 flex items-center justify-between text-[10px] uppercase font-mono tracking-widest text-text-tertiary">
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3 h-3" />
+                {new Date(doc.timestamp).toLocaleDateString()}
+              </span>
+              <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-gold">
+                <Eye className="w-3 h-3" />
+                VIEW
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -432,6 +544,12 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              <DocumentVault onOpenDocument={(doc) => {
+                setGeneratedDoc(doc.content);
+                setSelectedTemplate({ title: doc.title });
+                setStage('preview');
+              }} />
             </motion.div>
           )}
 
