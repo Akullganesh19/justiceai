@@ -8,6 +8,8 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+import PredictiveNav from './components/ui/PredictiveNav';
+
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
@@ -57,6 +59,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <ToastProvider>
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
+          <PredictiveNav />
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
