@@ -7,6 +7,7 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import OracleNavMesh from './components/ui/OracleNavMesh';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -60,6 +61,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ScrollToTop />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
+          <OracleNavMesh />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
