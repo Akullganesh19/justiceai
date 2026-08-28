@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  FileCheck,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +377,64 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('justice_ai_documents');
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error('Failed to load saved documents', e);
+      }
+    }
+    return [];
+  });
+
+  const saveDocument = (template, formData, docContent) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const newDoc = {
+          id: Date.now().toString(),
+          templateId: template.id,
+          title: template.title,
+          date: new Date().toISOString(),
+          content: docContent,
+          formData: formData
+        };
+        const updatedDocs = [newDoc, ...savedDocuments];
+        setSavedDocuments(updatedDocs);
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+      } catch (e) {
+        console.error('Failed to save document', e);
+      }
+    }
+  };
+
+  const deleteDocument = (id, e) => {
+    e.stopPropagation();
+    if (typeof window !== 'undefined') {
+      try {
+        const updatedDocs = savedDocuments.filter(doc => doc.id !== id);
+        setSavedDocuments(updatedDocs);
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+      } catch (e) {
+        console.error('Failed to delete document', e);
+      }
+    }
+  };
+
+  const viewSavedDocument = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setGeneratedDoc(doc.content);
+      setStage('preview');
+    }
+  };
+
+
+
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,6 +444,7 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+    saveDocument(selectedTemplate, formData, doc);
     setStage('preview');
   };
 
@@ -432,6 +492,57 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault (Saved Drafts) */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
+                      <div className="w-2 h-8 bg-gold shadow-luxe" />
+                      DOCUMENT_VAULT
+                    </h2>
+                    <span className="text-xs font-mono text-text-tertiary uppercase tracking-widest italic opacity-60">
+                      LOCAL_STORAGE_ACTIVE
+                    </span>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocuments.map((doc, i) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        key={doc.id}
+                        onClick={() => viewSavedDocument(doc)}
+                        className="group relative bg-void border-2 border-white/5 p-6 rounded-sm cursor-pointer hover:border-gold/30 transition-all shadow-hard"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-10 h-10 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+                            <FileCheck className="w-5 h-5 text-gold" />
+                          </div>
+                          <button
+                            onClick={(e) => deleteDocument(doc.id, e)}
+                            className="p-1.5 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 rounded-sm transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <h3 className="text-lg font-display text-white mb-2 uppercase tracking-tight truncate">
+                          {doc.title}
+                        </h3>
+                        <p className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider opacity-60">
+                          {new Date(doc.date).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
