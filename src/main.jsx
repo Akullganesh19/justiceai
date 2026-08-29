@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import PredictiveNavMesh from "./components/ui/PredictiveNavMesh";
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -58,6 +59,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
+          <PredictiveNavMesh />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
           <Suspense fallback={<PageLoader />}>
