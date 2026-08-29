@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Trash2,
+  FileText,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -191,6 +194,7 @@ function FormWizard({ template, onBack, onGenerate }) {
 
 function DocumentPreview({ document, template, onBack }) {
   const [copied, setCopied] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -208,6 +212,26 @@ function DocumentPreview({ document, template, onBack }) {
       window.document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+    const handleSave = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const savedStr = window.localStorage.getItem('justice_ai_documents');
+        const savedVault = savedStr ? JSON.parse(savedStr) : [];
+        const newDoc = {
+          id: Date.now().toString(),
+          title: template.title,
+          content: document,
+          timestamp: new Date().toISOString()
+        };
+        window.localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...savedVault]));
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      }
+    } catch (_err) {
+      console.warn('Failed to save to Vault:', _err);
     }
   };
 
@@ -333,6 +357,13 @@ function DocumentPreview({ document, template, onBack }) {
             <span>{copied ? 'CACHED!' : 'REF_COPY'}</span>
           </button>
           <button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-emerald-500/30 text-text-secondary hover:text-emerald-400 px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+          >
+            <Save className="w-4 h-4" />
+            <span>{isSaved ? 'SAVED!' : 'SAVE_TO_VAULT'}</span>
+          </button>
+          <button
             onClick={handleDownload}
             className="flex items-center gap-2 bg-gold hover:bg-gold-dark text-midnight px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all active:translate-y-[2px] italic shadow-hard border-2 border-gold/40"
           >
@@ -374,6 +405,29 @@ function DocumentPreview({ document, template, onBack }) {
 
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [vaultDocs, setVaultDocs] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = window.localStorage.getItem('justice_ai_documents');
+        return saved ? JSON.parse(saved) : [];
+      }
+    } catch (_err) {}
+    return [];
+  });
+
+  const deleteVaultDoc = (id) => {
+    try {
+      const updated = vaultDocs.filter(doc => doc.id !== id);
+      setVaultDocs(updated);
+      window.localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+    } catch (_err) {}
+  };
+
+  const loadVaultDoc = (doc) => {
+    setSelectedTemplate({ title: doc.title, generate: () => doc.content });
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
@@ -392,6 +446,12 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = window.localStorage.getItem('justice_ai_documents');
+        if (saved) setVaultDocs(JSON.parse(saved));
+      }
+    } catch (_err) {}
   };
 
   return (
@@ -408,6 +468,42 @@ export default function DocumentsPage() {
               exit={{ opacity: 0 }}
             >
               {/* Page Header */}
+              {/* Vault Section */}
+              {vaultDocs.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center gap-4 mb-8 border-b border-white/5 pb-4">
+                    <FileText className="w-6 h-6 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {vaultDocs.map((doc) => (
+                      <div key={doc.id} className="p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all shadow-hard group">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest truncate mb-2">{doc.title}</h3>
+                        <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold opacity-60 mb-6">
+                          {new Date(doc.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => loadVaultDoc(doc)}
+                            className="flex-1 bg-white/5 hover:bg-gold hover:text-midnight text-white px-4 py-2 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic"
+                          >
+                            LOAD
+                          </button>
+                          <button
+                            onClick={() => deleteVaultDoc(doc.id)}
+                            className="p-2 bg-void border-2 border-white/10 hover:border-red-500/50 hover:text-red-500 text-text-tertiary rounded-sm transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="text-center space-y-4 mb-16">
                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
                   <FileWarning className="w-4 h-4" />
