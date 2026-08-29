@@ -1,0 +1,6 @@
+## 2024-05-24 — React Router Data API Migration
+**Risk identified:** The project currently uses the legacy `<BrowserRouter>` with nested `<Routes>` in `main.jsx`. As React Router v6 progresses toward v7, the old component-based routing is becoming deprecated in favor of the Data API (`createBrowserRouter`). This causes problems with modern features like route loaders, actions, and advanced SSR capabilities, eventually rendering the current routing tree unmaintainable and unsupported.
+**Migration target:** Modern React Router Data API using `createBrowserRouter` and `RouterProvider`.
+**Migrated this session:** Migrated the root routing tree in `src/main.jsx` by establishing a `RootLayout` and wrapping all routes with `createBrowserRouter`. Also updated `src/test/App.test.jsx` to use `MemoryRouter` for compatibility. Included a safe fallback for SSR by wrapping `window.dispatchEvent` in `typeof window !== 'undefined'`.
+**Remaining:** Migrate individual `<Route>` loaders/actions if/when added, or update dynamic routing on the frontend if needed. All core routes are successfully on the new Data Router.
+**Next session:** Investigate and migrate data fetching logic directly to route `loader` functions to fully leverage the Data API.
