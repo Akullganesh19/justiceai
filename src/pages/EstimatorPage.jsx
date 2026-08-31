@@ -10,8 +10,6 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react';
-import Header from '../components/ui/Header.jsx';
-import Footer from '../components/ui/Footer.jsx';
 
 const CASE_TYPES = [
   {
@@ -300,7 +298,6 @@ export default function EstimatorPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono text-slate-200">
-      <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-12 pb-24">
         {/* Page Header */}
@@ -583,7 +580,6 @@ export default function EstimatorPage() {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+          </div>
   );
 }

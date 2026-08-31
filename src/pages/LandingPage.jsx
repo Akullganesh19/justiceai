@@ -22,8 +22,6 @@ import {
   Send,
   Award,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 import { MorphingCardStack } from '../components/ui/morphing-card-stack';
 import MotionGraphics from '../components/ui/MotionGraphics';
 
@@ -327,7 +325,6 @@ export default function LandingPage() {
       </div>
       <div className="grain-overlay pointer-events-none opacity-[0.03]" />
 
-      <Header />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24">
         {/* News Ticker */}
@@ -691,7 +688,6 @@ export default function LandingPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

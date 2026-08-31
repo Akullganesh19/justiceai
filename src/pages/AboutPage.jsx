@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Scale, Shield, Users, Target } from 'lucide-react';
-import Header from '../components/ui/Header';
 
 export default function AboutPage() {
   const containerVariants = {
@@ -37,7 +36,6 @@ export default function AboutPage() {
 
   return (
     <div className="relative min-h-screen bg-void pb-32 font-mono text-slate-200">
-      <Header />
 
       <main className="max-w-4xl mx-auto px-6 pt-32 space-y-24">
         {/* Hero Section */}

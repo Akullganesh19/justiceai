@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, HelpCircle, ArrowRight } from 'lucide-react';
-import Header from '../components/ui/Header';
 
 const FAQ_DATA = [
   {
@@ -93,7 +92,6 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono">
-      <Header />
 
       <main className="max-w-4xl mx-auto px-6 pt-32 space-y-20">
         <div className="text-center space-y-8">

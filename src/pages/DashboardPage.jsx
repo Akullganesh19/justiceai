@@ -23,8 +23,6 @@ import {
   BookMarked,
   AlertCircle,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 // Animated counter hook
 function useAnimatedCounter(target, duration = 1500) {
@@ -228,7 +226,6 @@ export default function DashboardPage() {
       </div>
       <div className="grain-overlay pointer-events-none opacity-[0.03]" />
 
-      <Header />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-28 pb-24">
         <motion.div
@@ -378,7 +375,6 @@ export default function DashboardPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }
