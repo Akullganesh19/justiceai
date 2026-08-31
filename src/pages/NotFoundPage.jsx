@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   Terminal,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ export default function NotFoundPage() {
 
   return (
     <div className="min-h-screen bg-void font-mono">
-      <Header />
 
       <main className="max-w-4xl mx-auto px-6 pt-48 pb-24 flex flex-col items-center text-center">
         {/* Animated Alert Symbol */}

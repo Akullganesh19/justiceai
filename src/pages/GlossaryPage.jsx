@@ -18,8 +18,6 @@ import {
   Globe,
   Cpu,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 import { GLOSSARY_TERMS } from '../data/legalGlossaryData';
 
 const CATEGORIES = [
@@ -163,7 +161,6 @@ export default function GlossaryPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono">
-      <Header />
 
       <main className="max-w-5xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
@@ -318,7 +315,6 @@ export default function GlossaryPage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

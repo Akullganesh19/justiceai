@@ -73,7 +73,10 @@ export default function Header({ onNewCase }) {
             </button>
 
             <button
-              onClick={onNewCase}
+              onClick={() => {
+                if (onNewCase) onNewCase();
+                else window.dispatchEvent(new CustomEvent('justice-ai-new-case'));
+              }}
               className="hidden md:flex items-center gap-3 px-6 py-3 bg-gold text-midnight rounded-sm border-2 border-gold/20 font-extrabold text-[10px] uppercase tracking-widest hover:bg-gold-dark transition-all active:translate-x-[1px] active:translate-y-[1px] shadow-hard font-display italic"
             >
               <Plus className="w-4 h-4" />

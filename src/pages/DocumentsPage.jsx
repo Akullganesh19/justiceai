@@ -13,7 +13,6 @@ import {
   X,
   ChevronRight,
 } from 'lucide-react';
-import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
 import jsPDF from 'jspdf';
 
@@ -396,7 +395,6 @@ export default function DocumentsPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono">
-      <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-16">
         <AnimatePresence mode="wait">

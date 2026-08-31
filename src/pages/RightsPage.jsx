@@ -17,8 +17,6 @@ import {
   Shield,
   ArrowRight,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Rights', icon: Scale },
@@ -479,7 +477,6 @@ export default function RightsPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono text-slate-200">
-      <Header />
 
       <main className="max-w-5xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
@@ -604,7 +601,6 @@ export default function RightsPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }
