@@ -7,6 +7,8 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import PredictiveNavMesh from './components/ui/PredictiveNavMesh.jsx';
+
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -56,6 +58,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <ToastProvider>
         <Router>
+          <PredictiveNavMesh />
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
           <CommandPalette />
