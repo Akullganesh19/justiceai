@@ -1,0 +1,6 @@
+## 2024-05-25 — React Router Data API Migration
+**Risk identified:** The project currently uses React Router's legacy `BrowserRouter` and `<Routes>` components for routing. The ecosystem (React Router v6.4+ and v7) is actively moving away from this toward the Data API (`createBrowserRouter`, `RouterProvider`), which is required for modern React Server Components, Suspense integration, and data loading/mutations. Continuing on the legacy router approach prevents adoption of modern React features and increases the migration cost later.
+**Migration target:** React Router Data API (`createBrowserRouter`, `RouterProvider`).
+**Migrated this session:** Migrated the root routing setup in `src/main.jsx` to use `createBrowserRouter` and `RouterProvider`. Created a `RootLayout` component to wrap the global layout elements and replaced `<BrowserRouter>` with `<MemoryRouter>` in the test wrapper (`src/test/App.test.jsx`) for compatibility.
+**Remaining:** Migrate individual pages to use route loaders (`loader`) and actions (`action`) instead of `useEffect` for data fetching, and update dynamic imports (lazy/Suspense) to leverage the Data API's built-in lazy loading features.
+**Next session:** Start migrating the `DashboardPage` and `CaseTrackerPage` to use route loaders for their initial data fetching instead of `useEffect`.
