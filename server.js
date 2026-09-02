@@ -281,6 +281,83 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+
+// ==== GENESIS: Self-Healing Architecture ====
+// Auto-retry with exponential backoff for external API calls
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  // Extract custom timeout if provided, otherwise default to 15s
+  const customTimeout = options.timeout || 15000;
+
+  // Create a safe URL for logging that won't leak query params (like API keys)
+  let safeUrl;
+  try {
+    const parsed = new URL(url);
+    safeUrl = parsed.origin + parsed.pathname;
+  } catch (e) {
+    safeUrl = url;
+  }
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // Generate a fresh abort signal for each attempt if a timeout is configured
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), customTimeout);
+
+    // Merge the fresh signal into options (override any existing static signal)
+    const currentOptions = { ...options, signal: controller.signal };
+
+    try {
+      const response = await fetch(url, currentOptions);
+
+      // If we got a successful response or a non-transient error, return it
+      if (response.ok || (response.status < 500 && response.status !== 429)) {
+        return response;
+      }
+
+      // Explicitly consume the body for transient errors to avoid memory leaks
+      await response.text().catch(() => {});
+
+      if (attempt === maxRetries) {
+        console.warn(`[GENESIS] Fetch to ${safeUrl} failed after ${maxRetries} attempts. Status: ${response.status}`);
+        return response; // Return the last failed response
+      }
+
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      console.warn(`[GENESIS] Fetch to ${safeUrl} returned ${response.status}. Retrying in ${backoffMs}ms (Attempt ${attempt}/${maxRetries})...`);
+      await new Promise(r => setTimeout(r, backoffMs));
+
+    } catch (err) {
+      if (attempt === maxRetries) {
+        console.warn(`[GENESIS] Fetch to ${safeUrl} failed after ${maxRetries} attempts. Error: ${err.message}`);
+        throw err;
+      }
+
+      // Timeout throws an AbortError - it's a transient network issue, so retry
+      if (err.name === 'AbortError' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.cause?.code === 'ECONNREFUSED' || err.cause?.code === 'ECONNRESET') {
+        const backoffMs = 100 * Math.pow(2, attempt - 1);
+        console.warn(`[GENESIS] Fetch to ${safeUrl} encountered transient error: ${err.message}. Retrying in ${backoffMs}ms (Attempt ${attempt}/${maxRetries})...`);
+        await new Promise(r => setTimeout(r, backoffMs));
+      } else {
+        // Unknown or fatal error
+        throw err;
+      }
+    } finally {
+      clearTimeout(id);
+    }
+  }
+}
+// ============================================
+
+
+
+
+
+
+
+
+
+
+
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,10 +395,11 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000
   });
 
   if (!response.ok) {
@@ -354,13 +432,14 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    timeout: 15000
   });
 
   if (!response.ok) {
@@ -567,14 +646,15 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'ulcaApiKey': BHASHINI_API_KEY,
         'userID': BHASHINI_USER_ID
       },
-      body: JSON.stringify(configPayload)
+      body: JSON.stringify(configPayload),
+      timeout: 10000
     });
 
     if (!configResponse.ok) {
@@ -598,14 +678,15 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': configData.pipelineInferenceAPIEndPoint.inferenceApiKey.value,
         'Accept': '*/*'
       },
-      body: JSON.stringify(computePayload)
+      body: JSON.stringify(computePayload),
+      timeout: 15000
     });
 
     if (!computeResponse.ok) {
@@ -830,11 +911,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +937,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
