@@ -8,6 +8,10 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+import { initPhantomInfrastructure } from './lib/phantomFetch.js';
+
+// Initialize Phantom Invisible Infrastructure (Coalescing & Caching)
+initPhantomInfrastructure();
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
