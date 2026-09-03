@@ -12,6 +12,74 @@ import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
 
+// 🧬 Genesis: Auto-Retry with Exponential Backoff
+// Automatically retries transient network errors (429, 5xx) to recover from temporary downtime
+// without breaking legitimate long-running requests like LLM streaming (by avoiding global hard timeouts).
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let timeoutId;
+    try {
+      // Copy options to avoid mutating original
+      const fetchOptions = { ...options };
+
+      // Fix: If a timeout is provided in options, generate a fresh AbortSignal for each attempt
+      if (options.timeout) {
+         const controller = new AbortController();
+         timeoutId = setTimeout(() => { const err = new Error('AbortError'); err.name = 'AbortError'; controller.abort(err); }, options.timeout);
+         fetchOptions.signal = controller.signal;
+         delete fetchOptions.timeout;
+      }
+
+      const response = await fetch(url, fetchOptions);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Retry on 429 Too Many Requests or 5xx Server Errors
+      if (!response.ok && (response.status === 429 || response.status >= 500)) {
+        const errText = await response.text().catch(() => ''); // Consume body to avoid memory leak
+        const errorMsg = `HTTP ${response.status}: ${errText || response.statusText}`;
+
+        if (attempt === maxAttempts) {
+          throw new Error(errorMsg);
+        }
+
+        const safeUrl = new URL(url).origin + new URL(url).pathname;
+        console.warn(`⚠️ [Genesis] fetchWithRetry: Attempt ${attempt} failed for ${safeUrl} (${response.status}). Retrying in ${100 * Math.pow(2, attempt - 1)}ms...`);
+
+        // Exponential backoff: 100ms, 200ms, 400ms...
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
+        continue;
+      }
+
+      return response;
+    } catch (err) {
+      // Always retry on network errors (fetch throws TypeError for network errors)
+      // Also retry if our custom timeout throws AbortError
+      const isNetworkError = err instanceof TypeError ||
+                             err.name === 'AbortError' ||
+                             err.code === 'ECONNREFUSED' ||
+                             err.code === 'ECONNRESET' ||
+                             err.cause?.code === 'ECONNREFUSED' ||
+                             err.cause?.code === 'ECONNRESET';
+
+      if (!isNetworkError || attempt === maxAttempts) {
+        throw err;
+      }
+
+      let safeUrl = url;
+      try {
+        safeUrl = new URL(url).origin + new URL(url).pathname;
+      } catch (e) { /* ignore parse error */ }
+
+      console.warn(`⚠️ [Genesis] fetchWithRetry: Attempt ${attempt} network error for ${safeUrl}: ${err.message}. Retrying...`);
+
+      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+}
+
+
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
 import dotenv from 'dotenv';
@@ -318,7 +386,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +422,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +635,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +666,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,11 +898,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeout: 10000 // 10s timeout
         });
 
         if (!response.ok) {
@@ -856,11 +924,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeout: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
