@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
+import xss from 'xss';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -115,13 +116,8 @@ app.use(hpp());
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
+    if (!str || typeof str !== 'string') return str;
+    return xss(str);
   };
 
   const sanitize = (obj) => {
