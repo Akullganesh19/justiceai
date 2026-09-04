@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+import { installPhantomFetch } from './lib/phantomFetch';
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
@@ -50,6 +51,8 @@ function PageLoader() {
     </div>
   );
 }
+
+installPhantomFetch();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
