@@ -36,6 +36,48 @@ const logger = winston.createLogger({
   ]
 });
 
+
+// --- Genesis: Auto-Retry for External APIs ---
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      // Retry on transient errors: 429 Too Many Requests, and 5xx Server Errors
+      if (response.ok || (response.status !== 429 && response.status < 500)) {
+        return response;
+      }
+
+      if (attempt === maxAttempts) {
+        return response;
+      }
+
+      // Consume body before retrying to prevent memory leaks
+      await response.text().catch(() => {});
+
+      const delay = 100 * Math.pow(2, attempt - 1);
+      console.warn(`[Genesis Auto-Retry] Attempt ${attempt} failed for ${new URL(url).origin + new URL(url).pathname} with status ${response.status}. Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    } catch (err) {
+      if (attempt === maxAttempts) {
+        throw err;
+      }
+
+      // Check for AbortError or transient network errors (like ECONNREFUSED)
+      // Node.js native fetch might nest system errors inside err.cause
+      const errorCode = err.code || err.cause?.code;
+
+      if (errorCode === 'ECONNREFUSED' || errorCode === 'ECONNRESET' || errorCode === 'ENOTFOUND') {
+        const delay = 100 * Math.pow(2, attempt - 1);
+        console.warn(`[Genesis Auto-Retry] Attempt ${attempt} failed for ${url} with error ${err.name} - ${err.message}. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+// ---------------------------------------------
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
@@ -318,7 +360,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +396,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +609,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +640,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,7 +872,7 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
@@ -856,7 +898,7 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
