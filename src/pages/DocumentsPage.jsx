@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  motion,
+  AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
   ShoppingBag,
@@ -12,6 +14,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Archive,
+  Trash2
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -191,6 +196,7 @@ function FormWizard({ template, onBack, onGenerate }) {
 
 function DocumentPreview({ document, template, onBack }) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -208,6 +214,25 @@ function DocumentPreview({ document, template, onBack }) {
       window.document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleSave = () => {
+    try {
+      const stored = localStorage.getItem('justice_ai_documents');
+      const docs = stored ? JSON.parse(stored) : [];
+      const newDoc = {
+        id: Date.now().toString(),
+        templateId: template.id,
+        title: template.title,
+        content: document,
+        date: new Date().toISOString()
+      };
+      localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...docs]));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (_e) {
+      console.warn('Failed to save to Vault:', _e);
     }
   };
 
@@ -339,6 +364,13 @@ function DocumentPreview({ document, template, onBack }) {
             <Download className="w-4 h-4" />
             <span>EXPORT_PDF</span>
           </button>
+          <button
+            onClick={handleSave}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-extrabold text-[10px] uppercase tracking-widest transition-all italic shadow-hard border-2 ${saved ? 'border-emerald-400 bg-emerald-400/10 text-emerald-400' : 'bg-void border-white/10 hover:border-gold/30 text-text-secondary hover:text-white'}`}
+          >
+            {saved ? <Check className="w-4 h-4 text-emerald-400" /> : <Save className="w-4 h-4" />}
+            <span>{saved ? 'SAVED_TO_VAULT' : 'SAVE_TO_VAULT'}</span>
+          </button>
         </div>
       </div>
 
@@ -375,7 +407,38 @@ function DocumentPreview({ document, template, onBack }) {
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
-  const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview' | 'vault'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  // Load docs on mount and stage change
+  React.useEffect(() => {
+    if (stage === 'vault') {
+      try {
+        const stored = localStorage.getItem('justice_ai_documents');
+        setSavedDocs(stored ? JSON.parse(stored) : []);
+      } catch (_e) {
+        setSavedDocs([]);
+      }
+    }
+  }, [stage]);
+
+  const handleDeleteSaved = (id) => {
+    try {
+      const updated = savedDocs.filter(d => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      setSavedDocs(updated);
+    } catch (_e) {
+      console.warn('Failed to delete doc:', _e);
+    }
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title, id: doc.templateId };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -421,6 +484,17 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+              {/* Vault Toggle */}
+              <div className="flex justify-center mb-12">
+                <button
+                  onClick={() => setStage('vault')}
+                  className="flex items-center gap-3 px-8 py-4 bg-void border-2 border-white/10 hover:border-gold/30 rounded-sm font-extrabold text-[11px] uppercase tracking-[0.2em] transition-all italic shadow-hard text-white"
+                >
+                  <Archive className="w-5 h-5 text-gold" />
+                  <span>ACCESS_DOCUMENT_VAULT</span>
+                </button>
+              </div>
+
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
@@ -432,6 +506,80 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {stage === 'vault' && (
+            <motion.div
+              key="vault"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-4xl mx-auto space-y-8"
+            >
+              <div className="flex items-center justify-between border-b-2 border-white/5 pb-8 mb-8">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setStage('select')}
+                    className="p-3 bg-void border-2 border-white/10 rounded-sm hover:border-gold/30 transition-all shadow-hard"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-text-secondary" />
+                  </button>
+                  <div>
+                    <h2 className="text-3xl font-display font-bold text-white uppercase tracking-tighter italic">DOCUMENT_VAULT</h2>
+                    <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest mt-1">
+                      SECURE_LOCAL_STORAGE
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {savedDocs.length === 0 ? (
+                <div className="text-center py-20 bg-void border-2 border-white/5 rounded-sm shadow-hard">
+                  <Archive className="w-12 h-12 text-text-tertiary mx-auto mb-4 opacity-50" />
+                  <p className="text-sm font-mono text-text-secondary uppercase tracking-widest italic opacity-70">
+                    VAULT_IS_EMPTY
+                  </p>
+                  <p className="text-[10px] font-mono text-text-tertiary mt-2">
+                    GENERATE_AND_SAVE_DOCUMENTS_TO_ACCESS_THEM_HERE
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {savedDocs.map(doc => (
+                    <div key={doc.id} className="bg-void border-2 border-white/5 rounded-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-hard hover:border-gold/20 transition-all">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <span className="px-2 py-1 bg-gold/10 border border-gold/20 text-gold text-[9px] font-extrabold uppercase tracking-widest rounded-sm">
+                            {doc.templateId}
+                          </span>
+                          <span className="text-[10px] text-text-tertiary font-mono italic">
+                            {new Date(doc.date).toLocaleString()}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-display text-white font-bold italic">{doc.title}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleViewSaved(doc)}
+                          className="flex items-center gap-2 px-6 py-2.5 bg-void border-2 border-white/10 hover:border-gold/40 rounded-sm font-extrabold text-[10px] text-white uppercase tracking-widest transition-all italic shadow-hard"
+                        >
+                          <FileSearch className="w-4 h-4" />
+                          <span>REVIEW_DRAFT</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSaved(doc.id)}
+                          className="p-2.5 bg-void border-2 border-red-500/20 hover:bg-red-500/10 rounded-sm transition-all shadow-hard text-red-400 group"
+                          title="Delete from Vault"
+                        >
+                          <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
