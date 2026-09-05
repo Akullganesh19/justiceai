@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Archive,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -375,7 +378,37 @@ function DocumentPreview({ document, template, onBack }) {
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
-  const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview' | 'vault'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  React.useEffect(() => {
+    try {
+      const docs = localStorage.getItem('justice_ai_documents');
+      if (docs) {
+        setSavedDocs(JSON.parse(docs));
+      }
+    } catch (_e) { /* ignore */ }
+  }, []);
+
+  const saveDocument = (docText, template) => {
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: template.id,
+      title: template.title,
+      text: docText,
+      date: new Date().toISOString()
+    };
+    // Fetch latest docs from localstorage to avoid race conditions if possible, but state is fine here
+    const updated = [newDoc, ...savedDocs];
+    setSavedDocs(updated);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+  };
+
+  const deleteDocument = (id) => {
+    const updated = savedDocs.filter(d => d.id !== id);
+    setSavedDocs(updated);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,6 +418,7 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+    saveDocument(doc, selectedTemplate);
     setStage('preview');
   };
 
@@ -408,6 +442,15 @@ export default function DocumentsPage() {
               exit={{ opacity: 0 }}
             >
               {/* Page Header */}
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={() => setStage('vault')}
+                  className="flex items-center gap-2 bg-void border border-gold/30 text-gold px-4 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-gold/10 transition-colors"
+                >
+                  <Archive className="w-4 h-4" />
+                  <span>Document Vault ({savedDocs.length})</span>
+                </button>
+              </div>
               <div className="text-center space-y-4 mb-16">
                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
                   <FileWarning className="w-4 h-4" />
@@ -464,6 +507,69 @@ export default function DocumentsPage() {
               />
             </motion.div>
           )}
+
+          {stage === 'vault' && (
+            <motion.div
+              key="vault"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="flex items-center gap-4 mb-8">
+                <button
+                  onClick={() => setStage('select')}
+                  className="p-2 rounded-sm bg-void border-2 border-white/10 hover:border-gold/30 transition-colors shadow-hard"
+                >
+                  <ArrowLeft className="w-5 h-5 text-text-secondary" />
+                </button>
+                <div>
+                  <h2 className="text-3xl font-display text-white italic">DOCUMENT_VAULT</h2>
+                  <p className="text-sm text-text-tertiary font-body mt-1">Archived procedural drafts and generated notices.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {savedDocs.length === 0 ? (
+                  <div className="text-center py-20 px-8 border-2 border-dashed border-white/10 rounded-sm">
+                    <Archive className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                    <p className="text-sm text-text-tertiary font-mono uppercase tracking-widest">Vault is empty</p>
+                  </div>
+                ) : (
+                  savedDocs.map(doc => (
+                    <div key={doc.id} className="bg-void border-2 border-white/5 p-6 rounded-sm flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-gold/30 transition-all group">
+                      <div className="flex-1 cursor-pointer" onClick={() => {
+                         // Find template to pass along
+                         const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title, id: doc.templateId };
+                         setSelectedTemplate(template);
+                         setGeneratedDoc(doc.text);
+                         setStage('preview');
+                      }}>
+                        <h3 className="text-lg font-display text-white uppercase italic tracking-tight mb-2 group-hover:text-gold transition-colors">{doc.title}</h3>
+                        <div className="flex items-center gap-4 text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {new Date(doc.date).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1"><FileSearch className="w-3 h-3"/> ID: {doc.id.slice(-6)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDocument(doc.id);
+                          }}
+                          className="p-3 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 rounded-sm transition-colors border border-transparent hover:border-red-400/20"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </main>
     </div>
