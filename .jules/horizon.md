@@ -1,0 +1,6 @@
+## 2025-05-15 — Migrate to React Router Data API
+**Risk identified:** The legacy Component API (`<BrowserRouter>`, `<Routes>`) for React Router is becoming outdated. Adhering to it limits the use of modern data loading capabilities (like loaders and actions) and leads to friction as the wider React ecosystem increasingly standardizes on the Data API (`createBrowserRouter`). This technical debt compounds as components get tangled with legacy routing semantics.
+**Migration target:** React Router Data API (v6.4+). Using `createBrowserRouter` and `RouterProvider`.
+**Migrated this session:** `src/main.jsx` was successfully migrated to the Data API. The legacy layout was safely wrapped in a new `RootLayout` component, taking advantage of `<Outlet />` without losing the original behavior. The test configuration in `src/test/App.test.jsx` was also updated to use `MemoryRouter` instead of `BrowserRouter`.
+**Remaining:** Migrate individual page data loading (such as `useEffect` fetching) over to route `loader` functions to fully leverage the Data API.
+**Next session:** Start migrating the most frequently accessed page components (like `DashboardPage` or `ChatPage`) to use `loader` functions for data fetching before component rendering.
