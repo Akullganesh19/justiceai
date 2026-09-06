@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings2, 
@@ -9,6 +9,9 @@ import {
   ShieldAlert, 
   Save, 
   RefreshCcw,
+  FileDown,
+  FileUp,
+  Trash2,
   Key,
   Globe,
   Zap
@@ -29,6 +32,95 @@ export default function IntelligenceSelectionTerminal() {
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(null); // null | 'ollama' | 'gemini' | 'deepseek'
+
+  const fileInputRef = useRef(null);
+
+  const handleExportData = () => {
+    try {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('justice_ai_')) {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `justice_ai_vault_export_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast({
+        title: 'DATA_VAULT_EXPORTED',
+        description: 'Your encrypted local footprint has been downloaded.',
+        type: 'success'
+      });
+    } catch (_err) {
+      addToast({
+        title: 'EXPORT_FAILED',
+        description: 'Failed to extract local vault data.',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        let importedCount = 0;
+        for (const key in data) {
+          if (key.startsWith('justice_ai_')) {
+            localStorage.setItem(key, data[key]);
+            importedCount++;
+          }
+        }
+        addToast({
+          title: 'SYSTEM_STATE_RESTORED',
+          description: `Successfully imported ${importedCount} memory nodes. Reloading...`,
+          type: 'success'
+        });
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (_err) {
+        addToast({
+          title: 'RESTORE_FAILED',
+          description: 'Corrupted or invalid vault file.',
+          type: 'error'
+        });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
+
+  const handlePurgeData = () => {
+    if (window.confirm('CRITICAL WARNING: This will permanently delete all local cases, chats, and intelligence states from this device. Proceed?')) {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('justice_ai_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      addToast({
+        title: 'DATA_PURGED',
+        description: 'Local vault wiped completely. Reloading system.',
+        type: 'success'
+      });
+      setTimeout(() => window.location.reload(), 1500);
+    }
+  };
+
 
   // Load settings on mount
   useEffect(() => {
@@ -53,7 +145,7 @@ export default function IntelligenceSelectionTerminal() {
         description: `Active analysis provider shifted to ${activeProvider.toUpperCase()}.`,
         type: 'success'
       });
-    } catch (e) {
+    } catch (_e) {
       addToast({
         title: 'SYSTEM_ERROR',
         description: 'Failed to write to local storage framework.',
@@ -79,7 +171,7 @@ export default function IntelligenceSelectionTerminal() {
         description: 'Analysis link verified. System ready to assist.',
         type: 'success'
       });
-    } catch (e) {
+    } catch (_e) {
       addToast({
         title: 'LINK_FAILURE',
         description: 'Could not establish connection with backend system.',
@@ -246,6 +338,69 @@ export default function IntelligenceSelectionTerminal() {
             </div>
           </div>
         </div>
+          {/* Data Portability & Vault */}
+          <div className="lg:col-span-3 mt-8 border-t border-white/5 pt-12 space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Database className="w-5 h-5 text-gold" />
+              <h2 className="text-xl font-black uppercase tracking-widest italic">
+                DATA_PORTABILITY_VAULT
+              </h2>
+            </div>
+            <p className="text-sm text-text-tertiary font-body mb-8 max-w-2xl opacity-80 leading-relaxed">
+              Your legal footprint (cases, consultations, documents) is stored exclusively on this device. Extract your system state for backup or migration, or permanently wipe local memory.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <button
+                onClick={handleExportData}
+                className="group p-6 bg-void border-2 border-white/10 hover:border-gold/40 rounded-sm text-left transition-all hover:-translate-y-1 shadow-hard"
+              >
+                <FileDown className="w-6 h-6 text-text-tertiary group-hover:text-gold transition-colors mb-4" />
+                <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">
+                  EXPORT_STATE
+                </h3>
+                <p className="text-xs text-text-tertiary font-body opacity-70">
+                  Download all local records as an encrypted JSON backup file.
+                </p>
+              </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="group p-6 bg-void border-2 border-white/10 hover:border-gold/40 rounded-sm text-left transition-all hover:-translate-y-1 shadow-hard"
+              >
+                <FileUp className="w-6 h-6 text-text-tertiary group-hover:text-gold transition-colors mb-4" />
+                <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">
+                  RESTORE_STATE
+                </h3>
+                <p className="text-xs text-text-tertiary font-body opacity-70">
+                  Import an existing JSON vault to restore your history.
+                </p>
+              </button>
+
+              {/* Hidden file input */}
+              <input
+                type="file"
+                accept=".json"
+                ref={fileInputRef}
+                onChange={handleImportData}
+                className="hidden"
+              />
+
+              <button
+                onClick={handlePurgeData}
+                className="group p-6 bg-void border-2 border-white/10 hover:border-red-500/40 rounded-sm text-left transition-all hover:-translate-y-1 shadow-hard"
+              >
+                <Trash2 className="w-6 h-6 text-text-tertiary group-hover:text-red-500 transition-colors mb-4" />
+                <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2 group-hover:text-red-500 transition-colors">
+                  PURGE_MEMORY
+                </h3>
+                <p className="text-xs text-text-tertiary font-body opacity-70">
+                  Permanently erase all local tracking and consultation data.
+                </p>
+              </button>
+            </div>
+          </div>
+
       </main>
     </div>
   );
