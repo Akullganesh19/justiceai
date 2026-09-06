@@ -1,0 +1,6 @@
+## 2024-05-18 — Data Portability Vault
+**Product understood as:** A local-first, privacy-centric AI legal co-pilot that stores all consultation and case tracking data exclusively in the browser's localStorage.
+**Derivation reasoning:** Pattern 5 (Isolation Without Integration). Users are storing highly sensitive, long-term legal case information within the app. Because it relies entirely on client-side storage without a cloud backend, their entire legal footprint is trapped in their current browser. If the cache is cleared or they switch devices, all data is permanently lost. Therefore, users obviously need a way to extract, backup, and restore their system state.
+**Feature built:** A Data Portability Vault added to the Intelligence Selection Terminal (Settings). It allows users to export all `justice_ai_*` keys as an encrypted JSON backup file, import/restore from a previous JSON vault, and permanently purge their local memory.
+**User impact:** Complete data sovereignty and portability. Users can now back up their cases, migrate to different devices, and ensure their sensitive legal records are never accidentally lost to a browser reset.
+**Next logical feature:** Global search functionality across all past case consultations to easily retrieve specific advice.
