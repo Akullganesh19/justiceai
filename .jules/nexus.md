@@ -1,0 +1,6 @@
+## 2024-05-24 — Document Vault
+**Product understood as:** A legal co-pilot that helps Indian citizens generate important legal documents (Notices, RTIs, FIRs, etc.) based on structured templates.
+**Derivation reasoning:** Currently, users can generate documents, copy them, or download them as PDFs. However, if they close the page or navigate away, the generated document is lost forever. They would have to re-fill the entire form to get it back. We already store chat history in `localStorage` (`justice_ai_history`). It is entirely logical that we should also save generated documents in `localStorage` (`justice_ai_documents`) so users can access their past drafts. This fulfills the "Actions Without Memory" missing feature pattern.
+**Feature built:** Added a "Document Vault" section to the Documents page. Generated documents are now automatically saved to local storage. Users can view a list of their saved documents, click on them to preview/download them again, or delete them.
+**User impact:** Users no longer lose their generated documents when they navigate away from the page, saving time and preventing frustration.
+**Next logical feature:** A multi-step workflow feature, where generating a document (e.g. a legal notice) could automatically log an event into the Case Tracker.
