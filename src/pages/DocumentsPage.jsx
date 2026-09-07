@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef } from 'react';
 import {
   FileWarning,
   ShoppingBag,
@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FileClock,
+  Archive
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -198,7 +201,7 @@ function DocumentPreview({ document, template, onBack }) {
       await navigator.clipboard.writeText(document);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } catch (_err) {
       // Fallback
       const ta = window.document.createElement('textarea');
       ta.value = document;
@@ -376,6 +379,17 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('justice_ai_documents');
+        return saved ? JSON.parse(saved) : [];
+      } catch (_err) {
+        return [];
+      }
+    }
+    return [];
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -384,9 +398,55 @@ export default function DocumentsPage() {
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
+
+    // Save to Vault
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      date: new Date().toISOString()
+    };
+
+    setSavedDocuments(prev => {
+      const updated = [newDoc, ...prev];
+      try {
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      } catch (_err) {
+        console.error("Failed to save to local storage", _err);
+      }
+      return updated;
+    });
+
     setGeneratedDoc(doc);
     setStage('preview');
   };
+
+  const loadSavedDocument = (docId) => {
+    const docToLoad = savedDocuments.find(d => d.id === docId);
+    if (docToLoad) {
+      const template = DOCUMENT_TEMPLATES.find(t => t.id === docToLoad.templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setGeneratedDoc(docToLoad.content);
+        setStage('preview');
+      }
+    }
+  };
+
+  const deleteSavedDocument = (docId, e) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => {
+      const updated = prev.filter(d => d.id !== docId);
+      try {
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      } catch (_err) {
+        console.error("Failed to save to local storage", _err);
+      }
+      return updated;
+    });
+  };
+
 
   const handleReset = () => {
     setSelectedTemplate(null);
@@ -422,7 +482,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -431,6 +491,59 @@ export default function DocumentsPage() {
                     index={i}
                   />
                 ))}
+              </div>
+
+              {/* Document Vault */}
+              <div className="border-t border-white/10 pt-16 mt-8">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-10 h-10 rounded-sm bg-gold/10 border border-gold/30 flex items-center justify-center">
+                    <Archive className="w-5 h-5 text-gold" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-display text-white uppercase tracking-wider">Document Vault</h2>
+                    <p className="text-sm text-text-tertiary font-mono italic opacity-70">
+                      SECURE LOCAL STORAGE OF GENERATED DRAFTS
+                    </p>
+                  </div>
+                </div>
+
+                {savedDocuments.length === 0 ? (
+                  <div className="text-center p-12 bg-void border-2 border-dashed border-white/10 rounded-sm">
+                    <FileClock className="w-8 h-8 text-white/20 mx-auto mb-4" />
+                    <p className="text-text-tertiary font-mono text-sm uppercase tracking-widest">No Documents In Vault</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc, idx) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        key={doc.id}
+                        onClick={() => loadSavedDocument(doc.id)}
+                        className="group p-5 bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm cursor-pointer transition-all shadow-hard relative overflow-hidden"
+                      >
+                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                               onClick={(e) => deleteSavedDocument(doc.id, e)}
+                               className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-sm transition-colors"
+                            >
+                               <Trash2 className="w-4 h-4" />
+                            </button>
+                         </div>
+                         <h4 className="text-white font-display text-lg mb-1 pr-8 truncate uppercase">{doc.title}</h4>
+                         <div className="flex items-center justify-between mt-4">
+                           <span className="text-xs text-text-tertiary font-mono opacity-70">
+                             {new Date(doc.date).toLocaleDateString()}
+                           </span>
+                           <span className="text-[10px] text-gold uppercase tracking-widest font-extrabold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                              OPEN <ChevronRight className="w-3 h-3" />
+                           </span>
+                         </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
