@@ -155,7 +155,7 @@ export default function DashboardPage() {
       try {
         const parsed = JSON.parse(saved);
         setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+      } catch (_e) {}
     }
 
     const hour = new Date().getHours();
