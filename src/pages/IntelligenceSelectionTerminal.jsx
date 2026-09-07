@@ -16,6 +16,7 @@ import {
 import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
 
+
 export default function IntelligenceSelectionTerminal() {
   const { addToast } = useToast();
   

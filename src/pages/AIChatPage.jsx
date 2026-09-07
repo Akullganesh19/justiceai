@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, Sparkles, ShieldCheck, Scale, Cpu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+
 function TypewriterEffect({ text, speed = 8, onComplete }) {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
