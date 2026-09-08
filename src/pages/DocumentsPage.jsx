@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,10 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Eye,
+  Calendar,
+  BookOpen
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +380,30 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocuments));
+  }, [savedDocuments]);
+
+  const handleDeleteSavedDoc = (id) => {
+    setSavedDocuments(prev => prev.filter(doc => doc.id !== id));
+  };
+
+  const handleViewSavedDoc = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +414,16 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save to Vault
+    const newSavedDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      date: new Date().toISOString(),
+      content: doc,
+    };
+    setSavedDocuments(prev => [newSavedDoc, ...prev]);
   };
 
   const handleReset = () => {
@@ -432,6 +470,57 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-24 space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/10 pb-4">
+                    <BookOpen className="w-6 h-6 text-gold" />
+                    <h2 className="text-2xl font-display uppercase tracking-widest text-white italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                    <span className="px-2 py-1 bg-white/5 border border-white/10 text-[10px] text-text-tertiary rounded-sm font-mono">
+                      {savedDocuments.length} SAVED
+                    </span>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {savedDocuments.map(doc => (
+                      <div
+                        key={doc.id}
+                        className="p-6 bg-void border border-white/10 hover:border-gold/30 rounded-sm transition-all group flex flex-col gap-4 shadow-hard"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-lg font-bold text-white mb-1 group-hover:text-gold transition-colors">{doc.title}</h3>
+                            <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-mono uppercase tracking-widest">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(doc.date).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSavedDoc(doc.id)}
+                            className="p-2 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 rounded-sm transition-colors"
+                            title="Delete from Vault"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex justify-end mt-auto pt-4 border-t border-white/5">
+                          <button
+                            onClick={() => handleViewSavedDoc(doc)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-gold/10 text-white hover:text-gold text-[10px] uppercase tracking-widest font-bold rounded-sm transition-colors border border-white/10 hover:border-gold/30"
+                          >
+                            <Eye className="w-3 h-3" />
+                            VIEW_DOCUMENT
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
