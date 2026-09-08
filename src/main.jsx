@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
@@ -15,29 +15,112 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+
+const ROUTE_IMPORTS = {
+  '/': () => import('./pages/LandingPage.jsx'),
+  '/dashboard': () => import('./pages/DashboardPage.jsx'),
+  '/chat': () => import('./pages/ChatPage.jsx'),
+  '/documents': () => import('./pages/DocumentsPage.jsx'),
+  '/rights': () => import('./pages/RightsPage.jsx'),
+  '/estimator': () => import('./pages/EstimatorPage.jsx'),
+  '/lawyers': () => import('./pages/LawyerFinderPage.jsx'),
+  '/tracker': () => import('./pages/CaseTrackerPage.jsx'),
+  '/quiz': () => import('./pages/LegalQuizPage.jsx'),
+  '/limitation': () => import('./pages/LimitationCalculatorPage.jsx'),
+  '/legal-aid': () => import('./pages/LegalAidCheckerPage.jsx'),
+  '/glossary': () => import('./pages/GlossaryPage.jsx'),
+  '/about': () => import('./pages/AboutPage.jsx'),
+  '/faq': () => import('./pages/FAQPage.jsx'),
+  '/samples': () => import('./pages/SamplesPage.jsx'),
+  '/lawyer-onboarding': () => import('./pages/LawyerOnboardingPage.jsx'),
+  '/disclaimer': () => import('./pages/DisclaimerPage.jsx'),
+  '/privacy': () => import('./pages/PrivacyPage.jsx'),
+  '/auth': () => import('./pages/AuthPage.jsx'),
+  '/showcase': () => import('./pages/ShowcasePage.jsx'),
+  '/settings': () => import('./pages/IntelligenceSelectionTerminal.jsx'),
+  '*': () => import('./pages/NotFoundPage.jsx')
+};
+
 // Lazy-loaded pages for optimal bundle splitting
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
-const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
-const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
-const FAQPage = lazy(() => import('./pages/FAQPage.jsx'));
-const SamplesPage = lazy(() => import('./pages/SamplesPage.jsx'));
-const DocumentsPage = lazy(() => import('./pages/DocumentsPage.jsx'));
-const RightsPage = lazy(() => import('./pages/RightsPage.jsx'));
-const EstimatorPage = lazy(() => import('./pages/EstimatorPage.jsx'));
-const LawyerFinderPage = lazy(() => import('./pages/LawyerFinderPage.jsx'));
-const CaseTrackerPage = lazy(() => import('./pages/CaseTrackerPage.jsx'));
-const LegalQuizPage = lazy(() => import('./pages/LegalQuizPage.jsx'));
-const LimitationCalculatorPage = lazy(() => import('./pages/LimitationCalculatorPage.jsx'));
-const LegalAidCheckerPage = lazy(() => import('./pages/LegalAidCheckerPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const GlossaryPage = lazy(() => import('./pages/GlossaryPage.jsx'));
-const LawyerOnboardingPage = lazy(() => import('./pages/LawyerOnboardingPage.jsx'));
-const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
-const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const LandingPage = lazy(ROUTE_IMPORTS['/']);
+const ChatPage = lazy(ROUTE_IMPORTS['/chat']);
+const AboutPage = lazy(ROUTE_IMPORTS['/about']);
+const FAQPage = lazy(ROUTE_IMPORTS['/faq']);
+const SamplesPage = lazy(ROUTE_IMPORTS['/samples']);
+const DocumentsPage = lazy(ROUTE_IMPORTS['/documents']);
+const RightsPage = lazy(ROUTE_IMPORTS['/rights']);
+const EstimatorPage = lazy(ROUTE_IMPORTS['/estimator']);
+const LawyerFinderPage = lazy(ROUTE_IMPORTS['/lawyers']);
+const CaseTrackerPage = lazy(ROUTE_IMPORTS['/tracker']);
+const LegalQuizPage = lazy(ROUTE_IMPORTS['/quiz']);
+const LimitationCalculatorPage = lazy(ROUTE_IMPORTS['/limitation']);
+const LegalAidCheckerPage = lazy(ROUTE_IMPORTS['/legal-aid']);
+const DashboardPage = lazy(ROUTE_IMPORTS['/dashboard']);
+const GlossaryPage = lazy(ROUTE_IMPORTS['/glossary']);
+const LawyerOnboardingPage = lazy(ROUTE_IMPORTS['/lawyer-onboarding']);
+const DisclaimerPage = lazy(ROUTE_IMPORTS['/disclaimer']);
+const PrivacyPage = lazy(ROUTE_IMPORTS['/privacy']);
+const AuthPage = lazy(ROUTE_IMPORTS['/auth']);
+const ShowcasePage = lazy(ROUTE_IMPORTS['/showcase']);
+const IntelligenceSelectionTerminal = lazy(ROUTE_IMPORTS['/settings']);
+const NotFoundPage = lazy(ROUTE_IMPORTS['*']);
+
+// Predictive Navigation Mesh
+function PredictiveNavigationMesh() {
+  const location = useLocation();
+  const prevPathRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const currentPath = location.pathname;
+    const prevPath = prevPathRef.current;
+
+    if (prevPath && prevPath !== currentPath) {
+      try {
+        const stored = localStorage.getItem('oracle_nav_graph');
+        const graph = stored ? JSON.parse(stored) : {};
+
+        if (!graph[prevPath]) graph[prevPath] = {};
+        graph[prevPath][currentPath] = (graph[prevPath][currentPath] || 0) + 1;
+
+        localStorage.setItem('oracle_nav_graph', JSON.stringify(graph));
+      } catch (_err) {
+        // Handle quota errors silently
+      }
+    }
+
+    prevPathRef.current = currentPath;
+
+    // Predict and prefetch the most likely next route
+    try {
+      const stored = localStorage.getItem('oracle_nav_graph');
+      if (stored) {
+        const graph = JSON.parse(stored);
+        const transitions = graph[currentPath];
+        if (transitions) {
+          let maxCount = 0;
+          let mostLikelyRoute = null;
+
+          for (const [route, count] of Object.entries(transitions)) {
+            if (count > maxCount) {
+              maxCount = count;
+              mostLikelyRoute = route;
+            }
+          }
+
+          if (mostLikelyRoute && ROUTE_IMPORTS[mostLikelyRoute]) {
+            // Silently prefetch the most likely route
+            ROUTE_IMPORTS[mostLikelyRoute]();
+          }
+        }
+      }
+    } catch (_err) {
+      // Ignore prediction failures
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 
 // Loading fallback component
 function PageLoader() {
@@ -58,6 +141,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Router>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
+          <PredictiveNavigationMesh />
           <CommandPalette />
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
           <Suspense fallback={<PageLoader />}>
