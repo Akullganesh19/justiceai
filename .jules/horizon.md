@@ -1,0 +1,6 @@
+## 2024-05-24 — React Router Data API Migration
+**Risk identified:** The project is using React Router v6 but sticking to the legacy `<BrowserRouter>` component pattern with scattered `<Routes>`. This pattern is becoming deprecated as React Router strongly pushes developers toward the modern Data API (`createBrowserRouter`, loaders, actions). Deferring this migration prevents us from using modern data fetching, error boundaries within routes, and concurrent rendering features. Continuing with the old pattern will make future upgrades (e.g., React Router v7) extremely difficult.
+**Migration target:** React Router's Data API (`createBrowserRouter` and `RouterProvider`).
+**Migrated this session:** Converted the root routing configuration in `src/main.jsx` to use `createBrowserRouter`, implementing a standard `RootLayout` with an `<Outlet />`. Updated testing wrappers in `src/test/App.test.jsx` to use `<MemoryRouter>` to remain compatible with tests.
+**Remaining:** Migrate individual pages to use route loaders and actions instead of `useEffect` for data fetching, starting with the heaviest data pages.
+**Next session:** Identify the pages making the most API calls on mount and migrate them to use React Router loaders.
