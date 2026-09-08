@@ -1,0 +1,6 @@
+## 2024-05-18 — Document Vault
+**Product understood as:** An AI legal co-pilot that helps citizens understand rights, draft documents, and navigate legal processes locally.
+**Derivation reasoning:** The product has a Document Generator (`/documents`) that allows users to create legal documents (Notices, RTIs, etc.). Users fill a form, generate a document, and can copy or export it. However, once they leave the page, the generated document is gone. Therefore, they obviously need a "Document Vault" feature to view, copy, and download previously generated documents because generating a document and losing it on navigation is a frustrating user experience. It doesn't exist because the initial focus was likely on the AI generation side.
+**Feature built:** Added a local storage mechanism to save generated documents and a "Document Vault" UI in the DocumentsPage to view/manage them.
+**User impact:** Users can now return to the Documents page and access their past drafted documents, preventing data loss and enabling them to resume their legal processes easily.
+**Next logical feature:** Ability to share a drafted document securely or get it reviewed by a lawyer (integration between Document Vault and Lawyer Finder).
