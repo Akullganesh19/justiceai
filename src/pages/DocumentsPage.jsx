@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FileWarning,
+import { FileWarning, Trash2, Clock, Calendar,
   ShoppingBag,
   FileSearch,
   Shield,
@@ -376,6 +375,15 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [activeTab, setActiveTab] = useState('templates'); // 'templates' | 'saved'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,6 +393,22 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save to localStorage
+    const newDoc = {
+      id: Date.now().toString(),
+      title: selectedTemplate.title,
+      templateId: selectedTemplate.id,
+      content: doc,
+      timestamp: new Date().toISOString(),
+    };
+
+    setSavedDocs(prev => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setStage('preview');
   };
 
@@ -392,6 +416,22 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+  };
+
+  const handleDeleteDoc = (id) => {
+    setSavedDocs(prev => {
+      const updated = prev.filter(doc => doc.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleViewSavedDoc = (doc) => {
+    // Find the template to match the structure expected by DocumentPreview
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
   };
 
   return (
@@ -408,7 +448,7 @@ export default function DocumentsPage() {
               exit={{ opacity: 0 }}
             >
               {/* Page Header */}
-              <div className="text-center space-y-4 mb-16">
+              <div className="text-center space-y-4 mb-10">
                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
                   <FileWarning className="w-4 h-4" />
                   <span>DRAFTING_PROTOCOL_V1.0</span>
@@ -421,17 +461,123 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
-              {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    onSelect={handleSelect}
-                    index={i}
-                  />
-                ))}
+              {/* Tabs */}
+              <div className="flex justify-center gap-4 mb-12">
+                <button
+                  onClick={() => setActiveTab('templates')}
+                  className={`px-6 py-3 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-luxe active:translate-y-[2px] italic ${
+                    activeTab === 'templates'
+                      ? 'bg-gold border-gold text-midnight'
+                      : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-gold/30'
+                  }`}
+                >
+                  Document Templates
+                </button>
+                <button
+                  onClick={() => setActiveTab('saved')}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-sm border-2 text-[10px] font-extrabold uppercase tracking-widest transition-all shadow-luxe active:translate-y-[2px] italic ${
+                    activeTab === 'saved'
+                      ? 'bg-gold border-gold text-midnight'
+                      : 'bg-void border-white/5 text-text-tertiary hover:text-white hover:border-gold/30'
+                  }`}
+                >
+                  Saved Drafts
+                  <span className={`text-[9px] px-2 py-0.5 rounded-sm border ${activeTab === 'saved' ? 'bg-midnight/20 border-midnight/20 text-midnight' : 'bg-white/5 border-white/5 text-white/20'}`}>
+                    {savedDocs.length}
+                  </span>
+                </button>
               </div>
+
+              {activeTab === 'templates' ? (
+                /* Template Grid */
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {DOCUMENT_TEMPLATES.map((template, i) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      onSelect={handleSelect}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              ) : (
+                /* Saved Documents List */
+                <div className="space-y-4">
+                  {savedDocs.length === 0 ? (
+                    <div className="text-center py-24 space-y-8 bg-void rounded-sm border-2 border-dashed border-white/10 shadow-hard">
+                      <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto opacity-40">
+                        <FileWarning className="w-8 h-8 text-white/40" />
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-2xl font-display font-bold text-white uppercase tracking-tight">
+                          No Saved Drafts
+                        </p>
+                        <p className="text-sm text-text-tertiary/60 max-w-md mx-auto leading-relaxed">
+                          Documents you generate will be automatically saved here for future reference.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('templates')}
+                        className="inline-block px-8 py-4 rounded-sm bg-void border-2 border-white/10 text-text-tertiary text-[11px] font-extrabold uppercase tracking-widest hover:text-white hover:border-gold/30 transition-all shadow-hard italic"
+                      >
+                        Explore Templates
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {savedDocs.map((doc, idx) => (
+                        <motion.div
+                          key={doc.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/20 transition-all group shadow-hard"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-sm bg-gold/10 border-2 border-gold/20 flex items-center justify-center shrink-0">
+                              <FileWarning className="w-5 h-5 text-gold" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-display font-bold text-white uppercase tracking-tight italic mb-1 group-hover:text-gold transition-colors">
+                                {doc.title}
+                              </h3>
+                              <div className="flex items-center gap-4 text-[10px] font-extrabold uppercase tracking-widest text-text-tertiary opacity-60">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(doc.timestamp).toLocaleDateString()}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(doc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                              onClick={() => handleViewSavedDoc(doc)}
+                              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-sm bg-void border-2 border-white/10 text-[10px] font-extrabold uppercase tracking-widest text-text-secondary hover:text-white hover:border-gold/30 transition-all italic shadow-hard"
+                            >
+                              View Draft
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteDoc(doc.id);
+                              }}
+                              className="p-3 rounded-sm bg-void border-2 border-white/10 text-text-tertiary hover:text-accent-error hover:border-accent-error/40 hover:bg-accent-error/10 transition-all shadow-hard"
+                              title="Delete Draft"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 

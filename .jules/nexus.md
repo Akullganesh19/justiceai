@@ -1,0 +1,6 @@
+## 2024-05-18 — Saved Documents
+**Product understood as:** An AI-powered legal co-pilot that helps citizens understand their rights, build strategies, and draft procedural legal documents.
+**Derivation reasoning:** Pattern 3: Actions Without Memory. The product currently allows users to generate legal documents via templates. However, once a document is generated (and the user navigates away or refreshes the page), the generated text is lost. The application has no "memory" of these generated documents, forcing users to either immediately download/copy them or lose their progress. Since we already generate this data, it logically follows that the app should locally persist the user's generated documents so they can be retrieved, previewed, downloaded, or copied later.
+**Feature built:** Added a "Saved Documents" tab to the Documents page that persists generated documents to localStorage.
+**User impact:** Users can now safely navigate away after generating a document, knowing they can retrieve, copy, download, or delete their drafted documents later from the "Saved Documents" tab.
+**Next logical feature:** Since users can now save drafted documents and have case histories, the next logical step might be a unified "My Legal Vault" or integrating saved documents directly with case histories (Pattern 5: Isolation Without Integration).
