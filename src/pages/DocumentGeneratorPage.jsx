@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import {
@@ -25,6 +25,7 @@ import {
   FileInput,
   Milestone,
   ArrowLeft,
+  Sparkles,
 } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import Header from '../components/ui/Header';
@@ -169,6 +170,42 @@ export default function DocumentGeneratorPage() {
   const [formData, setFormData] = useState({});
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [predictedTemplateId, setPredictedTemplateId] = useState(null);
+  const [predictedFacts, setPredictedFacts] = useState('');
+
+  // 🛸 ORACLE: Behavioral Next-Action Prediction
+  // Predict which document the user needs next based on their most recent chat
+  useEffect(() => {
+    try {
+      const historyStr = localStorage.getItem('justice_ai_history');
+      if (!historyStr) return;
+      const history = JSON.parse(historyStr);
+      if (!history || history.length === 0) return;
+
+      const latestCase = history[0];
+      const caseType = latestCase?.analysis?.caseType?.toLowerCase() || '';
+      const title = latestCase?.title?.toLowerCase() || '';
+
+      // Determine most likely template
+      let predictedId = null;
+      if (caseType.includes('consumer') || title.includes('consumer')) predictedId = 'consumer_complaint';
+      else if (caseType.includes('criminal') || title.includes('police') || title.includes('fir')) predictedId = 'bns_complaint';
+      else if (caseType.includes('rti') || title.includes('rti')) predictedId = 'rti_application';
+      else predictedId = 'legal_notice';
+
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPredictedTemplateId(predictedId);
+
+      // Extract the factual narrative from the user's messages to pre-fill
+      const userMessages = latestCase.messages.filter(m => m.role === 'user');
+      if (userMessages.length > 0) {
+
+        setPredictedFacts(userMessages[0].content);
+      }
+    } catch (_err) {
+      console.warn('Oracle prediction failed:', _err);
+    }
+  }, []);
 
   const handleFieldChange = (id, value) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -247,7 +284,18 @@ export default function DocumentGeneratorPage() {
               <motion.button
                 key={template.id}
                 whileHover={{ y: -8 }}
-                onClick={() => setSelectedTemplate(template)}
+                onClick={() => {
+                  setSelectedTemplate(template);
+                  if (template.id === predictedTemplateId && predictedFacts) {
+                    setFormData({
+                      facts: predictedFacts,
+                      deficiency: predictedFacts,
+                      incident_details: predictedFacts,
+                    });
+                  } else {
+                    setFormData({});
+                  }
+                }}
                 className="bg-void p-10 rounded-sm border-2 border-white/5 text-left space-y-6 group transition-all hover:border-gold/30 shadow-hard"
               >
                 <div className="w-14 h-14 bg-void border-2 border-white/5 rounded-sm flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-midnight transition-colors shadow-inner">
