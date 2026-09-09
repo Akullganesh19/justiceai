@@ -44,6 +44,53 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'nomic-embed-text';
 const CHAT_MODEL = process.env.CHAT_MODEL || 'gemma3:4b';
+
+// ==========================================
+// 🧬 GENESIS: SELF-HEALING ARCHITECTURE
+// ==========================================
+// Auto-retry wrapper for resilient external API calls.
+// Recovers automatically from transient failures (e.g., ECONNRESET, 50x errors)
+// with exponential backoff. Avoids retrying aborted requests.
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // If we got a 429 Too Many Requests or 5xx Server Error, those are worth retrying
+      if (!response.ok && (response.status === 429 || response.status >= 500)) {
+        throw new Error(`Transient HTTP Error: ${response.status}`);
+      }
+
+      // If it's a 4xx client error (other than 429), it's likely a bad request, don't retry
+      if (!response.ok && response.status >= 400 && response.status < 500) {
+         return response; // Return it so the caller can handle the 4xx properly
+      }
+
+      return response;
+    } catch (err) {
+      // Don't retry if the request was intentionally aborted
+      if (err.name === 'AbortError') {
+        throw err;
+      }
+
+      // Check for network errors (ECONNREFUSED, ECONNRESET, ENOTFOUND, etc.)
+      const isNetworkError = err.code || err.cause?.code || err.message.includes('fetch');
+
+      if (attempt === maxAttempts || (!isNetworkError && !err.message.includes('Transient HTTP Error'))) {
+        throw err;
+      }
+
+      const backoffMs = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`⚠️ 🧬 Genesis Auto-Recovery: fetch failed (${err.message}). Retrying (${attempt}/${maxAttempts}) in ${backoffMs}ms...`, {
+         url: new URL(url).origin + new URL(url).pathname
+      });
+
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
+  }
+}
+// ==========================================
+
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB default
 const BHASHINI_API_KEY = process.env.BHASHINI_API_KEY;
 const BHASHINI_USER_ID = process.env.BHASHINI_USER_ID;
@@ -318,7 +365,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +401,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +614,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +645,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
