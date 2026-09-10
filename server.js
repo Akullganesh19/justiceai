@@ -36,6 +36,41 @@ const logger = winston.createLogger({
   ]
 });
 
+// --- Auto-Retry Wrapper added by Genesis ---
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.status >= 500 && attempt < maxAttempts) {
+        logger.warn(`API ${url} returned ${response.status}. Retrying (${attempt}/${maxAttempts})...`);
+        await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempt - 1)));
+        continue;
+      }
+      return response;
+    } catch (err) {
+      const isAbortError = err.name === 'AbortError' || err.message?.includes('aborted');
+      if (isAbortError) {
+        logger.warn(`Request to ${url} aborted.`);
+        throw err; // Do not retry aborted requests
+      }
+
+      const isNetworkError = err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' ||
+                             err.cause?.code === 'ECONNREFUSED' || err.cause?.code === 'ECONNRESET' ||
+                             err.message?.includes('fetch failed');
+
+      if (attempt === maxAttempts) {
+        logger.error(`Failed to fetch ${url} after ${maxAttempts} attempts.`);
+        throw err;
+      }
+
+      logger.warn(`Network error on ${url}: ${err.message}. Retrying (${attempt}/${maxAttempts})...`);
+      await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempt - 1)));
+    }
+  }
+}
+// -------------------------------------------
+
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
@@ -318,7 +353,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +389,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +602,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +633,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
