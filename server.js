@@ -117,10 +117,10 @@ const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
     if (!str) return str;
     return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   };
 
@@ -834,7 +834,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          signal: AbortSignal.timeout(parseInt(process.env.OLLAMA_TIMEOUT) || 300000) // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -860,7 +860,7 @@ app.post('/api/chat', async (req, res) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          signal: AbortSignal.timeout(parseInt(process.env.OLLAMA_TIMEOUT) || 300000) // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
