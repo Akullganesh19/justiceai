@@ -19,7 +19,7 @@ import jsPDF from 'jspdf';
 
 const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
 
-function TemplateCard({ template, onSelect, index }) {
+function TemplateCard({ template, onSelect, index, isPredicted }) {
   const Icon = ICONS[template.icon] || FileWarning;
   return (
     <motion.div
@@ -30,7 +30,13 @@ function TemplateCard({ template, onSelect, index }) {
       className="group relative cursor-pointer"
     >
       <div className="h-full p-8 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 overflow-hidden flex flex-col shadow-hard">
-        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-sm bg-gold/5 blur-3xl group-hover:bg-gold/10 transition-all" />
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-sm bg-gold/5 blur-3xl group-hover:bg-gold/10 transition-all" />
+
+        {isPredicted && (
+          <div className="absolute top-4 right-4 bg-gold text-midnight text-[8px] uppercase tracking-widest font-extrabold px-3 py-1 rounded-sm shadow-hard animate-pulse">
+            PREDICTED_NEXT_ACTION
+          </div>
+        )}
 
         <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center mb-6 group-hover:border-gold/40 group-hover:scale-110 transition-all duration-500 shadow-hard">
           <Icon className="w-7 h-7 text-gold" />
@@ -53,7 +59,18 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    const identity = getLearnedIdentity();
+    const initial = {};
+    if (identity.name || identity.address || identity.phone) {
+      template.fields.forEach(f => {
+        if (f.id.includes('Name') && !f.id.includes('recipient') && !f.id.includes('opposite') && !f.id.includes('pio') && identity.name) initial[f.id] = identity.name;
+        if (f.id.includes('Address') && !f.id.includes('recipient') && !f.id.includes('opposite') && !f.id.includes('authority') && identity.address) initial[f.id] = identity.address;
+        if (f.id.includes('Phone') && identity.phone) initial[f.id] = identity.phone;
+      });
+    }
+    return initial;
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -372,6 +389,55 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+// ORACLE_PREDICTION_CAPABILITY
+// 1. Prediction: Analyze last chat case to suggest next document template
+// 2. Intelligent Default: Auto-learn user identity across different templates
+const getPredictedTemplateId = () => {
+  try {
+    const history = JSON.parse(localStorage.getItem('justice_ai_history') || '[]');
+    if (history.length === 0) return null;
+    const lastCase = history[0];
+    const caseType = lastCase?.analysis?.caseType?.toLowerCase() || '';
+    const strategy = lastCase?.analysis?.strategy?.join(' ').toLowerCase() || '';
+
+    if (strategy.includes('notice') || caseType.includes('civil') || caseType.includes('property')) return 'legal-notice';
+    if (strategy.includes('consumer') || caseType.includes('consumer')) return 'consumer-complaint';
+    if (strategy.includes('rti') || strategy.includes('information')) return 'rti-application';
+    if (strategy.includes('fir') || strategy.includes('police') || caseType.includes('criminal')) return 'fir-draft';
+  } catch (_err) {
+    return null;
+  }
+  return null;
+};
+
+const getLearnedIdentity = () => {
+  try {
+    return JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+  } catch (_err) {
+    return {};
+  }
+};
+
+const saveLearnedIdentity = (formData) => {
+  try {
+    const current = getLearnedIdentity();
+    const updated = { ...current };
+
+    // Map common form fields to our universal identity
+    const nameFields = ['senderName', 'complainantName', 'applicantName', 'informantName'];
+    const addressFields = ['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'];
+    const phoneFields = ['informantPhone'];
+
+    for (const key of Object.keys(formData)) {
+      if (nameFields.includes(key) && formData[key]) updated.name = formData[key];
+      if (addressFields.includes(key) && formData[key]) updated.address = formData[key];
+      if (phoneFields.includes(key) && formData[key]) updated.phone = formData[key];
+    }
+
+    localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(updated));
+  } catch (_err) { /* ignore */ }
+};
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
@@ -383,6 +449,7 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    saveLearnedIdentity(formData);
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
@@ -423,12 +490,18 @@ export default function DocumentsPage() {
 
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
+                {[...DOCUMENT_TEMPLATES].sort((a, b) => {
+                  const predictedId = getPredictedTemplateId();
+                  if (a.id === predictedId) return -1;
+                  if (b.id === predictedId) return 1;
+                  return 0;
+                }).map((template, i) => (
                   <TemplateCard
                     key={template.id}
                     template={template}
                     onSelect={handleSelect}
                     index={i}
+                    isPredicted={template.id === getPredictedTemplateId()}
                   />
                 ))}
               </div>
