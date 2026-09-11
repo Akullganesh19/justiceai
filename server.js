@@ -36,6 +36,27 @@ const logger = winston.createLogger({
   ]
 });
 
+
+// Genesis Recovery: Auto-Retry with Exponential Backoff
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok && (response.status >= 500 || response.status === 429)) {
+        if (attempt === maxAttempts) return response;
+        throw new Error(`HTTP ${response.status} - Retryable error`);
+      }
+      return response;
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      if (attempt === maxAttempts) throw err;
+      const backoff = 100 * Math.pow(2, attempt - 1);
+      logger.warn(`Genesis Recovery: Fetch attempt ${attempt} failed for ${url}. Retrying in ${backoff}ms...`);
+      await new Promise(res => setTimeout(res, backoff));
+    }
+  }
+}
+
 const app = express();
 
 // Configuration from environment variables with fallbacks
@@ -318,7 +339,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +375,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +588,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +619,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
