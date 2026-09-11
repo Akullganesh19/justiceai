@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Clock,
+  Trash2,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +378,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      if (saved) {
+        setSavedDocs(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading saved documents', e);
+    }
+  }, []);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +399,31 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save to localStorage
+    const newDoc = {
+      id: Date.now().toString(),
+      title: selectedTemplate.title,
+      content: doc,
+      date: new Date().toISOString(),
+      templateId: selectedTemplate.id
+    };
+
+    setSavedDocs(prev => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setStage('preview');
+  };
+
+  const handleDeleteDoc = (id) => {
+    setSavedDocs(prev => {
+      const updated = prev.filter(doc => doc.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -431,6 +469,68 @@ export default function DocumentsPage() {
                     index={i}
                   />
                 ))}
+              </div>
+
+              {/* Saved Documents Section */}
+              <div className="mt-24">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-sm bg-gold/10 border-2 border-gold/20 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-gold" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-display font-bold uppercase tracking-tight text-white italic">
+                      DOCUMENT_ARCHIVE
+                    </h2>
+                    <p className="text-xs text-text-tertiary font-mono tracking-widest uppercase opacity-60">
+                      Previously generated procedural drafts
+                    </p>
+                  </div>
+                </div>
+
+                {savedDocs.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocs.map(doc => (
+                      <div key={doc.id} className="p-6 rounded-sm bg-void border-2 border-white/5 shadow-hard flex flex-col hover:border-gold/30 transition-all group">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-lg font-display font-bold text-white uppercase tracking-tight group-hover:text-gold transition-colors">{doc.title}</h3>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDoc(doc.id);
+                            }}
+                            className="p-1.5 rounded-sm hover:bg-white/5 text-text-tertiary hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-tertiary font-mono opacity-60 mb-6 flex-1">
+                          Generated: {new Date(doc.date).toLocaleDateString()}
+                        </p>
+                        <button
+                          onClick={() => {
+                            setSelectedTemplate(DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0]);
+                            setGeneratedDoc(doc.content);
+                            setStage('preview');
+                          }}
+                          className="w-full py-3 bg-white/5 hover:bg-gold hover:text-midnight text-white text-xs font-bold uppercase tracking-widest border border-white/10 hover:border-gold transition-all flex items-center justify-center gap-2 italic"
+                        >
+                          <FileSearch className="w-4 h-4" />
+                          <span>REVIEW_DRAFT</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 rounded-sm bg-void border-2 border-white/5 border-dashed flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                      <FileSearch className="w-8 h-8 text-text-tertiary opacity-40" />
+                    </div>
+                    <p className="text-sm font-bold uppercase tracking-widest text-text-secondary mb-2">NO_ARCHIVES_FOUND</p>
+                    <p className="text-xs text-text-tertiary font-mono opacity-60 italic max-w-md">
+                      Generated documents will be securely cached here for future reference and extraction.
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
