@@ -742,11 +742,15 @@ app.post('/api/chat', async (req, res) => {
     } = req.body;
     
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'Messages array is required' });
+      return res.status(400).json({ error: 'Messages array is required and cannot be empty' });
     }
 
     // Get the latest user message to search for context
-    const latestUserMessage = messages[messages.length - 1].content;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || typeof lastMessage !== 'object' || typeof lastMessage.content !== 'string' || !lastMessage.content.trim()) {
+      return res.status(400).json({ error: 'Latest message content is missing or invalid' });
+    }
+    const latestUserMessage = lastMessage.content;
     
     let contextStr = '';
     let retrievedSources = [];
@@ -952,8 +956,8 @@ app.post('/api/chat', async (req, res) => {
 app.post('/api/embed', async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: 'Text is required' });
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text is required and must be a string' });
     }
     
     const vector = await embeddings.embedQuery(text);
@@ -1015,3 +1019,4 @@ process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
+export { app };
