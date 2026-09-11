@@ -53,7 +53,24 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      const initialData = {};
+      template.fields.forEach(field => {
+        if (field.id === 'sender_name' || field.id === 'applicant_name' || field.id === 'complainant_name') {
+          initialData[field.id] = savedIdentity.name || '';
+        }
+        if (field.id === 'sender_address' || field.id === 'applicant_address' || field.id === 'complainant_address') {
+          initialData[field.id] = savedIdentity.address || '';
+        }
+      });
+      return initialData;
+    } catch (e) {
+      console.error("Failed to parse identity", e);
+      return {};
+    }
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -383,6 +400,23 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    // Save identity for Oracle's smart defaults
+    try {
+      const currentIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      const name = formData['sender_name'] || formData['applicant_name'] || formData['complainant_name'] || currentIdentity.name;
+      const address = formData['sender_address'] || formData['applicant_address'] || formData['complainant_address'] || currentIdentity.address;
+
+      if (name || address) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify({
+          ...currentIdentity,
+          ...(name && { name }),
+          ...(address && { address })
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to save identity", e);
+    }
+
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
