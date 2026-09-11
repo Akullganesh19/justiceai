@@ -176,6 +176,24 @@ export default function DocumentGeneratorPage() {
 
   const handleGenerate = () => {
     if (!selectedTemplate) return;
+
+    // Save identity for Oracle's smart defaults
+    try {
+      const currentIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      const name = formData['sender_name'] || formData['applicant_name'] || formData['complainant_name'] || currentIdentity.name;
+      const address = formData['sender_address'] || formData['applicant_address'] || formData['complainant_address'] || currentIdentity.address;
+
+      if (name || address) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify({
+          ...currentIdentity,
+          ...(name && { name }),
+          ...(address && { address })
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to save identity", e);
+    }
+
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     success({ title: 'Document Generated', message: 'The draft has been professionally formulated.' });
@@ -247,7 +265,25 @@ export default function DocumentGeneratorPage() {
               <motion.button
                 key={template.id}
                 whileHover={{ y: -8 }}
-                onClick={() => setSelectedTemplate(template)}
+                onClick={() => {
+                  setSelectedTemplate(template);
+                  try {
+                    const savedIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+                    // Map saved identity to template fields if applicable
+                    const initialData = {};
+                    template.fields.forEach(field => {
+                      if (field.id === 'sender_name' || field.id === 'applicant_name' || field.id === 'complainant_name') {
+                        initialData[field.id] = savedIdentity.name || '';
+                      }
+                      if (field.id === 'sender_address' || field.id === 'applicant_address' || field.id === 'complainant_address') {
+                        initialData[field.id] = savedIdentity.address || '';
+                      }
+                    });
+                    setFormData(initialData);
+                  } catch (e) {
+                    console.error("Failed to parse identity", e);
+                  }
+                }}
                 className="bg-void p-10 rounded-sm border-2 border-white/5 text-left space-y-6 group transition-all hover:border-gold/30 shadow-hard"
               >
                 <div className="w-14 h-14 bg-void border-2 border-white/5 rounded-sm flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-midnight transition-colors shadow-inner">
@@ -305,11 +341,13 @@ export default function DocumentGeneratorPage() {
                       {field.type === 'textarea' ? (
                         <textarea
                           placeholder={field.placeholder}
+                          value={formData[field.id] || ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[15px] text-white focus:border-gold outline-none h-40 resize-none transition-all placeholder:text-white/10 italic shadow-inner"
                         />
                       ) : field.type === 'select' ? (
                         <select
+                          value={formData[field.id] || ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[15px] text-white focus:border-gold outline-none transition-all appearance-none cursor-pointer italic shadow-inner"
                         >
@@ -324,6 +362,7 @@ export default function DocumentGeneratorPage() {
                         <input
                           type={field.type}
                           placeholder={field.placeholder}
+                          value={formData[field.id] || ''}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           className="w-full bg-void border-2 border-white/10 rounded-sm p-5 text-[13px] text-white focus:border-gold outline-none transition-all placeholder:text-white/10 font-mono italic shadow-inner"
                         />
