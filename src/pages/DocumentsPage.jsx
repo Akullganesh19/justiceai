@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -53,7 +53,51 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  // 🛸 Oracle: Smart Cross-Template Defaults
+  // Predicts user identity fields (name, address, phone) across different document types
+  const [formData, setFormData] = useState(() => {
+    try {
+      const identity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      const initial = {};
+      template.fields.forEach(f => {
+        if (['senderName', 'complainantName', 'applicantName', 'informantName'].includes(f.id) && identity.name) {
+          initial[f.id] = identity.name;
+        }
+        if (['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'].includes(f.id) && identity.address) {
+          initial[f.id] = identity.address;
+        }
+        if (['informantPhone'].includes(f.id) && identity.phone) {
+          initial[f.id] = identity.phone;
+        }
+      });
+      return initial;
+    } catch (_e) {
+      return {};
+    }
+  });
+
+  // 🛸 Oracle: Learn user identity as they type
+  useEffect(() => {
+    try {
+      const identity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      let updated = false;
+      Object.entries(formData).forEach(([key, value]) => {
+        if (!value) return;
+        if (['senderName', 'complainantName', 'applicantName', 'informantName'].includes(key) && identity.name !== value) {
+          identity.name = value; updated = true;
+        }
+        if (['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'].includes(key) && identity.address !== value) {
+          identity.address = value; updated = true;
+        }
+        if (['informantPhone'].includes(key) && identity.phone !== value) {
+          identity.phone = value; updated = true;
+        }
+      });
+      if (updated) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identity));
+      }
+    } catch (_e) { /* ignore */ }
+  }, [formData]);
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
