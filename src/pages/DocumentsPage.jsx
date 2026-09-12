@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -372,10 +375,65 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+
+function SavedDocumentCard({ doc, onSelect, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group relative"
+    >
+      <div className="h-full p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 overflow-hidden flex flex-col shadow-hard">
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-10 h-10 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center group-hover:border-gold/40 group-hover:scale-110 transition-all duration-500 shadow-hard">
+            <FileWarning className="w-5 h-5 text-gold" />
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+            className="p-2 text-text-tertiary hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        <h3 className="text-xl font-display font-bold text-white mb-2 group-hover:text-gold transition-colors uppercase tracking-tight italic line-clamp-2">
+          {doc.title}
+        </h3>
+
+        <div className="flex items-center gap-2 text-[10px] text-text-tertiary font-mono uppercase tracking-widest mb-6 opacity-60">
+          <Clock className="w-3.5 h-3.5" />
+          <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+        </div>
+
+        <button
+          onClick={() => onSelect(doc)}
+          className="mt-auto flex items-center justify-between gap-3 bg-void border-2 border-white/5 group-hover:bg-gold text-white group-hover:text-midnight px-4 py-3 rounded-sm font-extrabold transition-all uppercase tracking-widest text-[10px] italic w-full"
+        >
+          <span>VIEW_DOCUMENT</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function DocumentsPage() {
+
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [view, setView] = useState('templates'); // 'templates' | 'saved'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('justice_ai_documents');
+    if (saved) {
+      try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSavedDocs(JSON.parse(saved));
+      } catch (_e) { /* ignore */ }
+    }
+  }, []);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -383,8 +441,34 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
-    const doc = selectedTemplate.generate(formData);
-    setGeneratedDoc(doc);
+    const docContent = selectedTemplate.generate(formData);
+
+    // Save to localStorage
+    const newDoc = {
+      id: Date.now().toString(),
+      title: `${selectedTemplate.title} - ${new Date().toLocaleDateString()}`,
+      content: docContent,
+      templateId: selectedTemplate.id,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedDocs = [newDoc, ...savedDocs];
+    setSavedDocs(updatedDocs);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+
+    setGeneratedDoc(docContent);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const updatedDocs = savedDocs.filter(d => d.id !== id);
+    setSavedDocs(updatedDocs);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+  };
+
+  const handleViewSaved = (doc) => {
+    setGeneratedDoc(doc.content);
+    setSelectedTemplate(DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title });
     setStage('preview');
   };
 
@@ -408,7 +492,7 @@ export default function DocumentsPage() {
               exit={{ opacity: 0 }}
             >
               {/* Page Header */}
-              <div className="text-center space-y-4 mb-16">
+              <div className="text-center space-y-4 mb-8">
                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
                   <FileWarning className="w-4 h-4" />
                   <span>DRAFTING_PROTOCOL_V1.0</span>
@@ -421,17 +505,75 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
-              {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    onSelect={handleSelect}
-                    index={i}
-                  />
-                ))}
+              {/* Toggle Navigation */}
+              <div className="flex justify-center mb-12">
+                <div className="inline-flex bg-void border-2 border-white/5 rounded-sm p-1 shadow-hard">
+                  <button
+                    onClick={() => setView('templates')}
+                    className={`px-6 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic flex items-center gap-2 ${
+                      view === 'templates'
+                        ? 'bg-gold/10 text-gold border-2 border-gold/40 shadow-luxe'
+                        : 'text-text-tertiary hover:text-white border-2 border-transparent hover:border-white/10'
+                    }`}
+                  >
+                    <FileWarning className="w-3.5 h-3.5" />
+                    <span>TEMPLATES</span>
+                  </button>
+                  <button
+                    onClick={() => setView('saved')}
+                    className={`px-6 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic flex items-center gap-2 ${
+                      view === 'saved'
+                        ? 'bg-gold/10 text-gold border-2 border-gold/40 shadow-luxe'
+                        : 'text-text-tertiary hover:text-white border-2 border-transparent hover:border-white/10'
+                    }`}
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>SAVED (${savedDocs.length})</span>
+                  </button>
+                </div>
               </div>
+
+              {/* View Content */}
+              {view === 'templates' ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {DOCUMENT_TEMPLATES.map((template, i) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      onSelect={handleSelect}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {savedDocs.length === 0 ? (
+                    <div className="text-center py-24 bg-void border-2 border-white/5 rounded-sm shadow-hard">
+                      <Save className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                      <p className="text-text-tertiary font-mono text-sm uppercase tracking-widest italic">
+                        NO_SAVED_DOCUMENTS_FOUND
+                      </p>
+                      <button
+                        onClick={() => setView('templates')}
+                        className="mt-6 px-6 py-2 bg-void border-2 border-white/10 text-text-secondary hover:text-white hover:border-gold/30 rounded-sm text-[10px] uppercase font-extrabold tracking-widest transition-all shadow-hard"
+                      >
+                        BROWSE_TEMPLATES
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {savedDocs.map((doc) => (
+                        <SavedDocumentCard
+                          key={doc.id}
+                          doc={doc}
+                          onSelect={handleViewSaved}
+                          onDelete={handleDeleteSaved}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 
