@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import xss from 'xss';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
@@ -114,18 +115,8 @@ app.use(hpp());
 
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
-
   const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
+    if (typeof obj === 'string') return xss(obj);
     if (Array.isArray(obj)) return obj.map(sanitize);
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
       const sanitized = {};
