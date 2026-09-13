@@ -1,0 +1,6 @@
+## 2024-06-12 — Saved Documents Archive
+**Product understood as:** An AI-powered legal co-pilot that helps citizens understand rights and draft procedural applications.
+**Derivation reasoning:** Pattern 3: Actions Without Memory. The product allows users to fill forms and generate legal documents, but never remembers them. Users do this repeatedly. Therefore, users obviously need a Document Archive to view, copy, and export previously generated documents without needing to re-enter all their data. It didn't exist because the app focused on the immediate generation flow without considering retention. I'm building it because users frequently need to reference or re-export documents they've generated in previous sessions.
+**Feature built:** An automatic Document Archive in the Documents page that persists generated documents to `localStorage`, rendering them with an empty state UI and providing view and delete capabilities.
+**User impact:** Users can now generate a document, leave the app, and return later to access, copy, or export their previously drafted legal notices.
+**Next logical feature:** User Activity Digest or Smart Configuration Templates for frequently used details (like Sender Name/Address).

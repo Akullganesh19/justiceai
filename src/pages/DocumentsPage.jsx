@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +378,23 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState([]);
+
+  useEffect(() => {
+    if (stage === 'select') {
+      const timer = setTimeout(() => {
+        try {
+          const saved = localStorage.getItem('justice_ai_documents');
+          if (saved) {
+            setSavedDocs(JSON.parse(saved));
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [stage]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +405,44 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save to localStorage
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      const docs = saved ? JSON.parse(saved) : [];
+      const newDoc = {
+        id: Date.now().toString(),
+        templateId: selectedTemplate.id,
+        title: selectedTemplate.title,
+        content: doc,
+        date: new Date().toISOString(),
+      };
+      localStorage.setItem('justice_ai_documents', JSON.stringify([newDoc, ...docs]));
+    } catch (_e) {
+      // Handle gracefully
+    }
+  };
+
+  const handleViewDoc = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate({ ...template, title: doc.title }); // Keep original title just in case
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteDoc = (id, e) => {
+    e.stopPropagation();
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      if (saved) {
+        const docs = JSON.parse(saved);
+        const updated = docs.filter(d => d.id !== id);
+        localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+        setSavedDocs(updated);
+      }
+    } catch (_e) {
+      // Handle gracefully
+    }
   };
 
   const handleReset = () => {
@@ -431,6 +488,72 @@ export default function DocumentsPage() {
                     index={i}
                   />
                 ))}
+              </div>
+
+              {/* Saved Documents Section */}
+              <div className="mt-24 space-y-8">
+                <div className="flex items-center gap-4 border-b-2 border-white/5 pb-6">
+                  <div className="w-2 h-8 bg-gold shadow-luxe" />
+                  <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white">
+                    DOCUMENT_ARCHIVE
+                  </h2>
+                </div>
+
+                {savedDocs.length === 0 ? (
+                  <div className="p-12 rounded-sm bg-void border-2 border-white/5 text-center space-y-6 shadow-hard">
+                    <div className="w-16 h-16 rounded-sm bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto opacity-20">
+                      <FileSearch className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-widest text-text-tertiary">
+                        No Saved Documents
+                      </p>
+                      <p className="text-xs text-text-tertiary font-body leading-relaxed opacity-40 italic max-w-md mx-auto">
+                        Documents you generate will be automatically archived here for future reference and export.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {savedDocs.map((doc, i) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        onClick={() => handleViewDoc(doc)}
+                        className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all cursor-pointer shadow-hard"
+                      >
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <FileSearch className="w-4 h-4 text-gold" />
+                            {doc.title}
+                          </h4>
+                          <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest text-text-tertiary font-bold italic">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(doc.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={(e) => handleDeleteDoc(doc.id, e)}
+                            className="p-2 rounded-sm bg-white/5 text-text-tertiary hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                            title="Delete Document"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <div className="px-4 py-2 bg-white/5 group-hover:bg-gold group-hover:text-midnight text-text-secondary text-[10px] font-extrabold uppercase tracking-widest rounded-sm transition-all italic flex items-center gap-2">
+                            <span>VIEW</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
