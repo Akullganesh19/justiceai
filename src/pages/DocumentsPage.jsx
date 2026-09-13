@@ -53,7 +53,26 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    // 🛸 Oracle: Intelligent Defaults Prediction
+    // Auto-fill identity fields based on cross-template behavior patterns
+    try {
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      if (saved) {
+        const identity = JSON.parse(saved);
+        const initial = {};
+        template.fields.forEach(f => {
+          const lower = f.id.toLowerCase();
+          const isUserEntity = !lower.includes('opposite') && !lower.includes('accused') && !lower.includes('authority') && !lower.includes('pio') && !lower.includes('police');
+          if (lower.includes('name') && isUserEntity && identity.name) initial[f.id] = identity.name;
+          if (lower.includes('address') && isUserEntity && identity.address) initial[f.id] = identity.address;
+          if (lower.includes('phone') && isUserEntity && identity.phone) initial[f.id] = identity.phone;
+        });
+        return initial;
+      }
+    } catch (_e) { /* ignore */ }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -383,6 +402,22 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    // 🛸 Oracle: Learn user identity for future prediction
+    try {
+      const currentIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      let updated = { ...currentIdentity };
+      Object.keys(formData).forEach(key => {
+        const lower = key.toLowerCase();
+        const isUserEntity = !lower.includes('opposite') && !lower.includes('accused') && !lower.includes('authority') && !lower.includes('pio') && !lower.includes('police');
+        if (lower.includes('name') && isUserEntity) updated.name = formData[key];
+        if (lower.includes('address') && isUserEntity) updated.address = formData[key];
+        if (lower.includes('phone') && isUserEntity) updated.phone = formData[key];
+      });
+      if (Object.keys(updated).length > 0) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(updated));
+      }
+    } catch (_e) { /* ignore */ }
+
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
