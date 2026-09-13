@@ -1,0 +1,6 @@
+## 2024-06-11 — Unprotected External API Calls
+**Failure point found:** External HTTP calls (via `fetch`) to DeepSeek, Bhashini, and Ollama APIs lack auto-retry mechanisms for transient network failures or 5xx server errors.
+**Why it existed:** The backend relied solely on basic `try/catch` blocks which either logged the error and failed immediately, or moved directly to the next fallback tier without attempting to recover from temporary glitches.
+**Recovery built:** Implemented `fetchWithRetry` in `server.js` with exponential backoff (100ms, 200ms, 400ms). It retries on network errors (e.g., `ECONNRESET`) and HTTP 5xx responses, while explicitly ignoring `AbortError` to respect client disconnects.
+**Blast radius before:** High. Any network blip or temporary 502 from Bhashini/DeepSeek would instantly fail the user's voice translation or AI response generation, requiring manual user intervention (re-clicking submit/speak).
+**Watch for:** Other external integrations or database calls (e.g., Vector DB) that might be missing transient error handling. Ensure `fetchWithRetry` isn't blindly applied to non-idempotent operations without careful consideration (though LLM generation is generally safe to retry).
