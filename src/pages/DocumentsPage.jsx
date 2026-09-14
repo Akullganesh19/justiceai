@@ -12,6 +12,10 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Clock,
+  Trash2,
+  Archive
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -49,6 +53,67 @@ function TemplateCard({ template, onSelect, index }) {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+
+
+function SavedDocumentsList({ documents, onView, onDelete }) {
+  if (documents.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 border-2 border-white/5 border-dashed rounded-sm opacity-60">
+        <Archive className="w-12 h-12 text-text-tertiary mb-6 opacity-40" />
+        <h3 className="text-xl font-display font-bold text-white uppercase tracking-wider mb-2">Vault Empty</h3>
+        <p className="text-sm font-mono text-text-tertiary uppercase tracking-widest text-center">
+          Generated documents will be securely archived here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {documents.map((doc) => (
+        <motion.div
+          key={doc.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 flex flex-col shadow-hard group"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2 text-text-tertiary">
+              <Clock className="w-4 h-4" />
+              <span className="text-[10px] uppercase font-bold tracking-widest">
+                {new Date(doc.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+            <button
+              onClick={() => onDelete(doc.id)}
+              className="p-1.5 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <h3 className="text-xl font-display font-bold text-white mb-2 line-clamp-1 italic">
+            {doc.templateTitle}
+          </h3>
+          <p className="text-xs font-mono text-text-tertiary mb-6 line-clamp-2 opacity-60 uppercase tracking-wide">
+            {doc.content.substring(0, 100)}...
+          </p>
+
+          <div className="mt-auto pt-4 border-t-2 border-white/5">
+            <button
+              onClick={() => onView(doc)}
+              className="w-full flex items-center justify-center gap-2 bg-void border-2 border-white/10 hover:border-gold/40 text-white hover:text-gold px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+            >
+              <span>VIEW_RECORD</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
@@ -376,6 +441,15 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [activeTab, setActiveTab] = useState('templates'); // 'templates' | 'vault'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_e) {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -383,15 +457,42 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
-    const doc = selectedTemplate.generate(formData);
-    setGeneratedDoc(doc);
+    const docText = selectedTemplate.generate(formData);
+    setGeneratedDoc(docText);
     setStage('preview');
+
+    // Save to Vault
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      templateTitle: selectedTemplate.title,
+      content: docText,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newSaved = [newDoc, ...savedDocuments];
+    setSavedDocuments(newSaved);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(newSaved));
   };
 
   const handleReset = () => {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+  };
+
+  const handleViewSaved = (doc) => {
+    // Find matching template to pass to preview
+    const tmpl = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.templateTitle };
+    setSelectedTemplate(tmpl);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const filtered = savedDocuments.filter(d => d.id !== id);
+    setSavedDocuments(filtered);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(filtered));
   };
 
   return (
@@ -408,7 +509,7 @@ export default function DocumentsPage() {
               exit={{ opacity: 0 }}
             >
               {/* Page Header */}
-              <div className="text-center space-y-4 mb-16">
+              <div className="text-center space-y-4 mb-12">
                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
                   <FileWarning className="w-4 h-4" />
                   <span>DRAFTING_PROTOCOL_V1.0</span>
@@ -421,17 +522,45 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
-              {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    onSelect={handleSelect}
-                    index={i}
-                  />
-                ))}
+              {/* Tabs */}
+              <div className="flex justify-center mb-12">
+                <div className="inline-flex bg-void border-2 border-white/5 rounded-sm p-1 shadow-hard">
+                  <button
+                    onClick={() => setActiveTab('templates')}
+                    className={`flex items-center gap-2 px-8 py-3 rounded-sm text-[10px] uppercase font-extrabold tracking-widest transition-all ${activeTab === 'templates' ? 'bg-white/10 text-white shadow-hard' : 'text-text-tertiary hover:text-white hover:bg-white/5'}`}
+                  >
+                    <FileWarning className="w-4 h-4" />
+                    TEMPLATES
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('vault')}
+                    className={`flex items-center gap-2 px-8 py-3 rounded-sm text-[10px] uppercase font-extrabold tracking-widest transition-all ${activeTab === 'vault' ? 'bg-white/10 text-white shadow-hard' : 'text-text-tertiary hover:text-white hover:bg-white/5'}`}
+                  >
+                    <Save className="w-4 h-4" />
+                    VAULT ({savedDocuments.length})
+                  </button>
+                </div>
               </div>
+
+              {/* Content Grid */}
+              {activeTab === 'templates' ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {DOCUMENT_TEMPLATES.map((template, i) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      onSelect={handleSelect}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <SavedDocumentsList
+                  documents={savedDocuments}
+                  onView={handleViewSaved}
+                  onDelete={handleDeleteSaved}
+                />
+              )}
             </motion.div>
           )}
 

@@ -1,0 +1,6 @@
+## 2024-05-18 — Saved Documents Vault
+**Product understood as:** A local AI-powered legal co-pilot that helps Indian citizens understand rights, track cases, and generate legal documents (like statutory notices, consumer complaints, and RTI applications).
+**Derivation reasoning:** We store user case progress (Tracker), AI chat history (Chat), and even API keys, but when users generate a crucial legal document in `DocumentsPage.jsx`, they have to download or copy it immediately. If they navigate away or refresh, the generated document is permanently lost. This is a classic "Actions Without Memory" pattern. The product generates valuable artifacts (documents) but has no memory of them.
+**Feature built:** Added a "Saved Documents Vault" (My Documents tab) in `DocumentsPage.jsx`. When a document is generated, it is automatically saved to `localStorage` under `justice_ai_documents` with metadata (template type, date, content). Users can view, copy, and download past generated documents.
+**User impact:** Users will never lose a generated document again. They can review past notices, re-download them, or copy them later, adding persistence to a core platform feature.
+**Next logical feature:** "Actions Without Memory" - saving user identity details (name, address, etc.) to auto-fill the forms in `DocumentsPage.jsx` when they generate multiple documents.
