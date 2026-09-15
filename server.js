@@ -19,6 +19,64 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+
+// --- Genesis Self-Healing: Auto-Retry with Exponential Backoff ---
+// Applies to external APIs (Gemini, DeepSeek, Bhashini, Ollama)
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  let timeoutMs = options.timeoutMs;
+  // Clean up custom option so it doesn't get passed to native fetch
+  if ('timeoutMs' in options) {
+    delete options.timeoutMs;
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let currentSignal = options.signal;
+    let abortController = null;
+
+    if (timeoutMs) {
+      // Need a fresh signal for each attempt so timeout doesn't instantly fail retries
+      abortController = new AbortController();
+      currentSignal = abortController.signal;
+      setTimeout(() => abortController.abort(), timeoutMs);
+    }
+
+    const currentOptions = { ...options, signal: currentSignal };
+
+    try {
+      const response = await fetch(url, currentOptions);
+
+      // If 5xx error, it's transient. Throw to trigger retry, but consume body to prevent socket leak.
+      if (response.status >= 500 && response.status < 600) {
+        await response.text().catch(() => {});
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      // If 429 (Rate Limit), wait and retry
+      if (response.status === 429) {
+        await response.text().catch(() => {});
+        throw new Error('Rate limit exceeded');
+      }
+
+      return response;
+    } catch (err) {
+      if (err.name === 'AbortError' && attempt < maxAttempts && timeoutMs) {
+         // It was our timeout, we can retry
+      } else if (attempt === maxAttempts) {
+        throw err;
+      } else if (err.name === 'AbortError') {
+        // Client disconnect abort, don't retry
+        throw err;
+      }
+
+      // Exponential backoff: 100ms, 200ms
+      await sleep(100 * Math.pow(2, attempt - 1));
+    }
+  }
+}
+// ----------------------------------------------------------------
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -318,7 +376,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +412,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +625,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +656,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,11 +888,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeoutMs: 10000
         });
 
         if (!response.ok) {
@@ -856,11 +914,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeoutMs: 15000
         });
 
         if (!ollamaResponse.ok) {
