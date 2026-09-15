@@ -53,7 +53,19 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    // 🛸 Oracle Prediction: Pre-fill forms with previously used identity data
+    // to anticipate the user's next action and save them from retyping.
+    try {
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (_e) {
+      // Ignore
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -383,6 +395,27 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    // 🛸 Oracle Prediction: Harvest identity fields during document generation
+    // and persist them to localStorage for predicting the next form's defaults.
+    try {
+      const identityFields = ['senderName', 'senderAddress', 'complainantName', 'complainantAddress', 'applicantName', 'applicantAddress', 'informantName', 'informantAddress', 'informantPhone'];
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      const identityData = saved ? JSON.parse(saved) : {};
+      let updated = false;
+
+      for (const field of identityFields) {
+        if (formData[field] && formData[field].trim() !== '') {
+          identityData[field] = formData[field].trim();
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identityData));
+      }
+    } catch (_e) {
+      // Ignore
+    }
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
