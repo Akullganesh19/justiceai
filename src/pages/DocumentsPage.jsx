@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
+  Trash2,
+  FileText,
   ShoppingBag,
   FileSearch,
   Shield,
@@ -377,6 +379,17 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  // Using useState initializer function instead of useEffect to avoid react-hooks/set-state-in-effect
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Error loading documents:', e);
+      return [];
+    }
+  });
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -385,6 +398,41 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+    setStage('preview');
+
+    // Save document to history
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      date: new Date().toISOString()
+    };
+
+    const updatedDocs = [newDoc, ...savedDocuments];
+    setSavedDocuments(updatedDocs);
+    try {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    } catch (e) {
+      console.error('Error saving document:', e);
+    }
+  };
+
+  const handleDeleteSaved = (id, e) => {
+    e.stopPropagation();
+    const updatedDocs = savedDocuments.filter(doc => doc.id !== id);
+    setSavedDocuments(updatedDocs);
+    try {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updatedDocs));
+    } catch (e) {
+      console.error('Error deleting document:', e);
+    }
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate({ ...template, title: doc.title });
+    setGeneratedDoc(doc.content);
     setStage('preview');
   };
 
@@ -432,6 +480,59 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Archive */}
+              <div className="mt-24 space-y-8">
+                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
+                    <div className="w-2 h-8 bg-gold shadow-luxe" />
+                    DOCUMENT_ARCHIVE
+                  </h2>
+                </div>
+
+                {savedDocuments.length === 0 ? (
+                  <div className="p-12 rounded-sm bg-void border-2 border-white/5 text-center space-y-6 shadow-hard">
+                    <div className="w-16 h-16 rounded-sm bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto opacity-20">
+                      <FileText className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-widest text-text-tertiary">
+                        NO ARCHIVED DOCUMENTS
+                      </p>
+                      <p className="text-xs text-text-tertiary font-body leading-relaxed opacity-40 italic">
+                        Documents generated using the drafting protocol will be automatically stored here.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group relative p-6 rounded-sm bg-void border-2 border-white/10 hover:border-gold/30 transition-all cursor-pointer shadow-hard flex flex-col justify-between min-h-[140px]"
+                      >
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-display font-bold text-white uppercase tracking-tight group-hover:text-gold transition-colors">
+                            {doc.title}
+                          </h3>
+                          <p className="text-[10px] text-text-tertiary font-mono tracking-widest uppercase opacity-60">
+                            {new Date(doc.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteSaved(doc.id, e)}
+                          className="absolute bottom-4 right-4 p-2 rounded-sm bg-void border-2 border-white/10 text-text-secondary hover:text-red-400 hover:border-red-400/30 transition-colors opacity-0 group-hover:opacity-100 shadow-hard"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </motion.div>
           )}
 
