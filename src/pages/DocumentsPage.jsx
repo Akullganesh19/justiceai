@@ -53,7 +53,33 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const stored = localStorage.getItem('justice_ai_oracle_identity');
+      if (stored) {
+        const identity = JSON.parse(stored);
+        const initial = {};
+        template.fields.forEach((f) => {
+          const idLower = f.id.toLowerCase();
+          const isExcludeName = ['recipient', 'opposite', 'pio', 'accused', 'authority'].some(k => idLower.includes(k));
+          if (identity.name && idLower.includes('name') && !isExcludeName) {
+             initial[f.id] = identity.name;
+          }
+          const isExcludeAddress = ['recipient', 'opposite', 'authority', 'accused'].some(k => idLower.includes(k));
+          if (identity.address && idLower.includes('address') && !isExcludeAddress) {
+             initial[f.id] = identity.address;
+          }
+          if (identity.phone && idLower.includes('phone')) {
+             initial[f.id] = identity.phone;
+          }
+        });
+        return initial;
+      }
+    } catch (_err) {
+      /* ignore */
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -74,6 +100,30 @@ function FormWizard({ template, onBack, onGenerate }) {
     if (currentStep < totalSteps - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
+      try {
+        const stored = localStorage.getItem('justice_ai_oracle_identity');
+        const identity = stored ? JSON.parse(stored) : {};
+        template.fields.forEach((f) => {
+          const val = formData[f.id];
+          if (val) {
+            const idLower = f.id.toLowerCase();
+            const isExcludeName = ['recipient', 'opposite', 'pio', 'accused', 'authority'].some(k => idLower.includes(k));
+            if (idLower.includes('name') && !isExcludeName) {
+              identity.name = val;
+            }
+            const isExcludeAddress = ['recipient', 'opposite', 'authority', 'accused'].some(k => idLower.includes(k));
+            if (idLower.includes('address') && !isExcludeAddress) {
+              identity.address = val;
+            }
+            if (idLower.includes('phone')) {
+              identity.phone = val;
+            }
+          }
+        });
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identity));
+      } catch (_err) {
+        /* ignore */
+      }
       onGenerate(formData);
     }
   };
