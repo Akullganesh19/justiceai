@@ -1,0 +1,6 @@
+## 2024-05-24 — Smart Document Defaults
+**Product understood as:** JusticeAI is a legal co-pilot that helps Indian citizens generate legal documents and understand their rights. The core value is reducing the friction and cost of creating procedural legal documents.
+**Prediction invented:** Smart Identity Defaults. Users frequently fill out multiple legal documents (e.g., Legal Notice, Consumer Complaint, RTI Application) that ask for their own name, address, and sometimes phone number. Instead of typing this repetitive information every time, the system now predicts these fields and pre-fills them by observing the user's past document generations.
+**Data used:** The signal comes from the submitted `formData` in `DocumentsPage`. We capture common identity fields (`senderName`, `senderAddress`, `complainantName`, `complainantAddress`, etc.) upon generation and store them locally under `justice_ai_oracle_identity`.
+**Impact:** Users will feel the app is "smarter" because it already knows who they are and where they live the next time they generate a document, saving time and reducing friction in multi-step legal processes.
+**Next opportunity:** We could potentially predict the `subject` or `facts` of the document based on the user's previous chat history or previously generated documents.
