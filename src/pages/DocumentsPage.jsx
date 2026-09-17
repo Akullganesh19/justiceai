@@ -53,7 +53,31 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      if (saved) {
+        const identity = JSON.parse(saved);
+        // Pre-fill fields that match identity patterns
+        const initial = {};
+        template.fields.forEach(field => {
+          if (['senderName', 'complainantName', 'applicantName', 'informantName'].includes(field.id) && identity.name) {
+            initial[field.id] = identity.name;
+          }
+          if (['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'].includes(field.id) && identity.address) {
+            initial[field.id] = identity.address;
+          }
+          if (['informantPhone', 'phone'].includes(field.id) && identity.phone) {
+            initial[field.id] = identity.phone;
+          }
+        });
+        return initial;
+      }
+    } catch (e) {
+      console.error('Failed to load identity defaults', e);
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -383,7 +407,53 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    // 🛸 Oracle: Extract and save identity for future predictions
+    try {
+      const identity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      let updated = false;
+
+      const nameField = ['senderName', 'complainantName', 'applicantName', 'informantName'].find(id => formData[id]);
+      if (nameField && formData[nameField] !== identity.name) {
+        identity.name = formData[nameField];
+        updated = true;
+      }
+
+      const addressField = ['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'].find(id => formData[id]);
+      if (addressField && formData[addressField] !== identity.address) {
+        identity.address = formData[addressField];
+        updated = true;
+      }
+
+      const phoneField = ['informantPhone', 'phone'].find(id => formData[id]);
+      if (phoneField && formData[phoneField] !== identity.phone) {
+        identity.phone = formData[phoneField];
+        updated = true;
+      }
+
+      if (updated) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identity));
+      }
+    } catch (e) {
+      console.error('Failed to save identity', e);
+    }
+
     const doc = selectedTemplate.generate(formData);
+
+    // Save generated document
+    try {
+      const savedDocs = JSON.parse(localStorage.getItem('justice_ai_documents') || '[]');
+      savedDocs.push({
+        id: Date.now().toString(),
+        templateId: selectedTemplate.id,
+        title: selectedTemplate.title,
+        date: new Date().toISOString(),
+        content: doc
+      });
+      localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+    } catch (e) {
+      console.error('Failed to save document', e);
+    }
+
     setGeneratedDoc(doc);
     setStage('preview');
   };
