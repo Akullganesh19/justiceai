@@ -741,7 +741,7 @@ app.post('/api/chat', async (req, res) => {
       apiKeys = {} 
     } = req.body;
     
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0 || messages.some(m => !m || typeof m.content !== 'string' || typeof m.role !== 'string')) {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
@@ -952,7 +952,7 @@ app.post('/api/chat', async (req, res) => {
 app.post('/api/embed', async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) {
+    if (!text || typeof text !== 'string') {
       return res.status(400).json({ error: 'Text is required' });
     }
     
@@ -969,6 +969,9 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err instanceof URIError) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Malformed URI component' });
+  }
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
