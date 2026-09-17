@@ -12,12 +12,45 @@ import {
   Check,
   X,
   ChevronRight,
+  Save,
+  Trash2,
+  FileText,
+  Archive,
+  FolderOpen
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
 import jsPDF from 'jspdf';
 
 const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
+
+
+function SavedDocCard({ doc, onView, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="group relative bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm p-6 transition-all duration-300 shadow-hard"
+    >
+      <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+        <button onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }} className="p-1.5 bg-accent-error/10 text-accent-error hover:bg-accent-error/20 rounded-sm transition-colors border border-accent-error/20" title="Delete Draft">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex items-start gap-4 cursor-pointer" onClick={() => onView(doc)}>
+        <div className="p-3 rounded-sm bg-gold/10 border-2 border-gold/20 shrink-0">
+          <FileText className="w-6 h-6 text-gold" />
+        </div>
+        <div>
+          <h3 className="text-white font-display text-lg mb-1 line-clamp-1">{doc.title}</h3>
+          <p className="text-xs text-text-tertiary font-mono mb-2 uppercase tracking-widest">{new Date(doc.createdAt).toLocaleDateString()}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 function TemplateCard({ template, onSelect, index }) {
   const Icon = ICONS[template.icon] || FileWarning;
@@ -189,8 +222,9 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 }
 
-function DocumentPreview({ document, template, onBack }) {
+function DocumentPreview({ document, template, onBack, onSave }) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
   const previewRef = useRef(null);
 
   const handleCopy = async () => {
@@ -321,6 +355,15 @@ function DocumentPreview({ document, template, onBack }) {
         </div>
 
         <div className="flex items-center gap-3">
+          {onSave && (
+            <button
+              onClick={() => { onSave(); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+              className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
+            >
+              {saved ? <Check className="w-4 h-4 text-accent-success" /> : <Save className="w-4 h-4" />}
+              <span>{saved ? 'SAVED!' : 'SAVE_DRAFT'}</span>
+            </button>
+          )}
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 bg-void border-2 border-white/10 hover:border-gold/30 text-text-secondary hover:text-white px-4 py-2.5 rounded-sm text-[10px] font-extrabold uppercase tracking-widest transition-all italic shadow-hard"
@@ -376,6 +419,52 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [viewingDraftId, setViewingDraftId] = useState(null);
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('justice_ai_documents')) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleSaveDocument = () => {
+    if (!generatedDoc || !selectedTemplate) return;
+    const newDoc = {
+      id: Date.now().toString(),
+      title: selectedTemplate.title,
+      templateId: selectedTemplate.id,
+      content: generatedDoc,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [newDoc, ...savedDocs];
+    setSavedDocs(updated);
+    try {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save document:', e);
+      // Revert if quota exceeded
+      setSavedDocs(savedDocs);
+    }
+  };
+
+  const handleViewSaved = (doc) => {
+    setViewingDraftId(doc.id);
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title, id: doc.templateId };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const updated = savedDocs.filter(d => d.id !== id);
+    setSavedDocs(updated);
+    try {
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save to local storage', e);
+    }
+  };
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -392,6 +481,7 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+    setViewingDraftId(null);
   };
 
   return (
@@ -432,6 +522,30 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Drafts Section */}
+              <div className="mt-24">
+                <div className="flex items-center gap-3 mb-8">
+                  <Archive className="w-5 h-5 text-gold" />
+                  <h2 className="text-xl font-display text-white uppercase tracking-widest italic">Saved Drafts</h2>
+                </div>
+
+                {savedDocs.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <AnimatePresence>
+                      {savedDocs.map(doc => (
+                        <SavedDocCard key={doc.id} doc={doc} onView={handleViewSaved} onDelete={handleDeleteSaved} />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 bg-void/50 border-2 border-white/5 border-dashed rounded-sm">
+                    <FolderOpen className="w-12 h-12 text-white/10 mb-4" />
+                    <p className="text-sm text-text-tertiary font-mono uppercase tracking-widest">NO_SAVED_DRAFTS_FOUND</p>
+                  </div>
+                )}
+              </div>
+
             </motion.div>
           )}
 
@@ -461,6 +575,7 @@ export default function DocumentsPage() {
                 document={generatedDoc}
                 template={selectedTemplate}
                 onBack={handleReset}
+                onSave={viewingDraftId ? null : handleSaveDocument}
               />
             </motion.div>
           )}

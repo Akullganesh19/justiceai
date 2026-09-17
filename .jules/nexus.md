@@ -1,0 +1,7 @@
+## 2024-05-20 — Saved Document Drafts
+
+**Product understood as:** An AI legal co-pilot that helps Indian citizens understand rights and draft procedural documents.
+**Derivation reasoning:** The product generates complex, user-specific legal documents (like FIR drafts, RTI requests, and Consumer Complaints) which involve filling out multi-step forms. Users generate these documents but the app provides no way to persist or revisit them later within the application, forcing users to download them immediately or lose their work. Therefore, they obviously need the ability to save these generated drafts locally to revisit, view, or manage them later. It is a logical next step to preserve user effort.
+**Feature built:** Added a "Save Draft" capability to the Document Generator. Generated documents can now be saved to local storage, and a new "Saved Drafts" gallery appears below the templates grid on the Documents page, allowing users to view or delete their previously saved drafts.
+**User impact:** Users can now generate multiple documents, save them directly in the browser, and review them later without needing to re-fill the entire form or sift through their downloads folder.
+**Next logical feature:** Since users can now save documents, the next logical feature might be the ability to edit a saved draft, or to pre-fill the form with their previously used details (like their name and address).
