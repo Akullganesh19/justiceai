@@ -742,7 +742,19 @@ app.post('/api/chat', async (req, res) => {
     } = req.body;
     
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'Messages array is required' });
+      return res.status(400).json({ error: 'Messages array is required and must not be empty' });
+    }
+
+    // Validate that all messages are properly formed
+    const isValid = messages.every(msg =>
+      msg &&
+      typeof msg === 'object' &&
+      'role' in msg &&
+      typeof msg.content === 'string'
+    );
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Each message must be an object with a role and a string content' });
     }
 
     // Get the latest user message to search for context
