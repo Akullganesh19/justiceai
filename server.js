@@ -62,6 +62,57 @@ if (missingEnvVars.length > 0) {
   throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
+// Custom fetch wrapper with exponential backoff and retry for external APIs
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  // If options contains a dynamic signal generator, it's passed as getSignal()
+  // to ensure a fresh abort signal for each retry attempt
+  const getSignal = options.getSignal;
+  if (getSignal) {
+    delete options.getSignal;
+  }
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (getSignal) {
+        options.signal = getSignal();
+      }
+
+      const response = await fetch(url, options);
+
+      // We only retry on 5xx errors or 429 Too Many Requests
+      if (!response.ok && (response.status >= 500 || response.status === 429)) {
+        // Consume unhandled response body to prevent socket memory leaks
+        await response.text().catch(() => {});
+
+        if (attempt === maxRetries) {
+          return response; // Return the last error response if we run out of retries
+        }
+
+        const delay = 100 * Math.pow(2, attempt - 1);
+        logger.warn(`Fetch attempt ${attempt} failed for ${url} with status ${response.status}. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      return response;
+    } catch (err) {
+      // Retry on network errors (no status code) or aborts (if it's not the final attempt)
+      const isNetworkError = err instanceof TypeError;
+      const isAbortError = err.name === 'AbortError' || err.name === 'TimeoutError';
+
+      if ((isNetworkError || isAbortError) && attempt < maxRetries) {
+        const delay = 100 * Math.pow(2, attempt - 1);
+        logger.warn(`Fetch attempt ${attempt} failed for ${url} with error: ${err.message}. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      // If we run out of retries or it's a non-retryable error, throw
+      throw err;
+    }
+  }
+}
+
 logger.info('Environment validation passed', { nodeEnv: NODE_ENV, port: PORT });
 
 // ===== SECURITY MIDDLEWARE =====
@@ -318,7 +369,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +405,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +618,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +649,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -830,11 +881,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          getSignal: () => AbortSignal.timeout(10000) // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +907,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          getSignal: () => AbortSignal.timeout(15000) // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
