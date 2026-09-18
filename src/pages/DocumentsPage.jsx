@@ -53,7 +53,30 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedId = localStorage.getItem('justice_ai_oracle_identity');
+      if (savedId) {
+        const identity = JSON.parse(savedId);
+        const initial = {};
+        template.fields.forEach(f => {
+          if (['senderName', 'complainantName', 'applicantName', 'informantName'].includes(f.id) && identity.name) {
+            initial[f.id] = identity.name;
+          }
+          if (['senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress'].includes(f.id) && identity.address) {
+            initial[f.id] = identity.address;
+          }
+          if (['informantPhone', 'senderPhone', 'complainantPhone', 'applicantPhone'].includes(f.id) && identity.phone) {
+            initial[f.id] = identity.phone;
+          }
+        });
+        return initial;
+      }
+    } catch (_e) {
+      /* ignore */
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -64,6 +87,22 @@ function FormWizard({ template, onBack, onGenerate }) {
 
   const handleChange = (fieldId, value) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
+
+    // Oracle: Learn identity silently
+    if (['senderName', 'complainantName', 'applicantName', 'informantName',
+         'senderAddress', 'complainantAddress', 'applicantAddress', 'informantAddress',
+         'informantPhone', 'senderPhone', 'complainantPhone', 'applicantPhone'].includes(fieldId)) {
+      try {
+        const savedId = localStorage.getItem('justice_ai_oracle_identity');
+        const identity = savedId ? JSON.parse(savedId) : {};
+        if (fieldId.toLowerCase().includes('name')) identity.name = value;
+        if (fieldId.toLowerCase().includes('address')) identity.address = value;
+        if (fieldId.toLowerCase().includes('phone')) identity.phone = value;
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identity));
+      } catch (_e) {
+        /* ignore */
+      }
+    }
   };
 
   const isStepValid = () => {
