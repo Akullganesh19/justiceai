@@ -1,0 +1,6 @@
+## 2024-05-24 — Add Resilient External Fetch Utility
+**Failure point found:** External API calls to Gemini, DeepSeek, Bhashini, and Ollama in `server.js` used native `fetch` with no retry logic on transient errors (5xx, network errors, timeouts) and lacked memory leak protections for unhandled response bodies on errors. Reusing `AbortSignal.timeout` directly in options also caused immediate failures on subsequent retry attempts if the first one timed out.
+**Why it existed:** Native `fetch` is standard, but doesn't handle real-world network flakiness, rate limiting, or connection resets out-of-the-box.
+**Recovery built:** Created `fetchWithRetry` wrapper with exponential backoff (100ms, 200ms, 400ms...), specifically targeting 5xx and 429 status codes, as well as `TypeError` network errors and `AbortError`s. Built a mechanism to recreate `AbortSignal`s via a `getSignal` parameter. Unhandled response bodies are consumed on failure.
+**Blast radius before:** High. Any network blip or momentary service degradation of upstream APIs (like Gemini or Ollama) caused an immediate unhandled user-facing error and required a manual retry from the user. Memory leaks were possible from unconsumed error response sockets.
+**Watch for:** Other `fetch` calls added in the future that don't utilize this wrapper.
