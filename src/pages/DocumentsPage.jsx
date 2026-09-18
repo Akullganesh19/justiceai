@@ -11,6 +11,9 @@ import {
   Download,
   Check,
   X,
+  Trash2,
+  Clock,
+  FileText as FileTextIcon,
   ChevronRight,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
@@ -376,6 +379,15 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_e) {
+      /* ignore */
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -383,9 +395,40 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
-    const doc = selectedTemplate.generate(formData);
-    setGeneratedDoc(doc);
+    const docText = selectedTemplate.generate(formData);
+    setGeneratedDoc(docText);
     setStage('preview');
+
+    // Save to local storage
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: docText,
+      createdAt: new Date().toISOString()
+    };
+
+    setSavedDocuments(prev => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || { title: doc.title, id: doc.templateId };
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id, e) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => {
+      const updated = prev.filter(d => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -419,6 +462,60 @@ export default function DocumentsPage() {
                 <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] font-mono italic opacity-60">
                   SYSTEMATIC GENERATION OF STATUTORY NOTICES AND PROCEDURAL APPLICATIONS.
                 </p>
+              </div>
+
+              {/* Saved Documents Library */}
+              <div className="mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-2 h-6 bg-gold shadow-luxe" />
+                  <h2 className="text-2xl font-display font-bold text-white uppercase tracking-tight italic">
+                    DOCUMENT_ARCHIVE
+                  </h2>
+                </div>
+
+                {savedDocuments.length === 0 ? (
+                  <div className="p-8 border-2 border-white/5 border-dashed rounded-sm bg-void/50 text-center flex flex-col items-center justify-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                      <FileTextIcon className="w-5 h-5 text-text-tertiary opacity-50" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase font-bold tracking-widest text-text-tertiary opacity-60">NO_DOCUMENTS_ARCHIVED</p>
+                      <p className="text-[10px] text-text-tertiary opacity-40 italic mt-1">Generated documents will be preserved here</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map(doc => (
+                      <div
+                        key={doc.id}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group p-5 bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm cursor-pointer transition-all flex flex-col gap-4 relative overflow-hidden"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+                              <FileTextIcon className="w-4 h-4 text-gold" />
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-white truncate max-w-[150px]">{doc.title}</h4>
+                              <p className="text-[9px] text-text-tertiary uppercase tracking-widest flex items-center gap-1 mt-1 opacity-60">
+                                <Clock className="w-3 h-3" />
+                                {new Date(doc.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => handleDeleteSaved(doc.id, e)}
+                            className="text-text-tertiary hover:text-accent-error opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Template Grid */}
