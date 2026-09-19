@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,10 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FileText,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +380,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocuments));
+  }, [savedDocuments]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -384,6 +400,19 @@ export default function DocumentsPage() {
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
+
+    // Save document
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      date: new Date().toISOString(),
+      formData
+    };
+
+    setSavedDocuments(prev => [newDoc, ...prev]);
+
     setGeneratedDoc(doc);
     setStage('preview');
   };
@@ -392,6 +421,18 @@ export default function DocumentsPage() {
     setSelectedTemplate(null);
     setGeneratedDoc(null);
     setStage('select');
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id, e) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => prev.filter(d => d.id !== id));
   };
 
   return (
@@ -421,6 +462,7 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
+
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
@@ -431,6 +473,69 @@ export default function DocumentsPage() {
                     index={i}
                   />
                 ))}
+              </div>
+
+              {/* Saved Documents Section */}
+              <div className="mt-24">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-sm bg-gold/10 border border-gold/20">
+                    <FileText className="w-5 h-5 text-gold" />
+                  </div>
+                  <h2 className="text-2xl font-display font-bold text-white uppercase italic tracking-wider">
+                    SAVED <span className="text-gold">DOCUMENTS</span>
+                  </h2>
+                </div>
+
+                {savedDocuments.length === 0 ? (
+                  <div className="bg-void border-2 border-white/5 rounded-sm p-12 text-center shadow-hard">
+                    <FileSearch className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-display text-white mb-2 uppercase tracking-widest italic">NO_DOCUMENTS_FOUND</h3>
+                    <p className="text-xs text-text-tertiary font-mono max-w-md mx-auto uppercase tracking-wider opacity-60">
+                      GENERATE A DOCUMENT USING THE TEMPLATES ABOVE. IT WILL BE AUTOMATICALLY SAVED HERE FOR FUTURE REFERENCE.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc, i) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        key={doc.id}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group relative bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm p-6 cursor-pointer transition-all shadow-hard flex flex-col"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="p-2 rounded-sm bg-white/5 group-hover:bg-gold/10 transition-colors">
+                            <FileText className="w-4 h-4 text-text-secondary group-hover:text-gold transition-colors" />
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteSaved(doc.id, e)}
+                            className="p-1.5 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 rounded-sm transition-colors"
+                            title="Delete document"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <h3 className="text-lg font-display font-bold text-white mb-2 uppercase tracking-tight italic group-hover:text-gold transition-colors line-clamp-2">
+                          {doc.title}
+                        </h3>
+
+                        <div className="mt-auto pt-4 flex items-center gap-4 text-[10px] font-mono text-text-tertiary uppercase tracking-widest">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3" />
+                            <span>{new Date(doc.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3 h-3" />
+                            <span>{new Date(doc.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
