@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import { xssMiddleware } from './src/middleware/xss.js';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -111,43 +112,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Prevent parameter pollution
 app.use(hpp());
-
-// Custom XSS protection middleware
-const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
-
-  const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
-    if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
-      const sanitized = {};
-      for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
-      }
-      return sanitized;
-    }
-    return obj;
-  };
-
-  // Sanitize body and query (req.params is read-only in Express 5)
-  if (req.body) req.body = sanitize(req.body);
-  if (req.query) {
-    // For query params, we need to handle them differently
-    Object.keys(req.query).forEach(key => {
-      req.query[key] = sanitize(req.query[key]);
-    });
-  }
-
-  next();
-};
 
 app.use(xssMiddleware);
 
