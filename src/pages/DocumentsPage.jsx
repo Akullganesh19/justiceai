@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
+  FileText,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -372,10 +375,62 @@ function DocumentPreview({ document, template, onBack }) {
   );
 }
 
+function SavedDocumentCard({ doc, onView, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group relative bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm p-6 flex flex-col gap-4 transition-all shadow-hard"
+    >
+      <div className="flex items-start justify-between">
+        <div className="w-10 h-10 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center">
+          <FileText className="w-5 h-5 text-gold" />
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="p-2 text-text-tertiary hover:text-accent-error transition-colors"
+          title="Delete Saved Document"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-display font-bold text-white mb-1 uppercase italic tracking-tight line-clamp-2">
+          {doc.title}
+        </h3>
+        <p className="text-[10px] text-text-tertiary font-mono uppercase tracking-widest flex items-center gap-2 opacity-60">
+          <Clock className="w-3 h-3" />
+          {new Date(doc.date).toLocaleDateString()}
+        </p>
+      </div>
+
+      <button
+        onClick={onView}
+        className="mt-auto flex items-center justify-between gap-3 bg-white/5 group-hover:bg-gold/10 text-text-secondary group-hover:text-gold px-4 py-2.5 rounded-sm font-extrabold transition-all uppercase tracking-widest text-[10px] italic border border-white/5 group-hover:border-gold/20"
+      >
+        <span>VIEW_DOCUMENT</span>
+        <ArrowRight className="w-4 h-4" />
+      </button>
+    </motion.div>
+  );
+}
+
 export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_err) { /* ignore */
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +440,40 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      document: doc,
+      date: new Date().toISOString(),
+    };
+
+    setSavedDocuments((prev) => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setStage('preview');
+  };
+
+  const handleViewSaved = (savedDoc) => {
+    const template =
+      DOCUMENT_TEMPLATES.find((t) => t.id === savedDoc.templateId) || {
+        title: savedDoc.title,
+      };
+    setSelectedTemplate(template);
+    setGeneratedDoc(savedDoc.document);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    setSavedDocuments((prev) => {
+      const updated = prev.filter((d) => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -432,6 +520,37 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
+                      <div className="w-2 h-8 bg-gold shadow-luxe" />
+                      SAVED_DOCUMENTS
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setSavedDocuments([]);
+                        localStorage.removeItem('justice_ai_documents');
+                      }}
+                      className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary hover:text-accent-error transition-colors"
+                    >
+                      CLEAR_ALL
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocuments.map((doc) => (
+                      <SavedDocumentCard
+                        key={doc.id}
+                        doc={doc}
+                        onView={() => handleViewSaved(doc)}
+                        onDelete={() => handleDeleteSaved(doc.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
