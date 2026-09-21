@@ -1,0 +1,6 @@
+## 2024-05-27 — [Local Storage Data Export/Import]
+**Product understood as:** An AI-powered legal co-pilot that stores all sensitive case history and user data locally in the browser to ensure maximum privacy.
+**Derivation reasoning:** The product stores vast amounts of important user data (chat histories, generated documents, tracked cases) exclusively in `localStorage` for privacy reasons. However, if a user clears their browser data, switches devices, or changes browsers, all this invaluable legal work is permanently lost. Therefore, users obviously need a way to export their local data to a file (like JSON) and import it on another device or restore it after a wipe. It doesn't exist because the initial focus was likely on building the core features (chat, cases, docs) rather than data portability. I'm building it to give users full ownership and portability of their private legal data without compromising the local-first architecture.
+**Feature built:** Data Export/Import utility in the Dashboard/Settings area.
+**User impact:** Users can now safely backup their legal history to a file and restore it on any device.
+**Next logical feature:** Something related to aggregating analytics across cases.
