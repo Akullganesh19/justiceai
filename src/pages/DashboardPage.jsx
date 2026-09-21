@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -22,6 +22,9 @@ import {
   HeartHandshake,
   BookMarked,
   AlertCircle,
+  Download,
+  Upload,
+  Database
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import Footer from '../components/ui/Footer';
@@ -145,31 +148,75 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
-  const [greeting, setGreeting] = useState('');
-  const [greetIcon, setGreetIcon] = useState(Sun);
-
-  useEffect(() => {
+  const [recentCases] = useState(() => {
     const saved = localStorage.getItem('justice_ai_history');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+        return parsed.slice(0, 5);
+      } catch (_e) { return []; }
     }
-
+    return [];
+  });
+  const [greeting] = useState(() => {
     const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
-    } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
-    } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
+    if (hour < 12) return 'Welcome Back';
+    if (hour < 17) return 'Afternoon Session';
+    return 'Evening Briefing';
+  });
+  const [greetIcon] = useState(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return Sunrise;
+    if (hour < 17) return Sun;
+    return Moon;
+  });
+  const fileInputRef = useRef(null);
+
+  const handleExportData = () => {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('justice_ai_')) {
+        data[key] = localStorage.getItem(key);
+      }
     }
-  }, []);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `justiceai_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        for (const [key, value] of Object.entries(data)) {
+          if (key.startsWith('justice_ai_')) {
+            localStorage.setItem(key, value);
+          }
+        }
+        window.location.reload();
+      } catch (error) {
+        console.error("Failed to parse backup file:", error);
+        alert("Invalid backup file format.");
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    if (event.target) {
+        event.target.value = '';
+    }
+  };
+
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -300,6 +347,55 @@ export default function DashboardPage() {
                 {quickActions.map((action, i) => (
                   <QuickActionCard key={i} {...action} />
                 ))}
+              </div>
+
+              {/* Data Management Section */}
+              <div className="pt-12 pb-4">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gold"></div>
+                  <h2 className="text-sm font-bold uppercase tracking-widest text-text-tertiary">
+                    Data Management
+                  </h2>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Export Button */}
+                  <button
+                    onClick={handleExportData}
+                    className="group p-8 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all text-left flex items-start gap-6 hover:translate-y-[-2px] hover:shadow-hard"
+                  >
+                    <div className="w-12 h-12 rounded flex-shrink-0 bg-void flex items-center justify-center border-2 border-white/10 group-hover:border-gold transition-all shadow-luxe">
+                      <Download className="w-6 h-6 text-text-tertiary group-hover:text-gold transition-colors" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1 group-hover:text-gold transition-colors">Backup Data</h3>
+                      <p className="text-xs text-text-tertiary opacity-80 leading-relaxed">Download a backup of all your local legal data, histories, and settings to a JSON file.</p>
+                    </div>
+                  </button>
+
+                  {/* Import Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".json"
+                      ref={fileInputRef}
+                      onChange={handleImportData}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="group p-8 rounded-sm w-full bg-void border-2 border-white/5 hover:border-blue-500/30 transition-all text-left flex items-start gap-6 hover:translate-y-[-2px] hover:shadow-hard"
+                    >
+                      <div className="w-12 h-12 rounded flex-shrink-0 bg-void flex items-center justify-center border-2 border-white/10 group-hover:border-blue-500 transition-all shadow-luxe">
+                        <Upload className="w-6 h-6 text-text-tertiary group-hover:text-blue-500 transition-colors" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1 group-hover:text-blue-500 transition-colors">Restore Backup</h3>
+                        <p className="text-xs text-text-tertiary opacity-80 leading-relaxed">Restore your legal histories and data from a previously downloaded JSON backup file.</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Auxiliary Services Grid */}
