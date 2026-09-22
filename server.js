@@ -703,8 +703,25 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
   }
 });
 
+
+// Basic Admin Auth Middleware for destructive RAG endpoints
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
+  // If the secret is not configured, completely lock down the destructive endpoints
+  if (!ADMIN_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Admin authentication is not configured on this server.' });
+  }
+
+  if (!authHeader || authHeader !== `Bearer ${ADMIN_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Admin access required for destructive actions' });
+  }
+  next();
+};
+
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +734,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
@@ -727,8 +744,17 @@ app.delete('/api/documents', (req, res) => {
 });
 
 // Endpoint to chat using RAG (with optional streaming)
+
 app.post('/api/chat', async (req, res) => {
   console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+
+  if (req.body && Array.isArray(req.body.messages)) {
+    for (const msg of req.body.messages) {
+      if (msg && typeof msg.content === 'string' && msg.content.length > 500000) {
+         return res.status(413).json({ error: 'Payload Too Large', message: 'Message content exceeds maximum allowed length' });
+      }
+    }
+  }
   try {
     const { 
       messages, 
@@ -969,6 +995,24 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  // Catch body-parser/JSON PayloadTooLargeErrors
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Payload Too Large', message: 'Request entity too large' });
+  }
+
+  // Catch URI decoding errors
+  if (err instanceof URIError) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Malformed URI component' });
+  }
+
+  // Catch multer size errors
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'Payload Too Large', message: 'File too large' });
+    }
+    return res.status(400).json({ error: 'Bad Request', message: err.message });
+  }
+
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
