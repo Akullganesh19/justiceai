@@ -8,6 +8,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Eye, EyeOff, Scale } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { globalEventBus } from '../../lib/analytics/EventBridge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -187,6 +188,20 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    // Create a mock user based on email (or default)
+    const user = {
+      userId: `user_${Date.now()}`,
+      email: email || 'advocate@justiceai.law',
+      role: 'advocate'
+    };
+
+    // Register user session with the global event bridge
+    globalEventBus.setContext('user', user);
+    globalEventBus.emit('user.login', user);
+
     console.log('UI: Sign In form submitted');
   };
   return (
@@ -229,6 +244,18 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+
+    const user = {
+      userId: `user_${Date.now()}`,
+      email: email || 'advocate@justiceai.law',
+      role: 'advocate'
+    };
+
+    globalEventBus.setContext('user', user);
+    globalEventBus.emit('user.signup', user);
+
     console.log('UI: Sign Up form submitted');
   };
   return (
