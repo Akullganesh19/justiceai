@@ -1,0 +1,6 @@
+## 2024-05-18 — Saved Drafts for Document Generator
+**Product understood as:** A local AI-powered legal co-pilot that helps Indian citizens draft statutory legal documents and understand their rights.
+**Derivation reasoning:** This product has a Document Generator that collects structured user inputs and generates legal documents (e.g., Statutory Demand Notices, Consumer Complaints). Users repeatedly generate and customize these forms. Therefore, users obviously need a way to save and revisit their drafted documents. It doesn't exist because the generator was built as a transient state machine without a persistence layer. I'm building it because giving users a persistent history of their generated drafts prevents data loss and encourages iterative document refinement.
+**Feature built:** Saved Drafts persistence in the Document Generator via `localStorage` (under the `justice_ai_documents` key).
+**User impact:** Users can now see a list of their previously generated documents on the Documents page, click to preview/download them again, and delete them, eliminating the risk of losing their generated legal drafts.
+**Next logical feature:** Ability to edit previously saved drafts (re-populating the Form Wizard with the saved document's data) instead of just viewing the generated output.

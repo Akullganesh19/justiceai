@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FileText,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +379,14 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_e) {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +396,40 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save to local storage
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      templateTitle: selectedTemplate.title,
+      content: doc,
+      formData,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSavedDocuments(prev => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setStage('preview');
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (e, id) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => {
+      const updated = prev.filter(d => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -432,6 +476,52 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-24">
+                  <div className="flex items-center gap-3 mb-8">
+                    <FileText className="w-6 h-6 text-gold" />
+                    <h2 className="text-2xl font-display font-bold text-white uppercase italic tracking-tight">
+                      Saved <span className="text-gold">Drafts</span>
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group p-5 bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm cursor-pointer transition-all duration-300 shadow-hard relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="relative flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-sm font-bold text-white group-hover:text-gold transition-colors font-display truncate">
+                              {doc.templateTitle}
+                            </h3>
+
+                            <div className="flex items-center gap-2 mt-2 text-[10px] text-text-tertiary font-mono uppercase">
+                              <Clock className="w-3 h-3" />
+                              {new Date(doc.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => handleDeleteSaved(e, doc.id)}
+                            className="p-2 text-text-tertiary hover:text-accent-error hover:bg-accent-error/10 rounded-sm transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
