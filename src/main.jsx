@@ -7,7 +7,26 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { globalEventBus } from './lib/analytics/EventBridge';
+import { analyticsSystem } from './lib/analytics/AnalyticsSystem';
 import './index.css';
+
+// Initialize Cross-System Intelligence (Synapse Event Bridge)
+globalEventBus.on('user.login', (data) => {
+  if (data && data.email) {
+    analyticsSystem.identify(data.email);
+  }
+});
+
+globalEventBus.on('user.register', (data) => {
+  if (data && data.email) {
+    analyticsSystem.identify(data.email, { name: data.name });
+  }
+});
+
+globalEventBus.on('system.error', (data) => {
+  analyticsSystem.logError(data.error, data.componentStack);
+});
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for

@@ -8,6 +8,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Eye, EyeOff, Scale } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { globalEventBus } from '../../lib/analytics/EventBridge';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -187,6 +188,8 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    globalEventBus.emit('user.login', { email: formData.get('email') });
     console.log('UI: Sign In form submitted');
   };
   return (
@@ -229,6 +232,8 @@ function SignInForm() {
 function SignUpForm() {
   const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    globalEventBus.emit('user.register', { name: formData.get('name'), email: formData.get('email') });
     console.log('UI: Sign Up form submitted');
   };
   return (
