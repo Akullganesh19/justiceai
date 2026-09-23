@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, Bug, FileText } from 'lucide-react';
+import { globalEventBus } from '../../lib/analytics/EventBridge';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -18,6 +19,8 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    globalEventBus.emit('system.error', { error: error.toString(), componentStack: errorInfo.componentStack });
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
