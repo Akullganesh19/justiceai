@@ -53,7 +53,14 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -63,7 +70,26 @@ function FormWizard({ template, onBack, onGenerate }) {
   );
 
   const handleChange = (fieldId, value) => {
-    setFormData((prev) => ({ ...prev, [fieldId]: value }));
+    setFormData((prev) => {
+      const nextData = { ...prev, [fieldId]: value };
+
+      const identityFields = [
+        'senderName', 'senderAddress', 'applicantName', 'applicantAddress',
+        'complainantName', 'complainantAddress', 'informantName',
+        'informantAddress', 'informantPhone'
+      ];
+
+      if (identityFields.includes(fieldId)) {
+        try {
+          const currentIdentity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+          const updatedIdentity = { ...currentIdentity, [fieldId]: value };
+          localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(updatedIdentity));
+        } catch {
+          // ignore
+        }
+      }
+      return nextData;
+    });
   };
 
   const isStepValid = () => {

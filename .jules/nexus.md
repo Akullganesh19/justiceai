@@ -1,0 +1,6 @@
+## 2024-05-18 — Smart Default Identity Caching
+**Product understood as:** An AI legal co-pilot that helps citizens track cases and draft multiple procedural documents locally.
+**Derivation reasoning:** This product has various document templates (Legal Notice, Consumer Complaint, RTI, FIR). Users repeatedly draft these documents. Each document requires basic user identity information (name, address, phone). Therefore users obviously need an auto-fill feature — because it's frustrating to type the same name and address across different forms. It doesn't exist because form state was built isolated per template session without cross-template memory. I'm building it because it eliminates friction and creates a feeling of a truly intelligent, continuous "co-pilot" assistant.
+**Feature built:** Identity caching system that stores explicitly entered names/addresses in localStorage and automatically hydrates future document generation forms as smart defaults.
+**User impact:** Users only ever type their personal details once; future templates auto-fill these details automatically.
+**Next logical feature:** Generating a unified 'Case Profile' automatically derived from all the document details entered across sessions, giving users a complete overview of a dispute without manual entry.
