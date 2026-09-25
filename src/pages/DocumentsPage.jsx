@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -53,7 +54,34 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_oracle_identity');
+      if (saved) {
+        const identity = JSON.parse(saved);
+        const NAME_FIELDS = ['senderName', 'applicantName', 'informantName', 'complainantName'];
+        const ADDRESS_FIELDS = ['senderAddress', 'applicantAddress', 'informantAddress', 'complainantAddress'];
+        const PHONE_FIELDS = ['informantPhone'];
+
+        const initialData = {};
+        template.fields.forEach((field) => {
+          if (NAME_FIELDS.includes(field.id) && identity.name) {
+            initialData[field.id] = identity.name;
+          } else if (ADDRESS_FIELDS.includes(field.id) && identity.address) {
+            initialData[field.id] = identity.address;
+          } else if (PHONE_FIELDS.includes(field.id) && identity.phone) {
+            initialData[field.id] = identity.phone;
+          }
+        });
+        return initialData;
+      }
+    } catch (_err) {
+      /* ignore */
+    }
+    return {};
+  });
+
+  const [autoFilled] = useState(() => Object.keys(formData).length > 0);
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -86,17 +114,26 @@ function FormWizard({ template, onBack, onGenerate }) {
       className="max-w-2xl mx-auto"
     >
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={onBack}
-          className="p-2 rounded-sm bg-void border-2 border-white/10 hover:border-gold/30 transition-colors shadow-hard"
-        >
-          <ArrowLeft className="w-5 h-5 text-text-secondary" />
-        </button>
-        <div>
-          <h2 className="text-3xl font-display text-white">{template.title}</h2>
-          <p className="text-sm text-text-tertiary font-body mt-1">Fill in the details below</p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-sm bg-void border-2 border-white/10 hover:border-gold/30 transition-colors shadow-hard"
+          >
+            <ArrowLeft className="w-5 h-5 text-text-secondary" />
+          </button>
+          <div>
+            <h2 className="text-3xl font-display text-white">{template.title}</h2>
+            <p className="text-sm text-text-tertiary font-body mt-1">Fill in the details below</p>
+          </div>
         </div>
+
+        {autoFilled && currentStep === 0 && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 border-2 border-gold/20 rounded-sm text-gold text-xs font-mono uppercase tracking-wider italic shadow-hard">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Identity Smart-Fill Applied</span>
+          </div>
+        )}
       </div>
 
       {/* Progress Bar */}
@@ -383,6 +420,33 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
+    try {
+      const identity = JSON.parse(localStorage.getItem('justice_ai_oracle_identity') || '{}');
+      let updated = false;
+      const NAME_FIELDS = ['senderName', 'applicantName', 'informantName', 'complainantName'];
+      const ADDRESS_FIELDS = ['senderAddress', 'applicantAddress', 'informantAddress', 'complainantAddress'];
+      const PHONE_FIELDS = ['informantPhone'];
+
+      for (const [key, value] of Object.entries(formData)) {
+        if (NAME_FIELDS.includes(key) && value) {
+          identity.name = value;
+          updated = true;
+        } else if (ADDRESS_FIELDS.includes(key) && value) {
+          identity.address = value;
+          updated = true;
+        } else if (PHONE_FIELDS.includes(key) && value) {
+          identity.phone = value;
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        localStorage.setItem('justice_ai_oracle_identity', JSON.stringify(identity));
+      }
+    } catch (_err) {
+      /* ignore */
+    }
+
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');

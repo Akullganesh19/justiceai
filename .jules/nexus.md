@@ -1,0 +1,6 @@
+## 2025-02-18 — Cross-Template Smart Identity Defaults
+**Product understood as:** A legal co-pilot and document generator that empowers citizens to handle procedural drafting systematically.
+**Derivation reasoning:** This product has user document generation. Users repeatedly fill out templates for Consumer Complaints, RTIs, FIRs, and Legal Notices. Therefore users obviously need their core identity details (Name, Address, Phone) to be remembered and auto-filled across all templates — because typing the same personal details into every new legal form is tedious. It doesn't exist because template fields were historically treated as isolated states. I'm building it because it provides an immediate "magic" UX improvement, saving time and reducing friction for repeat usage.
+**Feature built:** Identity extraction during document generation that saves Name, Address, and Phone to `localStorage`, and lazily auto-fills these fields on any new template with a small visual indicator.
+**User impact:** Users can now generate multiple documents in one session without re-typing their core identity.
+**Next logical feature:** Since users generate these documents, they'll likely want a central place to view/download previously generated documents (Document History).
