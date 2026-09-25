@@ -151,6 +151,23 @@ const xssMiddleware = (req, res, next) => {
 
 app.use(xssMiddleware);
 
+// ===== ADMIN AUTH MIDDLEWARE =====
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret) {
+    logger.warn('ADMIN_SECRET is not set in environment variables');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  if (!authHeader || authHeader !== adminSecret) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing admin credentials' });
+  }
+
+  next();
+};
+
 // ===== RATE LIMITING =====
 
 // General API rate limiting (generous for development, stricter for production)
@@ -704,7 +721,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +734,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
@@ -969,6 +986,27 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err instanceof URIError || err.status === 400 && typeof err.message === 'string' && err.message.includes('decode')) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'Invalid URI encoding'
+    });
+  }
+
+  if (err.type === 'entity.too.large' || err.name === 'MulterError' && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      error: 'Payload Too Large',
+      message: 'Request entity or file is too large'
+    });
+  }
+
+  if (err.name === 'MulterError') {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: err.message
+    });
+  }
+
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
