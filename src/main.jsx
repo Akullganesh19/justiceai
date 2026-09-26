@@ -40,6 +40,30 @@ const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSel
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 // Loading fallback component
+
+// 🛸 ORACLE ENGINE: Predictive Route Prefetching
+// Predicts what a returning user will do next based on history presence
+function OracleEngine({ children }) {
+  React.useEffect(() => {
+    try {
+      const history = localStorage.getItem('justice_ai_history');
+      if (history && JSON.parse(history).length > 0) {
+        console.log('[Oracle] Returning user detected. Prefetching high-probability routes...');
+        // Prefetch Dashboard and Documents silently
+        import('./pages/DashboardPage.jsx');
+        import('./pages/DocumentsPage.jsx');
+      } else {
+        // First-time user, prefetch Rights and Chat
+        import('./pages/RightsPage.jsx');
+        import('./pages/ChatPage.jsx');
+      }
+    } catch (e) {
+      // Degrade gracefully
+    }
+  }, []);
+  return <>{children}</>;
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen bg-void flex flex-col items-center justify-center space-y-6 font-mono">
@@ -56,6 +80,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <ToastProvider>
         <Router>
+          <OracleEngine>
           <div className="grain-overlay" aria-hidden="true" />
           <ScrollToTop />
           <CommandPalette />
@@ -86,6 +111,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
+        </OracleEngine>
         </Router>
       </ToastProvider>
     </ErrorBoundary>

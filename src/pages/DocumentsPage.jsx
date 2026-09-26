@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -11,6 +11,7 @@ import {
   Download,
   Check,
   X,
+  Sparkles,
   ChevronRight,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
@@ -377,6 +378,33 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  // 🛸 ORACLE: Next-Action Prediction (Lazy State Init)
+  const [predictedTemplate, setPredictedTemplate] = useState(() => {
+    try {
+      const history = localStorage.getItem('justice_ai_history');
+      if (history) {
+        const parsed = JSON.parse(history);
+        if (parsed.length > 0 && parsed[0].messages) {
+          const recentText = parsed[0].messages.map(m => m.content.toLowerCase()).join(' ');
+
+          if (recentText.includes('police') || recentText.includes('fir') || recentText.includes('theft') || recentText.includes('stolen') || recentText.includes('assault')) {
+            return DOCUMENT_TEMPLATES.find(t => t.id === 'fir-draft');
+          } else if (recentText.includes('consumer') || recentText.includes('defective') || recentText.includes('refund') || recentText.includes('product')) {
+            return DOCUMENT_TEMPLATES.find(t => t.id === 'consumer-complaint');
+          } else if (recentText.includes('rti') || recentText.includes('information') || recentText.includes('government') || recentText.includes('public authority')) {
+            return DOCUMENT_TEMPLATES.find(t => t.id === 'rti-application');
+          } else if (recentText.includes('notice') || recentText.includes('sue') || recentText.includes('legal action')) {
+            return DOCUMENT_TEMPLATES.find(t => t.id === 'legal-notice');
+          }
+        }
+      }
+    } catch {
+      // Degrade gracefully
+    }
+    return null;
+  });
+
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -420,6 +448,39 @@ export default function DocumentsPage() {
                   SYSTEMATIC GENERATION OF STATUTORY NOTICES AND PROCEDURAL APPLICATIONS.
                 </p>
               </div>
+
+
+              {/* 🛸 ORACLE: Predictive Intelligence Banner */}
+              {predictedTemplate && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-12 bg-void border-2 border-gold/40 p-6 rounded-sm shadow-hard flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group cursor-pointer"
+                  onClick={() => handleSelect(predictedTemplate)}
+                >
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-gold/20 transition-all" />
+
+                  <div className="flex items-start gap-4 relative z-10">
+                    <div className="w-12 h-12 rounded-sm bg-gold/10 border-2 border-gold/40 flex items-center justify-center flex-shrink-0 animate-pulse">
+                      <Sparkles className="w-6 h-6 text-gold" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-bold text-white uppercase tracking-tight italic flex items-center gap-2">
+                        Predictive Intelligence
+                        <span className="text-[9px] bg-gold text-midnight px-2 py-0.5 rounded-sm tracking-widest font-extrabold not-italic">ORACLE</span>
+                      </h3>
+                      <p className="text-sm text-text-tertiary font-body mt-1">
+                        Based on your recent consultation, you likely need a <strong className="text-gold">{predictedTemplate.title}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button className="relative z-10 flex items-center gap-2 bg-gold text-midnight px-6 py-3 rounded-sm font-extrabold uppercase tracking-widest text-[10px] hover:bg-gold-light transition-all shadow-luxe whitespace-nowrap">
+                    <span>Initialize Now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
 
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
