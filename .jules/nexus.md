@@ -1,0 +1,6 @@
+## 2024-10-24 — Document Vault (Saved Documents)
+**Product understood as:** JusticeAI empowers Indian citizens with an AI-powered legal co-pilot to privately understand their rights, build strategies, and generate legal documents.
+**Derivation reasoning:** This product has generated documents from templates. Users generate these legal documents for real-world use. Therefore users obviously need a Document Vault (Saved Documents) — because legal drafts are important, and users will likely need to reference, print, or retrieve them again later without re-filling the entire form. It doesn't exist because the initial focus was on the generation engine itself rather than persistence.
+**Feature built:** A Document Vault on the `/documents` page that automatically saves generated documents to local storage and allows users to view, copy, download, or delete past drafts.
+**User impact:** As a user, I can now confidently generate legal documents knowing they will be saved for future sessions, allowing me to retrieve and export them anytime without losing progress.
+**Next logical feature:** A comprehensive "Case Brief" export that packages saved chat sessions, cost estimates, and generated documents into a single shareable PDF for lawyer consultations.

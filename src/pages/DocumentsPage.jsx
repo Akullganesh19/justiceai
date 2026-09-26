@@ -12,12 +12,43 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FolderOpen,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
 import jsPDF from 'jspdf';
 
 const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
+
+
+function SavedDocumentCard({ doc, onView, onDelete }) {
+  return (
+    <div className="bg-void border-2 border-white/5 hover:border-gold/30 p-4 rounded-sm flex items-center justify-between group transition-all shadow-hard">
+      <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => onView(doc)}>
+        <div className="w-10 h-10 rounded-sm bg-gold/10 flex items-center justify-center">
+          <FileSearch className="w-5 h-5 text-gold" />
+        </div>
+        <div>
+          <h4 className="text-white font-bold font-display uppercase tracking-tight">{doc.title}</h4>
+          <p className="text-[10px] text-text-tertiary uppercase tracking-widest font-mono">
+            {new Date(doc.timestamp).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(doc.id);
+        }}
+        className="p-2 text-text-tertiary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+        title="Delete Document"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 function TemplateCard({ template, onSelect, index }) {
   const Icon = ICONS[template.icon] || FileWarning;
@@ -376,6 +407,14 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +424,34 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save document
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      timestamp: new Date().toISOString(),
+    };
+
+    const newSaved = [newDoc, ...savedDocuments];
+    setSavedDocuments(newSaved);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(newSaved));
+
     setStage('preview');
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id) => {
+    const newSaved = savedDocuments.filter(d => d.id !== id);
+    setSavedDocuments(newSaved);
+    localStorage.setItem('justice_ai_documents', JSON.stringify(newSaved));
   };
 
   const handleReset = () => {
@@ -432,6 +498,28 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents Section */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center gap-3 mb-8">
+                    <FolderOpen className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc) => (
+                      <SavedDocumentCard
+                        key={doc.id}
+                        doc={doc}
+                        onView={handleViewSaved}
+                        onDelete={handleDeleteSaved}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
