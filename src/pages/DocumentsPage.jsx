@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -21,6 +22,8 @@ const ICONS = { FileWarning, ShoppingBag, FileSearch, Shield };
 
 function TemplateCard({ template, onSelect, index }) {
   const Icon = ICONS[template.icon] || FileWarning;
+  const isPredicted = template._oracleScore > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -29,10 +32,16 @@ function TemplateCard({ template, onSelect, index }) {
       onClick={() => onSelect(template)}
       className="group relative cursor-pointer"
     >
-      <div className="h-full p-8 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-500 overflow-hidden flex flex-col shadow-hard">
+      <div className={`h-full p-8 rounded-sm bg-void border-2 ${isPredicted ? 'border-gold/60 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-white/5 hover:border-gold/30'} transition-all duration-500 overflow-hidden flex flex-col shadow-hard`}>
         <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-sm bg-gold/5 blur-3xl group-hover:bg-gold/10 transition-all" />
 
-        <div className="w-14 h-14 rounded-sm bg-void border-2 border-white/5 flex items-center justify-center mb-6 group-hover:border-gold/40 group-hover:scale-110 transition-all duration-500 shadow-hard">
+        {isPredicted && (
+          <div className="absolute top-4 right-4 bg-gold/10 text-gold px-2.5 py-1 rounded-sm text-[9px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 border border-gold/30 shadow-luxe z-10">
+            <Sparkles className="w-3 h-3" /> PREDICTED
+          </div>
+        )}
+
+        <div className={`w-14 h-14 rounded-sm bg-void border-2 ${isPredicted ? 'border-gold/40' : 'border-white/5'} flex items-center justify-center mb-6 group-hover:border-gold/40 group-hover:scale-110 transition-all duration-500 shadow-hard`}>
           <Icon className="w-7 h-7 text-gold" />
         </div>
 
@@ -53,7 +62,34 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const history = JSON.parse(localStorage.getItem('justice_ai_history') || '[]');
+      if (history.length > 0) {
+        const lastCase = history[0];
+        const userMsgs = lastCase.messages.filter((m) => m.role === 'user').map((m) => m.content).join('\n');
+        const aiMsgs = lastCase.messages.filter((m) => m.role === 'assistant').map((m) => m.content).join('\n');
+
+        const predicted = {};
+
+        if (template.id === 'consumer-complaint') {
+          const amtMatch = userMsgs.match(/(?:rs\.?|₹|inr|rupees)\s*([\d,]+)/i);
+          if (amtMatch) predicted.amount = amtMatch[1].replace(/,/g, '');
+
+          predicted.deficiency = `[AUTO-FILLED FROM CONSULTATION: ${lastCase.title || 'Recent Case'}]\n\n${userMsgs.substring(0, 300)}...`;
+        } else if (template.id === 'fir-draft') {
+          predicted.narrative = `[AUTO-FILLED FROM CONSULTATION: ${lastCase.title || 'Recent Case'}]\n\n${userMsgs.substring(0, 300)}...`;
+        } else if (template.id === 'rti-application') {
+          predicted.information = `[AUTO-FILLED FROM CONSULTATION: ${lastCase.title || 'Recent Case'}]\n\nBased on advice: ${aiMsgs.substring(0, 200)}...`;
+        }
+
+        return predicted;
+      }
+    } catch {
+      // Ignored
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -377,6 +413,30 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  const [templates] = useState(() => {
+    try {
+      const history = JSON.parse(localStorage.getItem('justice_ai_history') || '[]');
+      if (history.length > 0) {
+        const lastCase = history[0];
+        const allText = lastCase.messages.map(m => m.content).join('\n').toLowerCase();
+
+        const scoredTemplates = DOCUMENT_TEMPLATES.map(template => {
+          let score = 0;
+          if (template.id === 'consumer-complaint' && (allText.includes('consumer') || allText.includes('refund') || allText.includes('defective') || allText.includes('compensation'))) score += 10;
+          if (template.id === 'fir-draft' && (allText.includes('police') || allText.includes('crime') || allText.includes('stolen') || allText.includes('assault'))) score += 10;
+          if (template.id === 'rti-application' && (allText.includes('information') || allText.includes('government') || allText.includes('rti') || allText.includes('public authority'))) score += 10;
+
+          return { ...template, _oracleScore: score };
+        });
+
+        return scoredTemplates.sort((a, b) => (b._oracleScore || 0) - (a._oracleScore || 0));
+      }
+    } catch {
+      // Ignored
+    }
+    return DOCUMENT_TEMPLATES;
+  });
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -423,7 +483,7 @@ export default function DocumentsPage() {
 
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {DOCUMENT_TEMPLATES.map((template, i) => (
+                {templates.map((template, i) => (
                   <TemplateCard
                     key={template.id}
                     template={template}
