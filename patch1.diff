@@ -1,0 +1,36 @@
+<<<<<<< SEARCH
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FileWarning,
+  ShoppingBag,
+  FileSearch,
+  Shield,
+  ArrowLeft,
+  ArrowRight,
+  Copy,
+  Download,
+  Check,
+  X,
+  ChevronRight,
+} from 'lucide-react';
+=======
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FileWarning,
+  ShoppingBag,
+  FileSearch,
+  Shield,
+  ArrowLeft,
+  ArrowRight,
+  Copy,
+  Download,
+  Check,
+  X,
+  ChevronRight,
+  Trash2,
+  FileText,
+  Clock,
+} from 'lucide-react';
+>>>>>>> REPLACE

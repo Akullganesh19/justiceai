@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  FileText,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +379,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocuments));
+  }, [savedDocuments]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +401,28 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Auto-save the generated document
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      date: new Date().toISOString(),
+    };
+    setSavedDocuments((prev) => [newDoc, ...prev]);
+  };
+
+  const handleViewSaved = (savedDoc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === savedDoc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate({ ...template, title: savedDoc.title });
+    setGeneratedDoc(savedDoc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (e, id) => {
+    e.stopPropagation();
+    setSavedDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
   const handleReset = () => {
@@ -422,7 +459,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +469,46 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents Section */}
+              {savedDocuments.length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 border-b-2 border-white/5 pb-4">
+                    <FileText className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-tight italic">
+                      DOCUMENT_ARCHIVE
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc, i) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        key={doc.id}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group relative cursor-pointer p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 flex flex-col shadow-hard"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-lg font-display font-bold text-white group-hover:text-gold transition-colors line-clamp-1 italic">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={(e) => handleDeleteSaved(e, doc.id)}
+                            className="p-1.5 text-text-tertiary hover:text-accent-danger transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-text-tertiary mt-auto opacity-60">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{new Date(doc.date).toLocaleDateString()}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
