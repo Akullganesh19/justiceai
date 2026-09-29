@@ -1,3 +1,4 @@
+import { initFetchCoalescer } from './lib/infrastructure/fetchCoalescer';
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -50,6 +51,8 @@ function PageLoader() {
     </div>
   );
 }
+
+initFetchCoalescer();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
