@@ -191,12 +191,20 @@ app.use((req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     const level = res.statusCode >= 400 ? 'warn' : 'info';
+
+    // Mask IPs (IPv4 and IPv6) to avoid logging PII
+    const maskedIp = req.ip
+      ? req.ip
+          .replace(/(\d{1,3}\.\d{1,3}\.)\d{1,3}\.\d{1,3}/, '$1***.***')
+          .replace(/([a-f0-9]{1,4}:[a-f0-9]{1,4}:[a-f0-9]{1,4}:[a-f0-9]{1,4}:).*/i, '$1****:****')
+      : undefined;
+
     logger.log(level, `${req.method} ${req.path}`, {
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip
+      ip: maskedIp
     });
   });
   next();
@@ -821,7 +829,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    console.log(`Routing query to Ollama (message length: ${latestUserMessage.length} chars)`);
     
     try {
       if (stream) {
