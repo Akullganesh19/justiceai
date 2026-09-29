@@ -12,6 +12,10 @@ import {
   Check,
   X,
   ChevronRight,
+  History,
+  FileText,
+  Trash2,
+  Calendar,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +380,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+  }, [savedDocs]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +402,28 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save to vault
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: doc,
+      timestamp: new Date().toISOString(),
+    };
+    setSavedDocs(prev => [newDoc, ...prev]);
+  };
+
+  const handleOpenSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (e, id) => {
+    e.stopPropagation();
+    setSavedDocs(prev => prev.filter(d => d.id !== id));
   };
 
   const handleReset = () => {
@@ -422,7 +460,7 @@ export default function DocumentsPage() {
               </div>
 
               {/* Template Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {DOCUMENT_TEMPLATES.map((template, i) => (
                   <TemplateCard
                     key={template.id}
@@ -432,6 +470,49 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Documents Vault */}
+              {savedDocs.length > 0 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                    <History className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold uppercase tracking-widest text-white italic">
+                      DOCUMENT_VAULT
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocs.map(doc => (
+                      <div
+                        key={doc.id}
+                        onClick={() => handleOpenSaved(doc)}
+                        className="group relative bg-void border-2 border-white/5 hover:border-gold/30 p-6 rounded-sm cursor-pointer transition-all hover:translate-y-[-2px] shadow-hard flex flex-col"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="w-10 h-10 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+                            <FileText className="w-5 h-5 text-text-secondary group-hover:text-gold transition-colors" />
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteSaved(e, doc.id)}
+                            className="p-2 text-text-tertiary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-400/10 rounded-sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-2 group-hover:text-gold transition-colors line-clamp-1">
+                          {doc.title}
+                        </h3>
+
+                        <div className="mt-auto flex items-center gap-2 text-[10px] text-text-tertiary font-bold uppercase tracking-widest opacity-60">
+                          <Calendar className="w-3 h-3" />
+                          <span>{new Date(doc.timestamp).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
