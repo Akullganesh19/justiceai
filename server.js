@@ -6,6 +6,7 @@ import compression from 'compression';
 import hpp from 'hpp';
 import multer from 'multer';
 import fs from 'fs';
+import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
@@ -113,6 +114,28 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(hpp());
 
 // Custom XSS protection middleware
+
+// Admin Authentication Middleware
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !process.env.ADMIN_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized: Admin access required' });
+  }
+
+  // Use timing-safe equal to prevent timing attacks
+  try {
+    const a = Buffer.from(authHeader);
+    const b = Buffer.from(process.env.ADMIN_SECRET);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.status(401).json({ error: 'Unauthorized: Admin access required' });
+    }
+  } catch (err) {
+    return res.status(401).json({ error: 'Unauthorized: Admin access required' });
+  }
+
+  next();
+};
+
 const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
     if (!str) return str;
@@ -635,7 +658,7 @@ app.post('/api/voice/process', async (req, res) => {
 });
 
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +727,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +740,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
@@ -969,6 +992,11 @@ app.post('/api/embed', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err instanceof URIError) {
+    console.error('Malformed URI:', req.originalUrl);
+    return res.status(400).json({ error: 'Bad Request', message: 'Malformed URI encoding' });
+  }
+
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',
