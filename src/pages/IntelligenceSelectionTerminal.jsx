@@ -11,7 +11,9 @@ import {
   RefreshCcw,
   Key,
   Globe,
-  Zap
+  Zap,
+  Download,
+  Upload
 } from 'lucide-react';
 import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
@@ -29,6 +31,9 @@ export default function IntelligenceSelectionTerminal() {
   // UI State
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(null); // null | 'ollama' | 'gemini' | 'deepseek'
+  const fileInputRef = React.useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Load settings on mount
   useEffect(() => {
@@ -38,6 +43,91 @@ export default function IntelligenceSelectionTerminal() {
     if (savedProvider) setActiveProvider(savedProvider);
     if (savedKeys) setApiKeys(JSON.parse(savedKeys));
   }, []);
+
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const backupData = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('justice_ai_')) {
+          backupData[key] = localStorage.getItem(key);
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `justice_ai_backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      addToast({
+        title: "DATA_EXPORTED",
+        message: "Local storage backup created successfully.",
+        type: "success"
+      });
+    } catch (error) {
+      addToast({
+        title: "EXPORT_FAILED",
+        message: "Failed to create backup file.",
+        type: "error"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      let importedCount = 0;
+      for (const [key, value] of Object.entries(data)) {
+        if (key.startsWith('justice_ai_') && typeof value === 'string') {
+          localStorage.setItem(key, value);
+          importedCount++;
+        }
+      }
+
+      // Refresh current state
+      const savedProvider = localStorage.getItem('justice_ai_provider');
+      const savedKeys = localStorage.getItem('justice_ai_keys');
+      if (savedProvider) setActiveProvider(savedProvider);
+      if (savedKeys) setApiKeys(JSON.parse(savedKeys));
+
+      addToast({
+        title: "DATA_IMPORTED",
+        message: `Successfully restored ${importedCount} configurations.`,
+        type: "success"
+      });
+    } catch (error) {
+      addToast({
+        title: "IMPORT_FAILED",
+        message: "Invalid backup file format.",
+        type: "error"
+      });
+    } finally {
+      setIsImporting(false);
+      // Reset input
+      if (event.target) event.target.value = '';
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -218,6 +308,57 @@ export default function IntelligenceSelectionTerminal() {
                   <StatusLine label="Backend_Link" active={true} />
                   <StatusLine label="Vector_DB" active={true} />
                   <StatusLine label="Failover_Chain" active={true} />
+                </div>
+              </div>
+
+
+              <div className="h-[1px] bg-void/10" />
+
+              <div className="space-y-4">
+                <label className="text-[10px] uppercase font-black tracking-[0.4em] text-text-tertiary block">
+                  Data_Portability
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="bg-void/50 border border-white/10 hover:border-gold/50 p-3 rounded-sm flex items-center justify-center gap-2 transition-all group"
+                  >
+                    {isExporting ? (
+                      <RefreshCcw className="w-4 h-4 text-gold animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 text-gold group-hover:-translate-y-0.5 transition-transform" />
+                    )}
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary group-hover:text-white">
+                      Export
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleImportClick}
+                    disabled={isImporting}
+                    className="bg-void/50 border border-white/10 hover:border-gold/50 p-3 rounded-sm flex items-center justify-center gap-2 transition-all group"
+                  >
+                    {isImporting ? (
+                      <RefreshCcw className="w-4 h-4 text-gold animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 text-gold group-hover:translate-y-0.5 transition-transform" />
+                    )}
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-secondary group-hover:text-white">
+                      Import
+                    </span>
+                  </motion.button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImport}
+                    accept=".json"
+                    className="hidden"
+                  />
                 </div>
               </div>
 
