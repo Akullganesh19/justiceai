@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
+  Calendar,
   MessageSquare,
   FileText,
   BookOpen,
@@ -145,36 +146,48 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
-  const [greeting, setGreeting] = useState('');
-  const [greetIcon, setGreetIcon] = useState(Sun);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('justice_ai_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+  const [recentCases] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_history');
+      return saved ? JSON.parse(saved).slice(0, 5) : [];
+    } catch {
+      return [];
     }
-
+  });
+  const [trackedCases] = useState(() => {
+    try {
+      const savedTracker = localStorage.getItem('justice_ai_case_tracker_v2');
+      return savedTracker ? JSON.parse(savedTracker) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [{ greeting, greetIcon }] = useState(() => {
     const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
-    } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
-    } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
-    }
-  }, []);
+    if (hour < 12) return { greeting: 'Welcome Back', greetIcon: Sunrise };
+    if (hour < 17) return { greeting: 'Afternoon Session', greetIcon: Sun };
+    return { greeting: 'Good Evening', greetIcon: Moon };
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
+
+
+  const upcomingHearings = trackedCases
+    .filter(c => c.details && c.details.nextHearing)
+    .map(c => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const hearing = new Date(c.details.nextHearing);
+      hearing.setHours(0,0,0,0);
+      const diffDays = Math.ceil((hearing - today) / (1000 * 60 * 60 * 24));
+      return { ...c, diffDays, hearingDate: hearing };
+    })
+    .filter(c => c.diffDays >= 0)
+    .sort((a, b) => a.diffDays - b.diffDays)
+    .slice(0, 3);
 
   const GreetIcon = greetIcon;
 
@@ -356,6 +369,65 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 )}
+              </div>
+
+
+              {/* Upcoming Deadlines Widget */}
+              <div className="space-y-6 mt-12">
+                <div className="flex items-center justify-between border-b border-white/5 pb-6">
+                  <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white flex items-center gap-4">
+                    <div className="w-2 h-8 bg-red-500/80 shadow-luxe" />
+                    UPCOMING_DEADLINES
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  {upcomingHearings.length > 0 ? (
+                    upcomingHearings.map((c, i) => (
+                      <button
+                        key={c.id || i}
+                        onClick={() => navigate('/tracker')}
+                        className="group w-full text-left p-6 rounded-sm bg-void border-2 border-white/5 hover:border-red-500/30 transition-all duration-300 shadow-hard"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-white uppercase tracking-widest truncate group-hover:text-red-400 transition-colors">
+                              {c.name || 'Untitled Case'}
+                            </p>
+                            <div className="flex items-center gap-4 mt-3">
+                              <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-text-tertiary group-hover:text-white transition-colors">
+                                <Calendar className="w-3.5 h-3.5" />
+                                <span>{new Date(c.details.nextHearing).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span className={c.diffDays <= 7 ? 'text-red-400' : 'text-gold'}>
+                                  {c.diffDays === 0 ? 'TODAY' : `IN ${c.diffDays} DAYS`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center group-hover:bg-red-500/10 group-hover:text-red-400 transition-all">
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-12 rounded-sm bg-void border-2 border-white/5 text-center space-y-8 shadow-hard">
+                      <div className="w-16 h-16 rounded-sm bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto opacity-20">
+                        <Calendar className="w-8 h-8" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold uppercase tracking-widest text-text-tertiary">
+                          No Upcoming Deadlines
+                        </p>
+                        <p className="text-xs text-text-tertiary font-body leading-relaxed opacity-40 italic">
+                          No active hearings scheduled in Case Tracker.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Legal Insight Card */}
