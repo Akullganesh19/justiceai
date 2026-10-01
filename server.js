@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
+import crypto from 'crypto';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -111,6 +112,36 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Prevent parameter pollution
 app.use(hpp());
+
+// Authentication middleware for destructive actions
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret) {
+    console.warn('ADMIN_SECRET is not set, defaulting to secure rejection for destructive RAG endpoints.');
+    return res.status(401).json({ error: 'Unauthorized: Admin secret not configured' });
+  }
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token format' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const tokenBuffer = Buffer.from(token);
+    const secretBuffer = Buffer.from(adminSecret);
+
+    if (tokenBuffer.length === secretBuffer.length && crypto.timingSafeEqual(tokenBuffer, secretBuffer)) {
+      return next();
+    }
+  } catch (err) {
+    // Fall through to 401
+  }
+
+  return res.status(403).json({ error: 'Forbidden: Invalid token' });
+};
 
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
@@ -635,7 +666,7 @@ app.post('/api/voice/process', async (req, res) => {
 });
 
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +735,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +748,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
@@ -970,6 +1001,28 @@ app.post('/api/embed', async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
+
+  if (err instanceof URIError) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'Malformed URI'
+    });
+  }
+
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: 'Payload Too Large',
+      message: 'Request entity too large'
+    });
+  }
+
+  if (err.name === 'MulterError') {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: err.message
+    });
+  }
+
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
