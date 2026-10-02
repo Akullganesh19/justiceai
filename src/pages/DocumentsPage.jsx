@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Clock,
+  Trash2,
+  FileText,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -377,6 +380,15 @@ export default function DocumentsPage() {
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
 
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const handleSelect = (template) => {
     setSelectedTemplate(template);
     setStage('form');
@@ -384,8 +396,39 @@ export default function DocumentsPage() {
 
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
+
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      timestamp: new Date().toISOString(),
+      content: doc,
+    };
+
+    setSavedDocuments(prev => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setGeneratedDoc(doc);
     setStage('preview');
+  };
+
+  const handleOpenSavedDoc = (savedDoc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === savedDoc.templateId) || { title: savedDoc.title };
+    setSelectedTemplate(template);
+    setGeneratedDoc(savedDoc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSavedDoc = (id, e) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => {
+      const updated = prev.filter(d => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -419,6 +462,64 @@ export default function DocumentsPage() {
                 <p className="text-xs text-text-tertiary leading-relaxed max-w-2xl mx-auto uppercase tracking-[0.3em] font-mono italic opacity-60">
                   SYSTEMATIC GENERATION OF STATUTORY NOTICES AND PROCEDURAL APPLICATIONS.
                 </p>
+              </div>
+
+                            {/* Saved Documents Section */}
+              {savedDocuments.length > 0 && (
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest italic">
+                      SAVED_DOCUMENTS
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc, i) => (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        onClick={() => handleOpenSavedDoc(doc)}
+                        className="group relative cursor-pointer p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 shadow-hard"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 shrink-0 rounded-sm bg-white/5 border border-white/10 group-hover:border-gold/30 transition-colors">
+                              <FileText className="w-4 h-4 text-text-secondary group-hover:text-gold" />
+                            </div>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest truncate group-hover:text-gold transition-colors">
+                              {doc.title}
+                            </h3>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteSavedDoc(doc.id, e)}
+                            className="p-1.5 shrink-0 rounded-sm text-text-tertiary hover:text-red-400 hover:bg-red-400/10 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest opacity-60">
+                          {new Date(doc.timestamp).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Template Grid Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <FileWarning className="w-5 h-5 text-gold" />
+                <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest italic">
+                  NEW_PROCEDURAL_DRAFT
+                </h2>
               </div>
 
               {/* Template Grid */}
