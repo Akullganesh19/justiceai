@@ -145,19 +145,22 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
+  const [recentCases, setRecentCases] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.slice(0, 5);
+      }
+    } catch {
+      // Ignore error
+    }
+    return [];
+  });
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
   useEffect(() => {
-    const saved = localStorage.getItem('justice_ai_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
-    }
-
     const hour = new Date().getHours();
     if (hour < 12) {
       setGreeting('Welcome Back');

@@ -53,7 +53,44 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [prefilledFields, initialFormData] = React.useMemo(() => {
+    const fields = new Set();
+    const initial = {};
+    try {
+      const saved = localStorage.getItem('justice_ai_history');
+      if (saved) {
+        const history = JSON.parse(saved);
+        if (history && history.length > 0) {
+          const latestCase = history[0];
+          const facts = latestCase.messages
+            ?.filter((m) => m.role === 'user')
+            ?.map((m) => m.content)
+            ?.join('\n');
+
+          if (facts) {
+            template.fields.forEach((f) => {
+              const id = f.id.toLowerCase();
+              if (id.includes('desc') || id.includes('facts') || id.includes('narrative')) {
+                fields.add(f.id);
+                initial[f.id] = facts;
+              } else if (id.includes('amount') || id.includes('value')) {
+                const match = facts.match(/(?:\bRs\.?|₹|\bINR)\s*([\d,]+(?:\.\d+)?)\b/i) || facts.match(/\b([\d,]+(?:\.\d+)?)\s*(?:rupees)\b/i);
+                if (match) {
+                  fields.add(f.id);
+                  initial[f.id] = match[1].replace(/,/g, '');
+                }
+              }
+            });
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return [fields, initial];
+  }, [template]);
+
+  const [formData, setFormData] = useState(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -127,6 +164,9 @@ function FormWizard({ template, onBack, onGenerate }) {
               <label className="flex items-center gap-2 text-[10px] uppercase font-extrabold tracking-[0.2em] text-text-tertiary italic">
                 {field.label}
                 {field.required && <span className="text-gold">*</span>}
+                {prefilledFields.has(field.id) && (
+                  <span className="text-blue-400 normal-case tracking-normal ml-2" title="Pre-filled from recent case">✨ Extracted</span>
+                )}
               </label>
               {field.type === 'textarea' ? (
                 <textarea
