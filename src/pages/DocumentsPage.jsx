@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  History,
+  Trash2,
+  Eye,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +379,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocuments));
+  }, [savedDocuments]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -386,6 +401,29 @@ export default function DocumentsPage() {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
     setStage('preview');
+
+    // Save to history
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      date: new Date().toISOString(),
+      content: doc,
+      formData: formData
+    };
+    setSavedDocuments(prev => [newDoc, ...prev]);
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate(template);
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id, e) => {
+    e.stopPropagation();
+    setSavedDocuments(prev => prev.filter(d => d.id !== id));
   };
 
   const handleReset = () => {
@@ -432,6 +470,42 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {savedDocuments.length > 0 && (
+                <div className="mt-24 space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+                    <div className="w-10 h-10 rounded-sm bg-void flex items-center justify-center border-2 border-white/10 shadow-luxe">
+                      <History className="w-5 h-5 text-text-tertiary" />
+                    </div>
+                    <h2 className="text-2xl font-display font-bold uppercase tracking-tight text-white">
+                      DOCUMENT_HISTORY
+                    </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDocuments.map((doc) => (
+                      <div key={doc.id} onClick={() => handleViewSaved(doc)} className="group cursor-pointer p-6 rounded-sm bg-void border-2 border-white/5 hover:border-gold/30 transition-all duration-300 shadow-hard flex flex-col h-full">
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-white uppercase tracking-widest truncate group-hover:text-gold transition-colors mb-2">
+                            {doc.title}
+                          </p>
+                          <p className="text-[10px] text-text-tertiary font-mono italic opacity-70">
+                            Generated on {new Date(doc.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+                          <button className="text-[10px] text-gold uppercase font-bold tracking-widest flex items-center gap-2">
+                            <Eye className="w-3 h-3" /> View Draft
+                          </button>
+                          <button onClick={(e) => handleDeleteSaved(doc.id, e)} className="p-1.5 text-text-tertiary hover:text-red-400 transition-colors rounded-sm hover:bg-red-400/10">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 

@@ -145,29 +145,27 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
-  const [greeting, setGreeting] = useState('');
-  const [greetIcon, setGreetIcon] = useState(Sun);
-
-  useEffect(() => {
+  const [recentCases, setRecentCases] = useState(() => {
     const saved = localStorage.getItem('justice_ai_history');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
+        return parsed.slice(0, 5);
+      } catch {
+        return [];
+      }
     }
+    return [];
+  });
 
+  const { greeting, greetIcon } = React.useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
+      return { greeting: 'Welcome Back', greetIcon: Sunrise };
     } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
+      return { greeting: 'Afternoon Session', greetIcon: Sun };
     } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
+      return { greeting: 'Good Evening', greetIcon: Moon };
     }
   }, []);
 
