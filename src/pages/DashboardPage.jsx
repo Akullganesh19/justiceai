@@ -145,18 +145,26 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
+  const [recentCases, setRecentCases] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_history');
+      if (saved) return JSON.parse(saved).slice(0, 5);
+    } catch {}
+    return [];
+  });
+  const [savedDocsCount, setSavedDocsCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      if (saved) return JSON.parse(saved).length;
+    } catch {}
+    return 0;
+  });
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
   useEffect(() => {
-    const saved = localStorage.getItem('justice_ai_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
-    }
+
+
 
     const hour = new Date().getHours();
     if (hour < 12) {
@@ -278,7 +286,7 @@ export default function DashboardPage() {
               suffix="+"
               color="text-gold"
             />
-            <StatCard icon={Milestone} label="Drafting Templates" value={15} color="text-gold" />
+            <StatCard icon={FileText} label="Saved Documents" value={savedDocsCount} color="text-gold" />
             <StatCard
               icon={TrendingUp}
               label="Total Engagements"
