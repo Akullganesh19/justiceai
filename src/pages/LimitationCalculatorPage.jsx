@@ -14,8 +14,6 @@ import {
   Info as InfoIcon,
   Zap,
 } from 'lucide-react';
-import Header from '../components/ui/Header.jsx';
-import Footer from '../components/ui/Footer.jsx';
 
 const LIMITATION_CATEGORIES = [
   {
@@ -306,7 +304,6 @@ export default function LimitationCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-void pb-8 flex flex-col font-mono text-slate-200">
-      <Header />
 
       <main className="flex-1 max-w-5xl mx-auto px-6 pt-32 w-full space-y-10 pb-16">
         <div className="text-center space-y-6">
@@ -542,7 +539,6 @@ export default function LimitationCalculatorPage() {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+          </div>
   );
 }

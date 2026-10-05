@@ -1,8 +1,6 @@
 import React from 'react';
 import { Milestone, Shield, Scale, Cpu, ArrowLeft, Zap, Terminal } from 'lucide-react';
 import { MorphingCardStack } from '../components/ui/morphing-card-stack';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 import { useNavigate } from 'react-router-dom';
 
 const pillarCards = [
@@ -41,7 +39,6 @@ export default function ShowcasePage() {
 
   return (
     <div className="min-h-screen bg-void flex flex-col font-mono">
-      <Header />
 
       <main className="flex-1 max-w-7xl mx-auto px-6 pt-32 pb-24 w-full">
         <div className="space-y-16">
@@ -124,7 +121,6 @@ export default function ShowcasePage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

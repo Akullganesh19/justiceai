@@ -7,6 +7,8 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import FullLayout from './components/layout/FullLayout';
+import HeaderLayout from './components/layout/HeaderLayout';
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
@@ -62,28 +64,37 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <FloatingVoiceButton onTranscription={handleGlobalTranscription} />
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/rights" element={<RightsPage />} />
-              <Route path="/estimator" element={<EstimatorPage />} />
-              <Route path="/lawyers" element={<LawyerFinderPage />} />
-              <Route path="/tracker" element={<CaseTrackerPage />} />
-              <Route path="/quiz" element={<LegalQuizPage />} />
-              <Route path="/limitation" element={<LimitationCalculatorPage />} />
-              <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
-              <Route path="/glossary" element={<GlossaryPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/samples" element={<SamplesPage />} />
-              <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
-              <Route path="/disclaimer" element={<DisclaimerPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
+              {/* Layout with Header and Footer */}
+              <Route element={<FullLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/documents" element={<DocumentsPage />} />
+                <Route path="/rights" element={<RightsPage />} />
+                <Route path="/estimator" element={<EstimatorPage />} />
+                <Route path="/lawyers" element={<LawyerFinderPage />} />
+                <Route path="/tracker" element={<CaseTrackerPage />} />
+                <Route path="/quiz" element={<LegalQuizPage />} />
+                <Route path="/limitation" element={<LimitationCalculatorPage />} />
+                <Route path="/legal-aid" element={<LegalAidCheckerPage />} />
+                <Route path="/glossary" element={<GlossaryPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/samples" element={<SamplesPage />} />
+                <Route path="/lawyer-onboarding" element={<LawyerOnboardingPage />} />
+                <Route path="/disclaimer" element={<DisclaimerPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/showcase" element={<ShowcasePage />} />
+              </Route>
+
+              {/* Layout with Header only */}
+              <Route element={<HeaderLayout />}>
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+
+              {/* No Layout */}
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/showcase" element={<ShowcasePage />} />
-              <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
-              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </Router>

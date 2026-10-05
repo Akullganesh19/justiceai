@@ -13,7 +13,6 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import Header from '../components/ui/Header';
 import { useToast } from '../components/ui/Toast';
 
 export default function IntelligenceSelectionTerminal() {
@@ -92,8 +91,7 @@ export default function IntelligenceSelectionTerminal() {
 
   return (
     <div className="min-h-screen bg-void text-white font-mono selection:bg-gold/30">
-      <Header />
-      
+
       <main className="max-w-5xl mx-auto px-6 pt-32 pb-20">
         <div className="mb-16 relative">
           <div className="absolute -left-10 top-0 w-1 h-full bg-gold opacity-30" />

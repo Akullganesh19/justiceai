@@ -17,8 +17,6 @@ import {
   Lightbulb,
   FileText,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 import { DAILY_FACTS } from '../data/dailyFacts';
 
 const QUIZ_QUESTIONS = [
@@ -443,7 +441,6 @@ export default function LegalQuizPage() {
 
   return (
     <div className="min-h-screen bg-void pb-16 font-mono">
-      <Header />
 
       <main className="max-w-4xl mx-auto px-6 pt-32 space-y-12 pb-24 w-full">
         {/* Header */}
@@ -728,7 +725,6 @@ export default function LegalQuizPage() {
         )}
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

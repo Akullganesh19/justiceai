@@ -27,8 +27,6 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 // Document templates
 const DOCUMENT_TEMPLATES = {
@@ -224,8 +222,7 @@ export default function DocumentGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono">
-      <Header />
-      <main className="max-w-7xl mx-auto px-6 pt-32 space-y-16">
+            <main className="max-w-7xl mx-auto px-6 pt-32 space-y-16">
         {/* Page Header */}
         <div className="text-center space-y-8">
           <div className="inline-flex items-center gap-3 px-5 py-2 bg-void border-2 border-gold/40 text-gold text-[10px] uppercase font-extrabold tracking-[0.5em] italic rounded-sm shadow-luxe font-display">
@@ -393,7 +390,6 @@ export default function DocumentGeneratorPage() {
           </div>
         )}
       </main>
-      <Footer />
-    </div>
+          </div>
   );
 }
