@@ -1,8 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Lock, Database, UserCheck, EyeOff, Scale, Server, Terminal, Zap } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 export default function PrivacyPage() {
   const sections = [
@@ -34,7 +32,6 @@ export default function PrivacyPage() {
 
   return (
     <div className="min-h-screen bg-void flex flex-col font-mono">
-      <Header />
 
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 pb-24 w-full">
         <motion.div
@@ -98,7 +95,6 @@ export default function PrivacyPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

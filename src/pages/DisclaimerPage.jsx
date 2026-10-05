@@ -1,8 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, ShieldAlert, Milestone, Scale, FileWarning, Info } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 export default function DisclaimerPage() {
   const sections = [
@@ -34,7 +32,6 @@ export default function DisclaimerPage() {
 
   return (
     <div className="min-h-screen bg-void flex flex-col font-mono">
-      <Header />
 
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 pb-24 space-y-16">
         <motion.div
@@ -94,7 +91,6 @@ export default function DisclaimerPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

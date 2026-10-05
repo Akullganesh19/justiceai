@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Header from '../components/ui/Header';
 import ChatPanel from '../components/chat/ChatPanel';
 import ChatInput from '../components/chat/ChatInput';
 import AnalysisPanel from '../components/analysis/AnalysisPanel';
@@ -129,6 +128,12 @@ export default function ChatPage() {
       setAnalysis(caseData.analysis);
     }
   };
+
+  useEffect(() => {
+    const onNewCase = () => handleNewCase();
+    window.addEventListener('justice-ai-new-case', onNewCase);
+    return () => window.removeEventListener('justice-ai-new-case', onNewCase);
+  }, [messages, activeCaseId]);
 
   const handleNewCase = () => {
     // Save current before resetting if it has content
@@ -263,7 +268,6 @@ export default function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col bg-void overflow-hidden font-mono text-slate-200">
-      <Header onNewCase={handleNewCase} />
 
       <main className="flex-1 flex pt-16 h-[calc(100vh-64px)] relative">
         <DocumentScanningOverlay isOpen={isScanning} onComplete={handleScanComplete} />

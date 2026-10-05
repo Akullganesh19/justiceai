@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Home, Briefcase, LandPlot, Play, ArrowRight, Terminal, ShieldAlert } from 'lucide-react';
-import Header from '../components/ui/Header';
 
 const SAMPLES = [
   {
@@ -52,7 +51,6 @@ export default function SamplesPage() {
 
   return (
     <div className="min-h-screen bg-void pb-32 font-mono">
-      <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-16">
         <div className="text-center space-y-8">

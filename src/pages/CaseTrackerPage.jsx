@@ -27,8 +27,6 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useToast } from '../components/ui/Toast.jsx';
-import Header from '../components/ui/Header.jsx';
-import Footer from '../components/ui/Footer.jsx';
 
 // Case type specific milestone templates
 const CASE_TEMPLATES = {
@@ -788,7 +786,6 @@ export default function CaseTrackerPage() {
 
   return (
     <div className="min-h-screen bg-void pb-16 font-mono">
-      <Header />
 
       <main className="max-w-7xl mx-auto px-6 pt-32 space-y-16 pb-24">
         {/* Header */}
@@ -1290,7 +1287,6 @@ export default function CaseTrackerPage() {
         )}
       </AnimatePresence>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

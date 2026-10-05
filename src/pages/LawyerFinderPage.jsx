@@ -20,8 +20,6 @@ import {
   ArrowRight,
   AlertCircle,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 const SPECIALIZATIONS = [
   { id: 'all', label: 'All Specializations' },
@@ -368,7 +366,6 @@ export default function LawyerFinderPage() {
 
   return (
     <div className="min-h-screen bg-void pb-16 font-mono text-slate-200">
-      <Header />
 
       <main className="max-w-6xl mx-auto px-6 pt-32 space-y-12 pb-24 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 text-center md:text-left">
@@ -543,7 +540,6 @@ export default function LawyerFinderPage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

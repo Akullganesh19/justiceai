@@ -23,8 +23,6 @@ import {
   Zap,
   Plus,
 } from 'lucide-react';
-import Header from '../components/ui/Header';
-import Footer from '../components/ui/Footer';
 
 const STEPS = [
   { id: 1, label: 'Identity', icon: User },
@@ -103,7 +101,6 @@ export default function LawyerOnboardingPage() {
 
   return (
     <div className="min-h-screen bg-void pb-8 flex flex-col font-mono">
-      <Header />
 
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 w-full space-y-12 pb-24">
         {/* Header */}
@@ -596,7 +593,6 @@ export default function LawyerOnboardingPage() {
         )}
       </main>
 
-      <Footer />
 
       <style>{`
         .input-field-onboarding {

@@ -15,8 +15,6 @@ import {
   Globe,
   ArrowRight,
 } from 'lucide-react';
-import Header from '../components/ui/Header.jsx';
-import Footer from '../components/ui/Footer.jsx';
 
 // Enhanced eligibility criteria based on Section 12 of LSA Act, 1987
 const CRITERIA = [
@@ -184,7 +182,6 @@ export default function LegalAidCheckerPage() {
 
   return (
     <div className="min-h-screen bg-void pb-8 flex flex-col">
-      <Header />
 
       <main className="flex-1 max-w-4xl mx-auto px-6 pt-32 w-full space-y-10 pb-16">
         {/* Header */}
@@ -381,7 +378,6 @@ export default function LegalAidCheckerPage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }
