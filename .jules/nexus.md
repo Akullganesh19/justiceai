@@ -1,0 +1,6 @@
+## 2026-10-05 — Saved Documents Archive
+**Product understood as:** An AI-powered legal co-pilot that helps citizens understand their rights, get strategies, and draft legal documents.
+**Derivation reasoning:** The product has a document generation tool (Draft Documents) and users use it to create legal templates. Therefore users obviously need a way to view, revisit, and manage documents they have already generated, because without saving them, users lose their work the moment they navigate away or reset the form. It doesn't exist because document generation was initially built as a single-pass utility without persistence. I'm building it because it provides continuity and prevents data loss, turning a transient tool into a durable document vault.
+**Feature built:** A `localStorage` persistence layer (`justice_ai_documents`) for generated documents, a "SAVED_DOCUMENTS_ARCHIVE" UI on the main documents page to list them, and a dashboard integration to track the count of saved documents.
+**User impact:** Users can now see a history of the documents they've generated, open them for viewing/exporting again, delete them, and see a summary count on their dashboard.
+**Next logical feature:** Version history/editing for generated documents or syncing documents to specific cases in the tracker.
