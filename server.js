@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
 import multer from 'multer';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,6 +22,29 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const adminAuth = (req, res, next) => {
+  const secret = process.env.ADMIN_SECRET;
+
+  if (process.env.NODE_ENV !== 'development' && !secret) {
+    return res.status(500).json({ error: 'Server configuration error: ADMIN_SECRET is not set.' });
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Unauthorized: Missing Authorization header' });
+  }
+
+  const expectedSecret = secret || 'default_dev_secret';
+  const expectedBuffer = Buffer.from(expectedSecret);
+  const providedBuffer = Buffer.from(authHeader);
+
+  if (expectedBuffer.length !== providedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, providedBuffer)) {
+    return res.status(403).json({ error: 'Forbidden: Invalid token' });
+  }
+
+  next();
+};
 
 // Initialize Winston logger
 const logger = winston.createLogger({
@@ -635,7 +659,7 @@ app.post('/api/voice/process', async (req, res) => {
 });
 
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +728,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +741,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
