@@ -15,9 +15,46 @@ import winston from 'winston';
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 // Load environment variables
 dotenv.config();
+
+const fetchWithRetry = async (url, options, retries = 3, backoff = 1000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      let timeoutId;
+      let finalOptions = { ...options };
+      if (options.timeoutMs) {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), options.timeoutMs);
+        finalOptions.signal = controller.signal;
+      }
+      const res = await fetch(url, finalOptions);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // If it's a 4xx error (client error), it's non-retryable
+      if (res.status >= 400 && res.status < 500) {
+        return res; // Return early, caller will handle the ok check
+      }
+
+      // If it's a 5xx error or other bad status, retry
+      if (!res.ok) {
+        if (i === retries - 1) return res; // Return final failed response
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return res;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+         if (i === retries - 1) throw err;
+      } else if (err.isNonRetryable || i === retries - 1) {
+         throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, backoff * Math.pow(2, i)));
+    }
+  }
+};
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -318,7 +355,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +391,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +604,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +635,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -634,8 +671,36 @@ app.post('/api/voice/process', async (req, res) => {
   }
 });
 
+
+const adminAuth = (req, res, next) => {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(500).json({ error: 'Server misconfiguration: ADMIN_SECRET is missing.' });
+    }
+    console.warn('WARNING: ADMIN_SECRET not set in development. Allowing access.');
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Unauthorized: Missing authorization header.' });
+  }
+
+  try {
+    const expected = Buffer.from(secret);
+    const actual = Buffer.from(authHeader.replace(/^Bearer\s+/i, ''));
+    if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token.' });
+    }
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +769,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +782,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
@@ -830,11 +895,11 @@ app.post('/api/chat', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const response = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(10000) // 10s timeout for local Ollama
+          timeoutMs: 10000 // 10s timeout for local Ollama
         });
 
         if (!response.ok) {
@@ -856,11 +921,11 @@ app.post('/api/chat', async (req, res) => {
         res.end();
       } else {
         // Non-streaming response
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        const ollamaResponse = await fetchWithRetry(`${OLLAMA_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestData),
-          signal: AbortSignal.timeout(15000) // 15s timeout
+          timeoutMs: 15000 // 15s timeout
         });
 
         if (!ollamaResponse.ok) {
@@ -965,6 +1030,26 @@ app.post('/api/embed', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+
+// Multer & Entity Too Large Error Handler
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large' || err.name === 'MulterError') {
+    return res.status(err.type === 'entity.too.large' ? 413 : 400).json({
+      error: 'File too large or bad request',
+      message: err.message
+    });
+  }
+  next(err);
+});
+
+// URIError Handler
+app.use((err, req, res, next) => {
+  if (err instanceof URIError) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Malformed URI' });
+  }
+  next(err);
 });
 
 // Error handling middleware
