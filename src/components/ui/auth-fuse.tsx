@@ -1,4 +1,5 @@
 'use client';
+import { globalEventBus } from '../../lib/analytics/EventBridge.js';
 
 import * as React from 'react';
 import { useState, useId, useEffect } from 'react';
@@ -188,6 +189,8 @@ function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log('UI: Sign In form submitted');
+    const email = new FormData(event.currentTarget).get('email') as string;
+    globalEventBus.emit('user.login', { id: email, email: email, name: 'User' });
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">
