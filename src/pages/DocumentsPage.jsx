@@ -12,6 +12,9 @@ import {
   Check,
   X,
   ChevronRight,
+  Archive,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +379,14 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocuments, setSavedDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -383,9 +394,41 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
-    const doc = selectedTemplate.generate(formData);
-    setGeneratedDoc(doc);
+    const docText = selectedTemplate.generate(formData);
+    setGeneratedDoc(docText);
+
+    // Save to Vault
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      content: docText,
+      timestamp: new Date().toISOString(),
+    };
+
+    setSavedDocuments((prev) => {
+      const updated = [newDoc, ...prev];
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
+
     setStage('preview');
+  };
+
+  const handleOpenSaved = (savedDoc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === savedDoc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate({ ...template, title: savedDoc.title });
+    setGeneratedDoc(savedDoc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (e, id) => {
+    e.stopPropagation();
+    setSavedDocuments((prev) => {
+      const updated = prev.filter((d) => d.id !== id);
+      localStorage.setItem('justice_ai_documents', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -432,6 +475,45 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Document Vault */}
+              {savedDocuments.length > 0 && (
+                <div className="mt-24">
+                  <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                    <Archive className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display text-white uppercase tracking-widest italic">DOCUMENT_VAULT</h2>
+                    <span className="ml-auto text-xs text-text-tertiary font-mono bg-white/5 px-3 py-1 rounded-sm">
+                      {savedDocuments.length} DRAFT{savedDocuments.length !== 1 ? 'S' : ''} SECURED
+                    </span>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => handleOpenSaved(doc)}
+                        className="group bg-void border border-white/10 p-5 rounded-sm hover:border-gold/30 transition-all cursor-pointer relative overflow-hidden flex flex-col"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <h3 className="text-sm font-bold text-white group-hover:text-gold transition-colors font-display uppercase tracking-wider pr-8 truncate">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={(e) => handleDeleteSaved(e, doc.id)}
+                            className="absolute top-4 right-4 p-2 text-text-tertiary hover:text-red hover:bg-red/10 rounded-sm opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-auto text-[10px] text-text-tertiary font-mono uppercase">
+                          <Clock className="w-3 h-3" />
+                          {new Date(doc.timestamp).toLocaleDateString()} at {new Date(doc.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 

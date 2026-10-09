@@ -1,0 +1,6 @@
+## 2024-05-24 — Document Vault
+**Product understood as:** An AI legal co-pilot and document generator that empowers Indian citizens to navigate legal procedures autonomously.
+**Derivation reasoning:** This product has a procedural document generator. Users spend significant effort filling out multi-step forms to generate complex legal drafts. Therefore users obviously need a Document Vault (auto-save capability) — because currently, if a user navigates away or closes the tab, they permanently lose their generated legal documents and must re-enter all data. It doesn't exist because the MVP focused solely on the generation engine. I'm building it because users need persistence and a reliable record of their drafted statutory notices.
+**Feature built:** Added auto-save functionality to `DocumentsPage.jsx` that persists generated drafts to `justice_ai_documents` in `localStorage`, complete with a Document Vault UI to view and delete past drafts.
+**User impact:** Users can now safely navigate away after generating a document, knowing their drafts are securely stored locally for future reference and export.
+**Next logical feature:** Generating pre-filled templates automatically from a user's AI Chat case history context.
