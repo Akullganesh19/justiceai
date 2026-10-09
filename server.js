@@ -196,7 +196,7 @@ app.use((req, res, next) => {
       path: req.path,
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip
+      ip: req.ip ? req.ip.replace(/\.\d+$/, '.***').replace(/:[a-fA-F0-9]+$/, ':***') : 'unknown'
     });
   });
   next();
@@ -821,7 +821,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    console.log(`Routing query to Ollama. Length: ${latestUserMessage.length} chars`);
     
     try {
       if (stream) {
@@ -940,7 +940,7 @@ app.post('/api/chat', async (req, res) => {
     }
     
   } catch (err) {
-    console.error("Chat Error:", err);
+    console.error("Chat Error:", err.message || "Unknown error");
     res.status(500).json({ 
       error: err.message,
       details: process.env.NODE_ENV === 'development' ? err.stack : undefined
