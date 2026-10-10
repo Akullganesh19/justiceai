@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -53,7 +54,43 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedHistory = localStorage.getItem('justice_ai_history');
+      if (savedHistory) {
+        const history = JSON.parse(savedHistory);
+        if (history.length > 0) {
+          const latestCase = history[0];
+          if (latestCase.messages) {
+            const userMessages = latestCase.messages
+              .filter((m) => m.role === 'user')
+              .map((m) => m.content)
+              .join('\n');
+
+            const initialData = {};
+            template.fields.forEach((field) => {
+              const lowerId = field.id.toLowerCase();
+              if (
+                lowerId.includes('amount') ||
+                lowerId.includes('value') ||
+                lowerId.includes('desc') ||
+                lowerId.includes('facts') ||
+                lowerId.includes('narrative') ||
+                lowerId.includes('deficiency') ||
+                lowerId.includes('information')
+              ) {
+                initialData[field.id] = userMessages;
+              }
+            });
+            return initialData;
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return {};
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -98,6 +135,21 @@ function FormWizard({ template, onBack, onGenerate }) {
           <p className="text-sm text-text-tertiary font-body mt-1">Fill in the details below</p>
         </div>
       </div>
+
+      {/* Predictive Context Banner */}
+      {currentStep > 0 && Object.keys(formData).length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 p-4 rounded-sm bg-blue-500/10 border border-blue-500/20 flex items-start gap-3"
+        >
+          <Sparkles className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-blue-200/80 leading-relaxed font-body">
+            Relevant fields have been pre-filled using context from your recent case history.
+            Please review and edit as necessary.
+          </p>
+        </motion.div>
+      )}
 
       {/* Progress Bar */}
       <div className="flex gap-2 mb-10">
