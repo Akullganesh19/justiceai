@@ -196,7 +196,7 @@ app.use((req, res, next) => {
       path: req.path,
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip
+      ip: req.ip ? req.ip.replace(/\d+\.\d+$/, "x.x") : "[REDACTED]"
     });
   });
   next();
@@ -728,7 +728,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).map(k => k === "messages" ? "messages (REDACTED)" : k).join(', ')}`);
   try {
     const { 
       messages, 
@@ -821,7 +821,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    console.log(`Routing query to Ollama: [REDACTED_USER_QUERY]`);
     
     try {
       if (stream) {
