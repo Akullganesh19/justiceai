@@ -11,8 +11,7 @@ import {
   Download,
   Check,
   X,
-  ChevronRight,
-} from 'lucide-react';
+  ChevronRight, Trash2, FileText, Clock } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
 import jsPDF from 'jspdf';
@@ -373,6 +372,18 @@ function DocumentPreview({ document, template, onBack }) {
 }
 
 export default function DocumentsPage() {
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+  }, [savedDocs]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
@@ -383,8 +394,18 @@ export default function DocumentsPage() {
   };
 
   const handleGenerate = (formData) => {
-    const doc = selectedTemplate.generate(formData);
-    setGeneratedDoc(doc);
+    const generatedContent = selectedTemplate.generate(formData);
+
+    setSavedDocs(prev => {
+      const newDoc = {
+        id: Date.now().toString(),
+        title: selectedTemplate.title,
+        content: generatedContent,
+        timestamp: new Date().toISOString()
+      };
+      return [newDoc, ...prev].slice(0, 20);
+    });
+    setGeneratedDoc(generatedContent);
     setStage('preview');
   };
 
@@ -420,6 +441,51 @@ export default function DocumentsPage() {
                   SYSTEMATIC GENERATION OF STATUTORY NOTICES AND PROCEDURAL APPLICATIONS.
                 </p>
               </div>
+
+
+              {savedDocs.length > 0 && (
+                <div className="mt-24 mb-16 space-y-8">
+                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-wider">SAVED_DRAFTS</h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {savedDocs.map(savedDoc => (
+                      <div key={savedDoc.id} className="group p-6 bg-void border-2 border-white/5 hover:border-gold/30 rounded-sm shadow-hard transition-all flex flex-col justify-between h-40">
+                        <div>
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest">{savedDoc.title}</h3>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSavedDocs(prev => prev.filter(d => d.id !== savedDoc.id));
+                              }}
+                              className="text-text-tertiary hover:text-red-400 transition-colors p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-text-tertiary font-mono opacity-60">
+                            {new Date(savedDoc.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setGeneratedDoc(savedDoc.content);
+                            setSelectedTemplate(DOCUMENT_TEMPLATES.find(t => t.title === savedDoc.title) || DOCUMENT_TEMPLATES[0]);
+                            setStage('preview');
+                          }}
+                          className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-gold hover:text-gold-light transition-colors mt-4"
+                        >
+                          <FileText className="w-3 h-3" />
+                          VIEW_DOCUMENT
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
 
               {/* Template Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
