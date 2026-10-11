@@ -40,6 +40,55 @@ const app = express();
 
 // Configuration from environment variables with fallbacks
 const PORT = process.env.PORT || 3001;
+
+// --- PII Redaction for Logs ---
+const redactPII = (text) => {
+  if (typeof text !== 'string') return text;
+  return text
+    // Emails: j***@gmail.com
+    .replace(/([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, (m, name, domain) => `${name[0]}***@${domain}`)
+    // Indian Phones
+    .replace(/\b(?:\+?91[-.\s]?)?[6-9]\d{2}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, (m) => {
+      const clean = m.replace(/[-.\s+]/g, '');
+      const last4 = clean.slice(-4);
+      return `+91-***-***-${last4}`;
+    })
+    // US Phones
+    .replace(/\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/g, '***-***-$3')
+    // SSN
+    .replace(/\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b/g, '***-**-****')
+    // Aadhaar
+    .replace(/\b\d{4}[-.\s]?\d{4}[-.\s]?\d{4}\b/g, '****-****-****')
+    // Credit Cards
+    .replace(/\b(?:\d[ -]*?){13,16}\b/g, '****-****-****-****');
+};
+
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+const maskArgs = (args) => args.map(arg => {
+  if (typeof arg === 'string') return redactPII(arg);
+  if (arg instanceof Error) {
+    arg.message = redactPII(arg.message);
+    if (arg.stack) arg.stack = redactPII(arg.stack);
+    return arg;
+  }
+  if (typeof arg === 'object' && arg !== null) {
+    try {
+      return JSON.parse(redactPII(JSON.stringify(arg)));
+    } catch {
+      return arg;
+    }
+  }
+  return arg;
+});
+
+console.log = (...args) => originalConsoleLog.apply(console, maskArgs(args));
+console.error = (...args) => originalConsoleError.apply(console, maskArgs(args));
+console.warn = (...args) => originalConsoleWarn.apply(console, maskArgs(args));
+// ------------------------------
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'nomic-embed-text';
@@ -728,7 +777,7 @@ app.delete('/api/documents', (req, res) => {
 
 // Endpoint to chat using RAG (with optional streaming)
 app.post('/api/chat', async (req, res) => {
-  console.log(`[ROUTE] Incoming POST /api/chat - Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  console.log(`[ROUTE] Incoming POST /api/chat`);
   try {
     const { 
       messages, 
@@ -821,7 +870,7 @@ app.post('/api/chat', async (req, res) => {
       stream: stream
     };
 
-    console.log(`Routing query to Ollama: "${latestUserMessage.substring(0, 50)}..."`);
+    console.log(`Routing query to Ollama [Redacted for privacy]`);
     
     try {
       if (stream) {
@@ -943,7 +992,7 @@ app.post('/api/chat', async (req, res) => {
     console.error("Chat Error:", err);
     res.status(500).json({ 
       error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      // details removed to prevent stack trace leakage
     });
   }
 });
