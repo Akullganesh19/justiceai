@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -53,7 +54,53 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const { initialData, prefilledKeys } = useMemo(() => {
+    const data = {};
+    const keys = new Set();
+    try {
+      const historyStr = localStorage.getItem('justice_ai_history');
+      if (historyStr) {
+        const history = JSON.parse(historyStr);
+        if (history.length > 0) {
+          const recentCase = history[0];
+          let combinedText = '';
+          if (recentCase.messages) {
+            combinedText = recentCase.messages
+              .filter((m) => m.role === 'user')
+              .map((m) => m.content)
+              .join('\n');
+          }
+          if (recentCase.analysis?.facts) {
+            combinedText += '\n' + recentCase.analysis.facts;
+          }
+          if (combinedText) {
+            template.fields.forEach((field) => {
+              const lowerId = field.id.toLowerCase();
+              if (
+                lowerId.includes('facts') ||
+                lowerId.includes('narrative') ||
+                lowerId.includes('desc')
+              ) {
+                data[field.id] = combinedText.substring(0, 500) + (combinedText.length > 500 ? '...' : '');
+                keys.add(field.id);
+              } else if (lowerId.includes('amount') || lowerId.includes('value')) {
+                const amountMatch = combinedText.match(/(?:rs\.?|₹|rupees?)\s*([\d,]+)/i);
+                if (amountMatch) {
+                  data[field.id] = amountMatch[1].replace(/,/g, '');
+                  keys.add(field.id);
+                }
+              }
+            });
+          }
+        }
+      }
+    } catch {
+      // Ignored
+    }
+    return { initialData: data, prefilledKeys: keys };
+  }, [template.fields]);
+
+  const [formData, setFormData] = useState(initialData);
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
@@ -67,7 +114,9 @@ function FormWizard({ template, onBack, onGenerate }) {
   };
 
   const isStepValid = () => {
-    return stepFields.filter((f) => f.required).every((f) => formData[f.id]?.toString().trim());
+    const reqFields = stepFields.filter((f) => f.required);
+    if (reqFields.length === 0) return true;
+    return reqFields.length > 0 && reqFields.every((f) => formData[f.id]?.toString().trim());
   };
 
   const handleNext = () => {
@@ -127,6 +176,12 @@ function FormWizard({ template, onBack, onGenerate }) {
               <label className="flex items-center gap-2 text-[10px] uppercase font-extrabold tracking-[0.2em] text-text-tertiary italic">
                 {field.label}
                 {field.required && <span className="text-gold">*</span>}
+                {prefilledKeys.has(field.id) && (
+                  <span className="flex items-center gap-1 text-[8px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-sm border border-emerald-400/20 ml-2">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    EXTRACTED_FROM_CONTEXT
+                  </span>
+                )}
               </label>
               {field.type === 'textarea' ? (
                 <textarea
