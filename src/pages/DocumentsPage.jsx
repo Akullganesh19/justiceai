@@ -53,7 +53,32 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    const initialData = {};
+    try {
+      const historyStr = localStorage.getItem('justice_ai_history');
+      if (historyStr) {
+        const history = JSON.parse(historyStr);
+        if (history.length > 0) {
+          const recentCase = history[0];
+          const recentUserMsgs = recentCase.messages.filter((m) => m.role === 'user').map((m) => m.content).join('\n');
+
+          if (recentUserMsgs) {
+            template.fields.forEach((field) => {
+              const idLower = field.id.toLowerCase();
+              // Only pre-fill narrative/descriptive fields with text history to prevent breaking numerical validations
+              if (idLower.includes('desc') || idLower.includes('facts') || idLower.includes('narrative') || idLower.includes('subject')) {
+                initialData[field.id] = recentUserMsgs.substring(0, 300) + (recentUserMsgs.length > 300 ? '...' : '');
+              }
+            });
+          }
+        }
+      }
+    } catch {
+      // Intentionally ignored, gracefully degrade if localStorage fails
+    }
+    return initialData;
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
