@@ -1,0 +1,6 @@
+## 2024-05-25 — Predictive Form Pre-filling
+**Product understood as:** A comprehensive legal co-pilot and document generator that stores rich user case histories.
+**Derivation reasoning:** We store detailed user case conversations in `justice_ai_history`, but when users navigate to generate documents (like FIRs or consumer complaints), they have to re-type their entire narrative. Therefore users obviously need predictive form pre-filling — because the app should remember context and auto-fill narratives to save time and effort. It doesn't exist because the chat and document systems were built isolated from each other. I'm building it because it significantly reduces user friction and creates a magical "it just knows" experience.
+**Feature built:** Added logic to `FormWizard` in `DocumentsPage.jsx` to parse `justice_ai_history` from `localStorage` and automatically pre-fill narrative/description fields with recent context up to 300 characters, complete with a visual indicator.
+**User impact:** Users no longer need to copy-paste or retype their situation when switching from chatting to drafting documents.
+**Next logical feature:** Generating custom document templates dynamically based on unique case needs, rather than using fixed templates.

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileWarning,
@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -55,6 +56,67 @@ function TemplateCard({ template, onSelect, index }) {
 function FormWizard({ template, onBack, onGenerate }) {
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
+  const [contextApplied, setContextApplied] = useState(false);
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (!isInitialMount.current) return;
+    isInitialMount.current = false;
+
+    try {
+      const historyStr = localStorage.getItem('justice_ai_history');
+      if (historyStr) {
+        const history = JSON.parse(historyStr);
+        if (history.length > 0) {
+          const latestCase = history[0];
+          if (latestCase.messages && latestCase.messages.length > 1) {
+            const userMsg = latestCase.messages.find((m) => m.role === 'user');
+            if (userMsg && userMsg.content) {
+              const context = userMsg.content.substring(0, 300);
+              let applied = false;
+              let fieldsToUpdate = {};
+
+              template.fields.forEach((field) => {
+                const idLower = field.id.toLowerCase();
+                if (
+                  (idLower.includes('desc') ||
+                   idLower.includes('facts') ||
+                   idLower.includes('narrative') ||
+                   idLower.includes('subject')) &&
+                  !idLower.includes('amount') &&
+                  !idLower.includes('value')
+                ) {
+                  fieldsToUpdate[field.id] = context;
+                  applied = true;
+                }
+              });
+
+              if (applied) {
+                setFormData((prev) => {
+                  const newData = { ...prev };
+                  let actuallyChanged = false;
+
+                  for (const [key, value] of Object.entries(fieldsToUpdate)) {
+                    if (!newData[key]) {
+                      newData[key] = value;
+                      actuallyChanged = true;
+                    }
+                  }
+
+                  return actuallyChanged ? newData : prev;
+                });
+
+                setContextApplied(true);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore errors parsing history
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
   const stepFields = template.fields.slice(
@@ -93,9 +155,21 @@ function FormWizard({ template, onBack, onGenerate }) {
         >
           <ArrowLeft className="w-5 h-5 text-text-secondary" />
         </button>
-        <div>
-          <h2 className="text-3xl font-display text-white">{template.title}</h2>
-          <p className="text-sm text-text-tertiary font-body mt-1">Fill in the details below</p>
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-display text-white">{template.title}</h2>
+              <p className="text-sm text-text-tertiary font-body mt-1">Fill in the details below</p>
+            </div>
+            {contextApplied && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 border border-gold/20 rounded-sm shadow-hard">
+                <Sparkles className="w-4 h-4 text-gold animate-pulse" />
+                <span className="text-[10px] text-gold uppercase font-extrabold tracking-widest italic">
+                  CONTEXT_APPLIED
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
