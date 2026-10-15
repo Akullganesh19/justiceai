@@ -1,4 +1,8 @@
 import express from 'express';
+import crypto from 'crypto';
+import { setupRedactedLogger } from './src/lib/logger.js';
+
+setupRedactedLogger();
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -634,8 +638,40 @@ app.post('/api/voice/process', async (req, res) => {
   }
 });
 
+
+// Admin authentication middleware
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (process.env.NODE_ENV !== 'development' && !adminSecret) {
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  const expectedSecret = adminSecret || 'default_dev_secret';
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const tokenBuffer = Buffer.from(token);
+    const expectedBuffer = Buffer.from(expectedSecret);
+
+    if (tokenBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(tokenBuffer, expectedBuffer)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  } catch (e) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  next();
+};
+
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +740,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +753,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
