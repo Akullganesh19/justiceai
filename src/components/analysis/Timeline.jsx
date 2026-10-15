@@ -1,14 +1,61 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { Milestone } from 'lucide-react';
 
-export function Timeline({ timeline }) {
+export function Timeline({ timeline, caseType = "Custom Case" }) {
+  const navigate = useNavigate();
   if (!timeline || timeline.length === 0) return null;
+
+  const handleExportToTracker = () => {
+    try {
+      const STORAGE_KEY = 'justice_ai_case_tracker_v2';
+      const existingCases = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      const newCase = {
+        id: Date.now().toString(),
+        name: `AI Strategy: ${caseType}`,
+        caseType: 'custom',
+        steps: timeline.map((item, index) => ({
+          id: index + 1,
+          label: item.stage,
+          description: item.detail,
+          completed: item.status === 'completed',
+          expectedDays: item.estimatedDate ? 14 : undefined // default placeholder if needed
+        })),
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: '',
+          courtName: '',
+          bench: '',
+          advocateName: '',
+          advocatePhone: '',
+          oppositeParty: '',
+          nextHearing: '',
+        },
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([newCase, ...existingCases]));
+      navigate('/tracker');
+    } catch (e) {
+      console.error('Failed to export timeline to tracker:', e);
+    }
+  };
 
   return (
     <div className="space-y-10 pt-12 border-t border-white/5 relative">
       <div className="absolute top-0 left-0 w-1.5 h-10 bg-gold/20 rounded-sm" />
-      <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-text-tertiary block mb-8 opacity-60 italic">
-        CASE_PROGRESSION_TIMELINE
-      </label>
+      <div className="flex items-center justify-between mb-8">
+        <label className="text-[10px] uppercase font-extrabold tracking-[0.4em] text-text-tertiary block opacity-60 italic m-0">
+          CASE_PROGRESSION_TIMELINE
+        </label>
+        <button
+          onClick={handleExportToTracker}
+          className="flex items-center gap-2 px-4 py-2 rounded-sm bg-void border border-gold/40 text-[9px] text-gold uppercase tracking-[0.2em] font-extrabold hover:bg-gold/10 transition-colors shadow-hard italic"
+        >
+          <Milestone className="w-3 h-3" />
+          <span>TRACK_LIFECYCLE</span>
+        </button>
+      </div>
 
       <div className="space-y-8 relative">
         {timeline.map((item, i) => {
