@@ -209,7 +209,7 @@ export default function AnalysisPanel({
         </div>
 
         {/* Timeline Visualization */}
-        <Timeline timeline={analysis.timeline} />
+        <Timeline timeline={analysis.timeline} caseType={analysis.caseType} />
 
         {/* Actionable Content */}
         <div className="grid gap-12 pt-8">
