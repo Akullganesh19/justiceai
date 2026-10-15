@@ -53,7 +53,51 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const historyJson = localStorage.getItem('justice_ai_history');
+      if (!historyJson) return {};
+
+      const history = JSON.parse(historyJson);
+      if (!Array.isArray(history) || history.length === 0) return {};
+
+      const recentCase = history[0];
+      let caseContext = '';
+
+      if (recentCase.analysis?.summary) {
+        caseContext = recentCase.analysis.summary;
+      } else if (recentCase.messages && Array.isArray(recentCase.messages)) {
+        const userMsgs = recentCase.messages.filter(m => m.role === 'user');
+        if (userMsgs.length > 0) {
+          caseContext = userMsgs[userMsgs.length - 1].content;
+        }
+      }
+
+      if (!caseContext) return {};
+
+      const truncatedContext = caseContext.length > 300
+        ? caseContext.substring(0, 300) + '...'
+        : caseContext;
+
+      const initialData = {};
+      const narrativeKeywords = ['desc', 'fact', 'narrative', 'subject'];
+      const numericKeywords = ['amount', 'value'];
+
+      template.fields.forEach(field => {
+        const lowerId = field.id.toLowerCase();
+        const isNarrative = narrativeKeywords.some(kw => lowerId.includes(kw));
+        const isNumeric = numericKeywords.some(kw => lowerId.includes(kw));
+
+        if (isNarrative && !isNumeric) {
+          initialData[field.id] = truncatedContext;
+        }
+      });
+
+      return initialData;
+    } catch {
+      return {};
+    }
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
