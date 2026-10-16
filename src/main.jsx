@@ -7,6 +7,9 @@ import CommandPalette from './components/ui/CommandPalette';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
+import { initFetchCoalescing } from './lib/infrastructure/fetchCoalescing';
+initFetchCoalescing();
+
 import './index.css';
 
 const handleGlobalTranscription = (text) => {
