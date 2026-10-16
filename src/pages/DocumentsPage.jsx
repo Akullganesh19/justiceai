@@ -12,6 +12,8 @@ import {
   Check,
   X,
   ChevronRight,
+  Trash2,
+  Clock,
 } from 'lucide-react';
 import Header from '../components/ui/Header.jsx';
 import { DOCUMENT_TEMPLATES } from '../lib/documentTemplates';
@@ -376,6 +378,18 @@ export default function DocumentsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [generatedDoc, setGeneratedDoc] = useState(null);
   const [stage, setStage] = useState('select'); // 'select' | 'form' | 'preview'
+  const [savedDocs, setSavedDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_documents');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('justice_ai_documents', JSON.stringify(savedDocs));
+  }, [savedDocs]);
 
   const handleSelect = (template) => {
     setSelectedTemplate(template);
@@ -385,7 +399,30 @@ export default function DocumentsPage() {
   const handleGenerate = (formData) => {
     const doc = selectedTemplate.generate(formData);
     setGeneratedDoc(doc);
+
+    // Save to history
+    const newDoc = {
+      id: Date.now().toString(),
+      templateId: selectedTemplate.id,
+      title: selectedTemplate.title,
+      timestamp: new Date().toISOString(),
+      content: doc,
+    };
+    setSavedDocs((prev) => [newDoc, ...prev]);
+
     setStage('preview');
+  };
+
+  const handleViewSaved = (doc) => {
+    const template = DOCUMENT_TEMPLATES.find((t) => t.id === doc.templateId) || DOCUMENT_TEMPLATES[0];
+    setSelectedTemplate({ ...template, title: doc.title }); // Override title just in case template doesn't match perfectly
+    setGeneratedDoc(doc.content);
+    setStage('preview');
+  };
+
+  const handleDeleteSaved = (id, e) => {
+    e.stopPropagation();
+    setSavedDocs((prev) => prev.filter((doc) => doc.id !== id));
   };
 
   const handleReset = () => {
@@ -432,6 +469,48 @@ export default function DocumentsPage() {
                   />
                 ))}
               </div>
+
+              {/* Saved Drafts */}
+              {savedDocs.length > 0 && (
+                <div className="mt-20">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Clock className="w-5 h-5 text-gold" />
+                    <h2 className="text-2xl font-display font-bold uppercase text-white">
+                      SAVED DRAFTS
+                    </h2>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedDocs.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => handleViewSaved(doc)}
+                        className="group relative bg-void border-2 border-white/5 hover:border-gold/30 p-6 rounded-sm cursor-pointer transition-all shadow-hard flex flex-col gap-4"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-white font-bold uppercase text-sm group-hover:text-gold transition-colors">
+                            {doc.title}
+                          </h3>
+                          <button
+                            onClick={(e) => handleDeleteSaved(doc.id, e)}
+                            className="text-text-tertiary hover:text-accent-error transition-colors p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-tertiary font-mono">
+                          {new Date(doc.timestamp).toLocaleString('en-IN', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </p>
+                        <p className="text-xs text-text-tertiary opacity-60 line-clamp-2 italic">
+                          {doc.content.substring(0, 100)}...
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
