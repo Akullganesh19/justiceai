@@ -36,7 +36,7 @@ function useAnimatedCounter(target, duration = 1500) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          let startTime = Date.now();
+          const startTime = Date.now();
           const tick = () => {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
@@ -145,30 +145,32 @@ function RecentCaseCard({ caseData }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [recentCases, setRecentCases] = useState([]);
+  const [recentCases] = useState(() => {
+    try {
+      const saved = localStorage.getItem('justice_ai_history');
+      return saved ? JSON.parse(saved).slice(0, 5) : [];
+    } catch {
+      return [];
+    }
+  });
   const [greeting, setGreeting] = useState('');
   const [greetIcon, setGreetIcon] = useState(Sun);
 
   useEffect(() => {
-    const saved = localStorage.getItem('justice_ai_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setRecentCases(parsed.slice(0, 5));
-      } catch (e) {}
-    }
-
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Welcome Back');
-      setGreetIcon(Sunrise);
-    } else if (hour < 17) {
-      setGreeting('Afternoon Session');
-      setGreetIcon(Sun);
-    } else {
-      setGreeting('Good Evening');
-      setGreetIcon(Moon);
-    }
+    const updateTime = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) {
+        setGreeting('Welcome Back');
+        setGreetIcon(Sunrise);
+      } else if (hour < 17) {
+        setGreeting('Afternoon Session');
+        setGreetIcon(Sun);
+      } else {
+        setGreeting('Good Evening');
+        setGreetIcon(Moon);
+      }
+    };
+    updateTime();
   }, []);
 
   const containerVariants = {
