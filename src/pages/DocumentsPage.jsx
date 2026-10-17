@@ -53,7 +53,45 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const historyStr = localStorage.getItem('justice_ai_history');
+      if (!historyStr) return {};
+      const history = JSON.parse(historyStr);
+      if (!history || history.length === 0) return {};
+
+      const latestCase = history[0];
+      if (!latestCase || !latestCase.messages) return {};
+
+      const userMsgs = latestCase.messages
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .join('\n\n');
+
+      if (!userMsgs) return {};
+
+      // Extract context with 300 char limit
+      const context = userMsgs.length > 300 ? userMsgs.substring(0, 297) + '...' : userMsgs;
+
+      const initialData = {};
+      const narrativeKeywords = ['desc', 'facts', 'narrative', 'subject'];
+      const numericKeywords = ['amount', 'value'];
+
+      template.fields.forEach(field => {
+        const idLower = field.id.toLowerCase();
+        const isNarrative = narrativeKeywords.some(kw => idLower.includes(kw));
+        const isNumeric = numericKeywords.some(kw => idLower.includes(kw));
+
+        if (isNarrative && !isNumeric) {
+          initialData[field.id] = context;
+        }
+      });
+
+      return initialData;
+    } catch {
+      return {};
+    }
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
