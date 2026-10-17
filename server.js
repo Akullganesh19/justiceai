@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import DOMPurify from 'isomorphic-dompurify';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -114,18 +115,8 @@ app.use(hpp());
 
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
-
   const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
+    if (typeof obj === 'string') return DOMPurify.sanitize(obj);
     if (Array.isArray(obj)) return obj.map(sanitize);
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
       const sanitized = {};
