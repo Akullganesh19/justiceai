@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import { setupRedactedLogger, winstonRedactFormat } from './src/lib/logger.js';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -18,6 +19,9 @@ import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
+
+// Override global console logs to prevent PII leaks
+setupRedactedLogger();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +31,7 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
+    winstonRedactFormat(),
     winston.format.json()
   ),
   transports: [
