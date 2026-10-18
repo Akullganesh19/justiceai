@@ -53,7 +53,39 @@ function TemplateCard({ template, onSelect, index }) {
 }
 
 function FormWizard({ template, onBack, onGenerate }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedHistory = localStorage.getItem('justice_ai_history');
+      if (!savedHistory) return {};
+
+      const history = JSON.parse(savedHistory);
+      if (!history || history.length === 0) return {};
+
+      const recentCase = history[0];
+      if (!recentCase || !recentCase.messages) return {};
+
+      // Combine user messages from the most recent case to form context
+      const context = recentCase.messages
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .join(' ')
+        .slice(0, 300);
+
+      if (!context) return {};
+
+      const initialData = {};
+      template.fields.forEach(field => {
+        const id = field.id.toLowerCase();
+        // Predictively pre-fill narrative fields, ignoring numeric ones
+        if ((id.includes('desc') || id.includes('facts') || id.includes('narrative') || id.includes('subject')) && !id.includes('amount') && !id.includes('value')) {
+          initialData[field.id] = context;
+        }
+      });
+      return initialData;
+    } catch {
+      return {};
+    }
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const fieldsPerStep = 3;
   const totalSteps = Math.ceil(template.fields.length / fieldsPerStep);
