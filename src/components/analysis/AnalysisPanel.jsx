@@ -90,6 +90,7 @@ export default function AnalysisPanel({
   analysis,
   selectedJurisdiction = 'National',
   onExport,
+  onTrackCase,
   isLoading,
   progress = 0,
 }) {
@@ -227,7 +228,16 @@ export default function AnalysisPanel({
         />
 
         {/* Export Action */}
-        <div className="pt-16 border-t border-white/5 pb-16">
+        <div className="pt-16 border-t border-white/5 pb-16 space-y-4">
+          {analysis.timeline && analysis.timeline.length > 0 && onTrackCase && (
+            <button
+              onClick={onTrackCase}
+              className="w-full flex items-center justify-center gap-4 bg-emerald-500/10 text-emerald-400 px-10 py-6 rounded-sm border-2 border-emerald-500/20 font-extrabold text-lg uppercase tracking-widest hover:bg-emerald-500/20 transition-all shadow-hard active:translate-y-[2px] italic"
+            >
+              <Milestone className="w-6 h-6" />
+              <span>TRACK_STRATEGY_IN_SYSTEM</span>
+            </button>
+          )}
           <button
             onClick={onExport}
             className="w-full flex items-center justify-center gap-4 bg-gold text-midnight px-10 py-6 rounded-sm border-2 border-gold-light/20 font-extrabold text-lg uppercase tracking-widest hover:bg-gold-light transition-all shadow-hard active:translate-y-[2px] italic"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/ui/Header';
 import ChatPanel from '../components/chat/ChatPanel';
 import ChatInput from '../components/chat/ChatInput';
@@ -14,6 +14,7 @@ import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay'
 
 export default function ChatPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeCaseId, setActiveCaseId] = useState(Date.now().toString());
   const [history, setHistory] = useState(() => {
     try {
@@ -261,6 +262,46 @@ export default function ChatPage() {
     setIsExportOpen(true);
   };
 
+  const handleTrackCase = () => {
+    if (!analysis || !analysis.timeline || analysis.timeline.length === 0) return;
+
+    let trackerCases = [];
+    try {
+      const saved = localStorage.getItem('justice_ai_case_tracker_v2');
+      if (saved) {
+        trackerCases = JSON.parse(saved);
+      }
+    } catch (e) {
+      trackerCases = [];
+    }
+
+    const newCase = {
+      id: Date.now().toString(),
+      name: `${analysis.caseType || 'Consultation'} Tracking`,
+      caseType: 'custom',
+      steps: analysis.timeline.map((item, index) => ({
+        id: index + 1,
+        label: item.stage,
+        description: item.detail,
+        completed: item.status === 'completed',
+      })),
+      createdAt: new Date().toISOString(),
+      details: {
+        caseNumber: '',
+        courtName: '',
+        bench: '',
+        advocateName: '',
+        advocatePhone: '',
+        oppositeParty: '',
+        nextHearing: '',
+      },
+    };
+
+    trackerCases.unshift(newCase);
+    localStorage.setItem('justice_ai_case_tracker_v2', JSON.stringify(trackerCases));
+    navigate('/tracker');
+  };
+
   return (
     <div className="h-screen flex flex-col bg-void overflow-hidden font-mono text-slate-200">
       <Header onNewCase={handleNewCase} />
@@ -354,6 +395,7 @@ export default function ChatPage() {
               selectedJurisdiction={selectedJurisdiction}
               isLoading={isLoading}
               onExport={handleExport}
+              onTrackCase={handleTrackCase}
               progress={progress}
             />
           </div>
