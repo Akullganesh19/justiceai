@@ -9,6 +9,7 @@ import { CaseHistorySidebar } from '../components/chat/CaseHistorySidebar';
 import { sendMessage } from '../lib/claudeApi';
 import { parseAIResponse } from '../lib/parseAnalysis';
 import { generateSummary } from '../lib/generateSummary';
+import { syncAnalysisToTracker } from '../lib/syncTracker';
 import { Milestone, Sword, ShieldCheck, MapPin, AlertCircle } from 'lucide-react';
 import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay';
 
@@ -237,6 +238,7 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
 
+      syncAnalysisToTracker(activeCaseId, title, newAnalysis || analysis);
       setHistory((prev) => {
         const filtered = prev.filter((c) => c.id !== activeCaseId);
         return [caseData, ...filtered];
