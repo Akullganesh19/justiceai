@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
@@ -113,6 +113,23 @@ export function ToastProvider({ children }) {
   const error = useCallback((data) => addToast('error', data), [addToast]);
   const warning = useCallback((data) => addToast('warning', data), [addToast]);
   const info = useCallback((data) => addToast('info', data), [addToast]);
+
+  // Synapse Intelligence Gap Filled: The UI Toast system now automatically
+  // surfaces global unhandled errors to the user instead of letting them
+  // fail silently or crash out of sight.
+  useEffect(() => {
+    const handleGlobalError = (e) => {
+      error({
+        title: 'System Exception',
+        message: 'A critical system error occurred. Our team has been notified.',
+        duration: 8000,
+      });
+      console.log('[Toast Event Bridge] Surfacing error to UI:', e.detail);
+    };
+
+    window.addEventListener('justice-ai-error', handleGlobalError);
+    return () => window.removeEventListener('justice-ai-error', handleGlobalError);
+  }, [error]);
 
   const value = {
     toasts,

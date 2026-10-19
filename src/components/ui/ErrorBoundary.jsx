@@ -19,6 +19,17 @@ class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
+    // Synapse Event Bridge: Emit a global event so analytics/monitoring can intercept this
+    // without tightly coupling ErrorBoundary to those services.
+    window.dispatchEvent(
+      new CustomEvent('justice-ai-error', {
+        detail: {
+          message: error?.message || String(error),
+          stack: errorInfo?.componentStack
+        }
+      })
+    );
+
     // Log to error reporting service (if configured)
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
