@@ -15,6 +15,12 @@ const handleGlobalTranscription = (text) => {
   window.dispatchEvent(event);
 };
 
+// Synapse Intelligence Gap Filled: Listen for global application errors
+// independent of the UI layer for tracking/analytics purposes.
+window.addEventListener('justice-ai-error', (e) => {
+  console.log('[Analytics Event Bridge] Global Error Captured for Tracking:', e.detail);
+});
+
 // Lazy-loaded pages for optimal bundle splitting
 const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
 const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
