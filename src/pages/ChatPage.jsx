@@ -11,8 +11,11 @@ import { parseAIResponse } from '../lib/parseAnalysis';
 import { generateSummary } from '../lib/generateSummary';
 import { Milestone, Sword, ShieldCheck, MapPin, AlertCircle } from 'lucide-react';
 import DocumentScanningOverlay from '../components/chat/DocumentScanningOverlay';
+import { useToast } from '../components/ui/Toast';
+import { exportToTracker } from '../hooks/useSyncChatToTracker';
 
 export default function ChatPage() {
+  const { success, error } = useToast();
   const location = useLocation();
   const [activeCaseId, setActiveCaseId] = useState(Date.now().toString());
   const [history, setHistory] = useState(() => {
@@ -261,6 +264,17 @@ export default function ChatPage() {
     setIsExportOpen(true);
   };
 
+  const handleSyncTracker = () => {
+    if (!analysis) return;
+    try {
+      const title = messages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+      exportToTracker(title, analysis);
+      success({ title: 'Sync Successful', message: 'Analysis timeline synced to Case Tracker.' });
+    } catch (err) {
+      error({ title: 'Sync Failed', message: err.message });
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-void overflow-hidden font-mono text-slate-200">
       <Header onNewCase={handleNewCase} />
@@ -354,6 +368,7 @@ export default function ChatPage() {
               selectedJurisdiction={selectedJurisdiction}
               isLoading={isLoading}
               onExport={handleExport}
+              onSyncTracker={handleSyncTracker}
               progress={progress}
             />
           </div>
