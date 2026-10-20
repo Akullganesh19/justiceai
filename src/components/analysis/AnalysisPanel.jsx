@@ -90,6 +90,7 @@ export default function AnalysisPanel({
   analysis,
   selectedJurisdiction = 'National',
   onExport,
+  onSyncTracker,
   isLoading,
   progress = 0,
 }) {
@@ -227,7 +228,7 @@ export default function AnalysisPanel({
         />
 
         {/* Export Action */}
-        <div className="pt-16 border-t border-white/5 pb-16">
+        <div className="pt-16 border-t border-white/5 pb-16 space-y-4">
           <button
             onClick={onExport}
             className="w-full flex items-center justify-center gap-4 bg-gold text-midnight px-10 py-6 rounded-sm border-2 border-gold-light/20 font-extrabold text-lg uppercase tracking-widest hover:bg-gold-light transition-all shadow-hard active:translate-y-[2px] italic"
@@ -235,6 +236,16 @@ export default function AnalysisPanel({
             <Download className="w-6 h-6" />
             <span>EXPORT_STRATEGY_REPORT</span>
           </button>
+
+          {onSyncTracker && (
+            <button
+              onClick={onSyncTracker}
+              className="w-full flex items-center justify-center gap-4 bg-void text-gold px-10 py-6 rounded-sm border-2 border-gold/40 font-extrabold text-lg uppercase tracking-widest hover:bg-gold/5 transition-all shadow-hard active:translate-y-[2px] italic"
+            >
+              <Milestone className="w-6 h-6" />
+              <span>SYNC_TO_CASE_TRACKER</span>
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
