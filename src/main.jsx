@@ -1,3 +1,5 @@
+import { initFetchCoalescer } from "./lib/fetchCoalescer";
+initFetchCoalescer();
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
