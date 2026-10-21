@@ -674,6 +674,21 @@ export default function CaseTrackerPage() {
     }
   }, [activeCase]);
 
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          setCases(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error('Failed to sync case tracker state', e);
+      }
+    };
+    window.addEventListener('justice-ai-tracker-synced', handleSync);
+    return () => window.removeEventListener('justice-ai-tracker-synced', handleSync);
+  }, []);
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
