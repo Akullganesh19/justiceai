@@ -192,7 +192,14 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      if (newAnalysis) setAnalysis(newAnalysis);
+      if (newAnalysis) {
+        setAnalysis(newAnalysis);
+        window.dispatchEvent(
+          new CustomEvent("justice-ai-analysis-updated", {
+            detail: { caseId: activeCaseId, title: "Sample Case", analysis: newAnalysis },
+          })
+        );
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -229,6 +236,14 @@ export default function ChatPage() {
 
       // Auto-save to history
       const title = updatedMessages[1]?.content?.substring(0, 40) + '...' || 'Untitled Case';
+
+      if (newAnalysis) {
+        window.dispatchEvent(
+          new CustomEvent("justice-ai-analysis-updated", {
+            detail: { caseId: activeCaseId, title, analysis: newAnalysis },
+          })
+        );
+      }
       const caseData = {
         id: activeCaseId,
         title,
