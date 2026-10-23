@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { Milestone } from 'lucide-react';
 
-export function Timeline({ timeline }) {
+export function Timeline({ timeline, caseTitle = 'AI Suggested Case' }) {
+  const navigate = useNavigate();
   if (!timeline || timeline.length === 0) return null;
 
   return (
@@ -73,6 +76,18 @@ export function Timeline({ timeline }) {
             </motion.div>
           );
         })}
+      </div>
+      <div className="pt-6">
+        <button
+          onClick={() => {
+            console.log('🧠 Synapse Connection Fired (Export): AI Timeline -> Case Tracker', { caseTitle, steps: timeline.length });
+            navigate('/tracker', { state: { importedTimeline: timeline, caseTitle } });
+          }}
+          className="w-full flex items-center justify-center gap-3 bg-midnight text-gold border border-gold/30 px-6 py-4 rounded-sm font-extrabold uppercase tracking-widest hover:bg-gold/10 transition-all shadow-hard italic"
+        >
+          <Milestone className="w-5 h-5" />
+          <span>IMPORT_TO_CASE_TRACKER</span>
+        </button>
       </div>
     </div>
   );

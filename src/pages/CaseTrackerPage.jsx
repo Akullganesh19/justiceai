@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Trash2,
@@ -645,6 +646,48 @@ export default function CaseTrackerPage() {
   const [selectedCaseType, setSelectedCaseType] = useState('consumer');
   const [showCNRModal, setShowCNRModal] = useState(false);
   const [cnrNumber, setCnrNumber] = useState('');
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.importedTimeline) {
+      console.log('🧠 Synapse Connection Fired (Intercept): Received AI Timeline -> Initializing Case', { caseTitle: location.state.caseTitle });
+      const { importedTimeline, caseTitle } = location.state;
+
+      const newSteps = importedTimeline.map((step, index) => ({
+        id: index + 1,
+        label: step.stage,
+        description: step.detail,
+        completed: step.status === 'completed'
+      }));
+
+      const newCase = {
+        id: Date.now().toString(),
+        name: caseTitle || 'AI Suggested Case',
+        caseType: 'imported',
+        steps: newSteps,
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: '',
+          courtName: '',
+          bench: '',
+          advocateName: '',
+          advocatePhone: '',
+          oppositeParty: '',
+          nextHearing: '',
+        },
+      };
+
+      setTimeout(() => {
+        setCases(prev => [newCase, ...prev]);
+        setActiveCaseId(newCase.id);
+      }, 0);
+
+      // Clear state to avoid infinite loops on refresh
+      navigate('/tracker', { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
 
   // Case details fields
   const [caseDetails, setCaseDetails] = useState({
