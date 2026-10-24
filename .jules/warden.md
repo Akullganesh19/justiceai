@@ -1,0 +1,6 @@
+## 2024-10-24 — Redact PII from Winston Logs Globally
+**Data traced:** User input payloads and error messages containing PII (Email, Phone, Aadhaar, PAN, Card Numbers).
+**Exposure found:** `server.js` logged full user chat messages blindly inside fallback error handling paths and truncated snippets via `console.log(\`Routing query to Ollama: "\${latestUserMessage.substring(0, 50)}..."\`)`. Winston's unhandled error hook could also leak full request details on failure.
+**Fix:** Created `src/lib/logger.js` which provides a custom global Winston object redactor and overrides `console.log`, `console.error`, `console.warn`, and `console.info` with an irreversible PII-stripping mechanism before it ever hits stdout or `logs/combined.log`. Modified `server.js` to instantiate and use this secure logger by default.
+**Coverage confirmed:** Tested via a local spawn process hitting the `/api/chat` endpoint with test PII (Email, Phone, Aadhaar, Card) and observed output was successfully replaced with `[REDACTED_EMAIL]`, `[REDACTED_AADHAAR]`, etc. Verified that standard `console.log` and Winston logs are securely intercepted.
+**Still exposed elsewhere:** Potential leaks may still exist if client-side tools independently send analytics or telemetry containing PII, but server-side logging exposure has been structurally mitigated.
