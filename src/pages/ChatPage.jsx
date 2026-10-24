@@ -360,7 +360,7 @@ export default function ChatPage() {
         </div>
       </main>
 
-      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} summary={summary} />
+      <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} summary={summary} analysis={analysis} />
     </div>
   );
 }
