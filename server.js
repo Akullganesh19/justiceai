@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import crypto from 'crypto';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -54,6 +55,38 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/chat/completions';
+
+// ===== ADMIN AUTH MIDDLEWARE =====
+const adminAuth = (req, res, next) => {
+  const secret = process.env.ADMIN_SECRET;
+
+  if (!secret) {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(500).json({ error: 'Server configuration error: ADMIN_SECRET missing in production.' });
+    }
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  const expectedSecret = secret || 'default_insecure_secret_for_dev';
+
+  try {
+    const tokenBuffer = Buffer.from(token);
+    const expectedBuffer = Buffer.from(expectedSecret);
+
+    if (tokenBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(tokenBuffer, expectedBuffer)) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token format' });
+  }
+};
 
 // Security: Validate required environment variables
 const requiredEnvVars = ['PORT', 'NODE_ENV', 'OLLAMA_BASE_URL', 'EMBEDDING_MODEL', 'CHAT_MODEL'];
@@ -635,7 +668,7 @@ app.post('/api/voice/process', async (req, res) => {
 });
 
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +737,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +750,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
