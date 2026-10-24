@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Download, FileText } from 'lucide-react';
+import { X, Copy, Check, Download, FileText, Milestone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function ExportModal({ isOpen, onClose, summary }) {
+export default function ExportModal({ isOpen, onClose, summary, analysis }) {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -75,6 +77,25 @@ export default function ExportModal({ isOpen, onClose, summary }) {
               >
                 <Download className="w-5 h-5" />
                 <span>SAVE_AS_TEXT</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (analysis?.timeline) {
+                    navigate('/case-tracker', {
+                      state: {
+                        newCaseTimeline: analysis.timeline,
+                        caseName: analysis.caseType || 'AI Generated Case'
+                      }
+                    });
+                  }
+                }}
+                disabled={!analysis?.timeline}
+                className="flex items-center justify-center gap-3 px-8 py-4 rounded-sm bg-void text-text-primary hover:bg-white/5 border-2 border-white/10 transition-all font-extrabold uppercase text-[11px] tracking-[0.2em] italic shadow-hard active:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
+                title={!analysis?.timeline ? "No timeline available to export" : ""}
+              >
+                <Milestone className="w-5 h-5 text-gold" />
+                <span>EXPORT_TO_CASE_TRACKER</span>
               </button>
             </div>
           </motion.div>

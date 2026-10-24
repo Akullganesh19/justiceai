@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -628,6 +629,8 @@ function StepItem({ step, index, total, onToggle, onDelete, onEdit, onUpdateStep
 }
 
 export default function CaseTrackerPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const [cases, setCases] = useState(() => {
     try {
@@ -673,6 +676,46 @@ export default function CaseTrackerPage() {
       // Notification logic can go here
     }
   }, [activeCase]);
+
+
+  // Intercept shared context for AI-generated timelines
+  useEffect(() => {
+    if (location.state?.newCaseTimeline) {
+      const { newCaseTimeline, caseName } = location.state;
+
+      const customSteps = newCaseTimeline.map((item, index) => ({
+        id: Date.now() + index,
+        label: item.stage,
+        description: item.detail,
+        completed: false
+      }));
+
+      const newCase = {
+        id: Date.now().toString(),
+        name: caseName,
+        caseType: 'custom',
+        steps: customSteps,
+        createdAt: new Date().toISOString(),
+        details: {
+          caseNumber: '',
+          courtName: '',
+          bench: '',
+          advocateName: '',
+          advocatePhone: '',
+          oppositeParty: '',
+          nextHearing: '',
+        },
+      };
+
+      setTimeout(() => {
+        setCases((prev) => [...prev, newCase]);
+        setActiveCaseId(newCase.id);
+        success({ title: 'AI Case Imported', message: 'The case tracking timeline has been successfully created.' });
+        // Clear state to prevent duplication on refresh
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 0);
+    }
+  }, [location.state, navigate, location.pathname, success]);
 
   // Persist to localStorage
   useEffect(() => {
