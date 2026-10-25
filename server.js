@@ -8,6 +8,7 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
@@ -452,6 +453,34 @@ async function loadAndIndexDocuments() {
   }
 }
 
+// ============ MIDDLEWARE ============
+const adminAuth = (req, res, next) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret) {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(500).json({ error: 'Server configuration error: ADMIN_SECRET missing in production.' });
+    }
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Unauthorized: Missing authorization header.' });
+  }
+
+  // Use the secret from env, or a fallback in development only
+  const expectedSecret = adminSecret || 'dev_fallback_secret_123';
+
+  const expectedBuffer = Buffer.from(expectedSecret);
+  const actualBuffer = Buffer.from(authHeader);
+
+  if (expectedBuffer.length !== actualBuffer.length || !crypto.timingSafeEqual(expectedBuffer, actualBuffer)) {
+    return res.status(403).json({ error: 'Forbidden: Invalid authorization token.' });
+  }
+
+  next();
+};
+
 // ============ API ROUTES ============
 // Root endpoint
 app.get('/', (req, res) => {
@@ -635,7 +664,7 @@ app.post('/api/voice/process', async (req, res) => {
 });
 
 // Upload documents endpoint
-app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
+app.post('/api/upload', adminAuth, upload.array('documents', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
@@ -704,7 +733,7 @@ app.post('/api/upload', upload.array('documents', 5), async (req, res) => {
 });
 
 // Delete specific document chunks by source
-app.delete('/api/documents/:source', (req, res) => {
+app.delete('/api/documents/:source', adminAuth, (req, res) => {
   const source = decodeURIComponent(req.params.source);
   const beforeCount = documentChunks.length;
   documentChunks = documentChunks.filter(chunk => chunk.source !== source);
@@ -717,7 +746,7 @@ app.delete('/api/documents/:source', (req, res) => {
 });
 
 // Clear all documents
-app.delete('/api/documents', (req, res) => {
+app.delete('/api/documents', adminAuth, (req, res) => {
   const count = documentChunks.length;
   documentChunks = [];
   res.json({
