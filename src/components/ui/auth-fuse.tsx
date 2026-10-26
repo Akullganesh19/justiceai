@@ -187,7 +187,17 @@ PasswordInput.displayName = 'PasswordInput';
 function SignInForm() {
   const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('UI: Sign In form submitted');
+    const emailInput = event.currentTarget.elements.namedItem('email') as HTMLInputElement;
+    const email = emailInput ? emailInput.value : 'unknown@justiceai.law';
+    const user = { email, role: 'Advocate', tier: 'Pro', sessionId: Date.now() };
+
+    // Simulate login persistence
+    localStorage.setItem('justice_ai_user', JSON.stringify(user));
+
+    // Dispatch custom event for cross-system intelligence
+    window.dispatchEvent(new CustomEvent('justice_ai_user_login', { detail: user }));
+
+    console.log('UI: Sign In form submitted, Mock user persisted', user);
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-10">

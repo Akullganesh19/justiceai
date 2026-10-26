@@ -8,6 +8,7 @@ class ErrorBoundary extends React.Component {
       hasError: false,
       error: null,
       errorInfo: null,
+      userContext: null,
     };
   }
 
@@ -16,12 +17,24 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    this.setState({ errorInfo });
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    let userContext = null;
+    try {
+      const storedUser = localStorage.getItem('justice_ai_user');
+      if (storedUser) {
+        userContext = JSON.parse(storedUser);
+      }
+    } catch (e) {
+      console.warn('Failed to parse user context from localStorage', e);
+    }
+
+    this.setState({ errorInfo, userContext });
+
+    // Log crash with enriched user context for prioritized debugging
+    console.error('ErrorBoundary caught an error for user:', userContext, error, errorInfo);
 
     // Log to error reporting service (if configured)
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      this.props.onError(error, errorInfo, userContext);
     }
   }
 
@@ -78,6 +91,11 @@ class ErrorBoundary extends React.Component {
             {/* Error Details (in development mode) */}
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="p-6 rounded-sm bg-void border-2 border-white/5 space-y-4 relative z-10">
+                {this.state.userContext && (
+                  <div className="text-[10px] text-gold uppercase tracking-[0.2em] font-extrabold mb-2">
+                    USER_CONTEXT_CAPTURED: {this.state.userContext.email} ({this.state.userContext.tier})
+                  </div>
+                )}
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
                   <span className="text-[10px] uppercase tracking-[0.4em] text-red font-extrabold italic">
                     [D_BUG_LOGS_ENABLED]
