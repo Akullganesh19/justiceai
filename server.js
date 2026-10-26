@@ -10,6 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
+import xss from 'xss';
 import winston from 'winston';
 
 const require = createRequire(import.meta.url);
@@ -114,14 +115,10 @@ app.use(hpp());
 
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
+  const xssFilter = new xss.FilterXSS();
   const escapeHtml = (str) => {
     if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
+    return xssFilter.process(str);
   };
 
   const sanitize = (obj) => {
