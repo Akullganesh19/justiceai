@@ -11,6 +11,10 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import { setupRedactedLogger, redactFormat } from './src/lib/logger.js';
+
+// Setup global logger to redact PII
+setupRedactedLogger();
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -26,6 +30,7 @@ const __dirname = path.dirname(__filename);
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
+    redactFormat(),
     winston.format.timestamp(),
     winston.format.json()
   ),
