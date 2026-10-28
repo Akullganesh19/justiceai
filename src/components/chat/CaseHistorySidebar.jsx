@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2 } from 'lucide-react';
+import { History, Plus, ChevronLeft, ChevronRight, FileText, Trash2, Search, X } from 'lucide-react';
 
 export function CaseHistorySidebar({
   history,
@@ -11,6 +11,12 @@ export function CaseHistorySidebar({
   isOpen,
   setIsOpen,
 }) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredHistory = history.filter((item) =>
+    (item.title || 'Untitled Consultation').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <motion.div
       initial={false}
@@ -34,7 +40,7 @@ export function CaseHistorySidebar({
             className="flex-1 flex flex-col min-w-[320px] overflow-hidden"
           >
             {/* Sidebar Header */}
-            <div className="p-8 border-b border-white/5 space-y-6 bg-midnight-slate/20">
+            <div className="p-6 border-b border-white/5 space-y-5 bg-midnight-slate/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-gold">
                   <History className="w-5 h-5" />
@@ -44,16 +50,35 @@ export function CaseHistorySidebar({
                 </div>
                 <button
                   onClick={onNew}
-                  className="p-3 rounded-xl bg-gold text-midnight hover:bg-gold-light transition-all shadow-luxe active:translate-y-[1px]"
+                  className="p-2.5 rounded-xl bg-gold text-midnight hover:bg-gold-light transition-all shadow-luxe active:translate-y-[1px]"
                   title="New Consultation"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary opacity-50" />
+                <input
+                  type="text"
+                  placeholder="Search history..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-void border border-white/10 rounded-xl py-2 pl-9 pr-8 text-xs text-white placeholder-text-tertiary focus:outline-none focus:border-gold/30 transition-colors shadow-inner"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-white transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-10 space-y-4 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
+            <div className="flex-1 overflow-y-auto px-5 py-6 space-y-3 custom-scrollbar bg-[radial-gradient(circle_at_left_top,rgba(212,175,55,0.02)_0%,transparent_50%)]">
               {history.length === 0 ? (
                 <div className="text-center py-20 px-8 space-y-6 opacity-40">
                   <div className="w-16 h-16 rounded-2xl bg-midnight border border-white/5 flex items-center justify-center mx-auto text-white shadow-inner">
@@ -63,8 +88,15 @@ export function CaseHistorySidebar({
                     No history found. Start a new consultation to begin.
                   </p>
                 </div>
+              ) : filteredHistory.length === 0 ? (
+                <div className="text-center py-10 px-4 space-y-4 opacity-50">
+                  <Search className="w-8 h-8 mx-auto text-text-tertiary" />
+                  <p className="text-[10px] text-text-tertiary uppercase tracking-widest">
+                    No matching consultations
+                  </p>
+                </div>
               ) : (
-                history.map((item) => (
+                filteredHistory.map((item) => (
                   <div
                     key={item.id}
                     className={`group relative p-5 rounded-2xl border transition-all cursor-pointer ${
