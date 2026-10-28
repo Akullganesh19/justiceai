@@ -1,3 +1,4 @@
+import { dedupedFetch } from '../lib/api-client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -69,7 +70,7 @@ export default function IntelligenceSelectionTerminal() {
     try {
       // For now, we'll just simulate a ping to the backend
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/health`);
+      const response = await dedupedFetch(`${baseUrl}/api/health`);
       if (!response.ok) throw new Error('Backend Unreachable');
       
       await new Promise(r => setTimeout(r, 1200));
