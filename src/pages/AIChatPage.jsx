@@ -1,3 +1,4 @@
+import { dedupedFetch } from '../lib/api-client';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, Sparkles, ShieldCheck, Scale, Cpu } from 'lucide-react';
@@ -75,7 +76,7 @@ How may I assist you with your legal matters today?`,
 
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/chat`, {
+      const response = await dedupedFetch(`${baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
