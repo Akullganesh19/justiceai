@@ -11,10 +11,13 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import xss from 'xss';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
 import dotenv from 'dotenv';
+
+const xssFilter = new xss.FilterXSS();
 
 // Load environment variables
 dotenv.config();
@@ -116,12 +119,7 @@ app.use(hpp());
 const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
     if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
+    return xssFilter.process(str);
   };
 
   const sanitize = (obj) => {
