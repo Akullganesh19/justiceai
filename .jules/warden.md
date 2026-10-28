@@ -1,0 +1,6 @@
+## 2026-10-28 — Global Log PII Redaction
+**Data traced:** PII (emails, Indian phone numbers, Aadhaar, PAN, card numbers)
+**Exposure found:** System logs and error output in standard terminal/files could leak user and contextual information, including sensitive personal IDs and contact information.
+**Fix:** Created `src/lib/logger.js` containing `redactFormat` for winston and `setupRedactedLogger` to override global `console.*` methods. This ensures real-time structural redaction (masking) of incoming PII fields regardless of nesting before they are written to `logs/combined.log`, `logs/error.log` or standard output. Handled Date/Error built-in objects safely and prevented circular reference loops. Integrated this securely into the initialization flow in `server.js`.
+**Coverage confirmed:** Actively intercepted direct `console.log`, `console.error` (handling embedded Error object messages/stacks), and winston `logger.info` instances containing various mock PII payload shapes. Verified redaction rules correctly obfuscated sensitive information in the output payload.
+**Still exposed elsewhere:** Currently this approach actively governs log outputs; database entries and API responses are governed by broader application logic and could theoretically leak if a handler mistakenly serves raw db records without DTO filtering.
