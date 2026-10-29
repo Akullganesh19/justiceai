@@ -7,6 +7,7 @@ import {
   Menu,
   Command,
   LayoutDashboard,
+  History,
   FileText,
   BookOpen,
   Calculator,
@@ -30,6 +31,7 @@ const navLinks = [
   { to: '/limitation', label: 'Deadlines', icon: Clock },
   { to: '/legal-aid', label: 'Legal Aid', icon: HeartHandshake },
   { to: '/tracker', label: 'Tracker', icon: Milestone },
+  { to: '/history', label: 'History', icon: History },
 ];
 
 export default function Header({ onNewCase }) {

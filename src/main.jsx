@@ -38,6 +38,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const ShowcasePage = lazy(() => import('./pages/ShowcasePage.jsx'));
 const IntelligenceSelectionTerminal = lazy(() => import('./pages/IntelligenceSelectionTerminal.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
+const HistoryDigestPage = lazy(() => import('./pages/HistoryDigestPage.jsx'));
 
 // Loading fallback component
 function PageLoader() {
@@ -83,6 +84,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/showcase" element={<ShowcasePage />} />
               <Route path="/settings" element={<IntelligenceSelectionTerminal />} />
+              <Route path="/history" element={<HistoryDigestPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
