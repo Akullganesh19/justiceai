@@ -760,7 +760,7 @@ app.post('/api/chat', async (req, res) => {
           let score = cosineSimilarity(userVector, chunk.vector);
           
           // Boost chunks from the correct jurisdiction (filename-based tagging)
-          if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(jurisdiction.toLowerCase())) {
+          if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(String(jurisdiction).toLowerCase())) {
             score += 0.2;
           }
           
