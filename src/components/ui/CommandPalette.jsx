@@ -9,6 +9,7 @@ import {
   Calculator,
   ShoppingBag,
   Home,
+  History,
   Briefcase,
   HelpCircle,
   Info,
@@ -46,6 +47,14 @@ const ALL_COMMANDS = [
     group: 'Navigate',
     icon: MessageSquare,
     action: '/chat',
+  },
+  {
+    id: 'nav-history',
+    label: 'Case History Digest',
+    group: 'Navigate',
+    icon: History,
+    action: '/history',
+    description: 'View and manage all past consultations',
   },
   {
     id: 'nav-documents',
