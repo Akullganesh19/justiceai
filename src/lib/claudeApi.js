@@ -1,3 +1,4 @@
+import { dedupedFetch } from "./api-client.js";
 import { SYSTEM_PROMPT } from './systemPrompt';
 
 // Route requests to our local Node.js RAG backend instead of raw Ollama
@@ -7,7 +8,7 @@ export async function sendMessage(conversationHistory, userMessage, options = {}
   const { judgePersonality = 'Neutral', mode = 'copilot', jurisdiction = 'National' } = options;
 
   try {
-    const response = await fetch(RAG_BACKEND_URL, {
+    const response = await dedupedFetch(RAG_BACKEND_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
