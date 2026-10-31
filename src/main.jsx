@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ui/ScrollToTop';
 import CommandPalette from './components/ui/CommandPalette';
+import { setupApiClient } from './lib/api-client';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
@@ -50,6 +51,8 @@ function PageLoader() {
     </div>
   );
 }
+
+setupApiClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
