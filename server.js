@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
+import xss from 'xss';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -113,24 +114,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(hpp());
 
 // Custom XSS protection middleware
-const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
+const xssFilter = new xss.FilterXSS();
 
-  const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
+const xssMiddleware = (req, res, next) => {
+  const MAX_DEPTH = 10;
+  const sanitize = (obj, depth = 0) => {
+    if (depth > MAX_DEPTH) return null;
+    if (typeof obj === 'string') return xssFilter.process(obj);
+    if (Array.isArray(obj)) return obj.map(item => sanitize(item, depth + 1));
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
+      if (obj instanceof Date || obj instanceof Error) return obj;
       const sanitized = {};
-      for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+      for (const key of Reflect.ownKeys(obj)) {
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }

@@ -1,0 +1,6 @@
+## 2025-05-18 — XSS Filter Payload and Prototype Stripping Vuln
+**Attacked:** The global Express XSS protection middleware in \`server.js\` (\`/api/*\`).
+**Found:** The custom regex-based \`escapeHtml\` function was buggy. It was incorrectly replacing \`<\` and \`>\` with the exact same literal character instead of HTML entities (\`&lt;\` and \`&gt;\`). Additionally, the custom \`sanitize\` recursive function was stripping prototypes of built-in objects like \`Date\` and \`Error\` by enumerating them as plain objects, and it lacked a recursion limit, making it susceptible to stack overflows from deeply nested payloads (DoS).
+**Severity:** 🔴 Exploitable now (XSS bypass across all endpoints since the middleware intercepted \`req.body\` and \`req.query\`).
+**Fixed or flagged:** Fixed. Replaced the custom buggy regex with the proven \`xss\` library (as per project memory) instantiated via \`new xss.FilterXSS()\`. Re-wrote the object traversal to enforce a \`MAX_DEPTH\` of 10, explicitly skip \`Date\` and \`Error\` instances, and use \`Reflect.ownKeys()\` to preserve object structure accurately.
+**Systemic pattern:** Home-rolled sanitization instead of using proven libraries. Any future middleware dealing with deep object traversal must include max depth limits and built-in type checks.
