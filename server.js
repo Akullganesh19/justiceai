@@ -281,6 +281,34 @@ function cosineSimilarity(vecA, vecB) {
   return div === 0 ? 0 : (dotProduct / div);
 }
 
+
+async function fetchWithRetry(url, options = {}, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      // Don't retry on successful responses or 4xx errors (except 408/429)
+      if (response.ok || (response.status >= 400 && response.status < 500 && response.status !== 408 && response.status !== 429)) {
+        return response;
+      }
+
+      // If it's a 5xx, 408, or 429, we should retry if we have attempts left
+      if (attempt === maxAttempts) {
+        return response; // Return the last response (even if error) if we're out of attempts
+      }
+
+      const delay = 100 * Math.pow(2, attempt - 1);
+      console.warn(`⚠️ ${options.method || 'GET'} ${url} failed with status ${response.status}. Retrying in ${delay}ms (Attempt ${attempt}/${maxAttempts})`);
+      await new Promise(r => setTimeout(r, delay));
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+
+      const delay = 100 * Math.pow(2, attempt - 1);
+      console.warn(`⚠️ ${options.method || 'GET'} ${url} failed with network error: ${err.message}. Retrying in ${delay}ms (Attempt ${attempt}/${maxAttempts})`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
 async function callGemini(messages, systemPrompt, overrideApiKey = null) {
   const apiKey = overrideApiKey || GEMINI_API_KEY;
   if (!apiKey) {
@@ -318,7 +346,7 @@ async function callGemini(messages, systemPrompt, overrideApiKey = null) {
     }
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -354,7 +382,7 @@ async function callDeepSeek(messages, systemPrompt, overrideApiKey = null) {
     max_tokens: 2048
   };
 
-  const response = await fetch(DEEPSEEK_BASE_URL, {
+  const response = await fetchWithRetry(DEEPSEEK_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -567,7 +595,7 @@ app.post('/api/voice/process', async (req, res) => {
       }
     };
 
-    const configResponse = await fetch(`${BHASHINI_BASE_URL}/config`, {
+    const configResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/config`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -598,7 +626,7 @@ app.post('/api/voice/process', async (req, res) => {
       pipelineResponseConfig: configData.pipelineResponseConfig
     };
 
-    const computeResponse = await fetch(`${BHASHINI_BASE_URL}/compute`, {
+    const computeResponse = await fetchWithRetry(`${BHASHINI_BASE_URL}/compute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
