@@ -124,13 +124,15 @@ const xssMiddleware = (req, res, next) => {
       .replace(/'/g, '&#039;');
   };
 
-  const sanitize = (obj) => {
+  const sanitize = (obj, depth = 0) => {
+    if (depth > 50) return null;
     if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
+    if (Array.isArray(obj)) return obj.map(item => sanitize(item, depth + 1));
+    if (obj instanceof Date || obj instanceof Error) return obj;
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }
