@@ -124,13 +124,14 @@ const xssMiddleware = (req, res, next) => {
       .replace(/'/g, '&#039;');
   };
 
-  const sanitize = (obj) => {
+  const sanitize = (obj, depth = 0) => {
+    if (depth > 20) return null;
     if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
-    if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
+    if (Array.isArray(obj)) return obj.map(item => sanitize(item, depth + 1));
+    if (obj && typeof obj === 'object' && !Object.isFrozen(obj) && !(obj instanceof Date) && !(obj instanceof Error)) {
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }
@@ -746,7 +747,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Get the latest user message to search for context
-    const latestUserMessage = messages[messages.length - 1].content;
+    const latestUserMessage = String(messages[messages.length - 1].content);
     
     let contextStr = '';
     let retrievedSources = [];
@@ -760,7 +761,7 @@ app.post('/api/chat', async (req, res) => {
           let score = cosineSimilarity(userVector, chunk.vector);
           
           // Boost chunks from the correct jurisdiction (filename-based tagging)
-          if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(jurisdiction.toLowerCase())) {
+          if (jurisdiction && String(jurisdiction) !== 'National' && chunk.source?.toLowerCase().includes(String(jurisdiction).toLowerCase())) {
             score += 0.2;
           }
           
