@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import winston from 'winston';
+import xss from 'xss';
 
 const require = createRequire(import.meta.url);
 const { PDFParse: pdfParse } = require('pdf-parse');
@@ -112,25 +113,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Prevent parameter pollution
 app.use(hpp());
 
+// Initialize XSS filter once
+const xssFilter = new xss.FilterXSS();
+
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
+  const sanitize = (obj, depth = 0) => {
+    if (depth > 10) return null; // Prevent stack overflow
+    if (typeof obj === 'string') return xssFilter.process(obj);
+    if (Array.isArray(obj)) return obj.map(item => sanitize(item, depth + 1));
+    if (obj instanceof Date || obj instanceof Error) return obj; // Preserve built-ins
 
-  const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }
