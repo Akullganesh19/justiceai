@@ -117,20 +117,22 @@ const xssMiddleware = (req, res, next) => {
   const escapeHtml = (str) => {
     if (!str) return str;
     return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   };
 
-  const sanitize = (obj) => {
+  const sanitize = (obj, depth = 0) => {
+    if (depth > 20) return null; // Prevent stack overflow on circular references
     if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
+    if (Array.isArray(obj)) return obj.map(item => sanitize(item, depth + 1));
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
+      if (obj instanceof Date || obj instanceof Error) return obj;
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }
@@ -760,7 +762,7 @@ app.post('/api/chat', async (req, res) => {
           let score = cosineSimilarity(userVector, chunk.vector);
           
           // Boost chunks from the correct jurisdiction (filename-based tagging)
-          if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(jurisdiction.toLowerCase())) {
+          if (jurisdiction && jurisdiction !== 'National' && chunk.source?.toLowerCase().includes(String(jurisdiction).toLowerCase())) {
             score += 0.2;
           }
           
