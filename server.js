@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import hpp from 'hpp';
 import multer from 'multer';
+import xss from 'xss';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -112,25 +113,24 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Prevent parameter pollution
 app.use(hpp());
 
+// Initialize XSS filter once for performance
+const xssFilter = new xss.FilterXSS();
+
 // Custom XSS protection middleware
 const xssMiddleware = (req, res, next) => {
-  const escapeHtml = (str) => {
-    if (!str) return str;
-    return str
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
-      .replace(/"/g, '"')
-      .replace(/'/g, '&#039;');
-  };
+  const sanitize = (obj, depth = 0) => {
+    if (depth > 100) return null; // Drop deeply nested data to prevent stack overflow
 
-  const sanitize = (obj) => {
-    if (typeof obj === 'string') return escapeHtml(obj);
-    if (Array.isArray(obj)) return obj.map(sanitize);
+    if (typeof obj === 'string') return xssFilter.process(obj);
+    if (Array.isArray(obj)) return obj.map(i => sanitize(i, depth + 1));
+
+    if (obj instanceof Date) return obj;
+    if (obj instanceof Error) return obj;
+
     if (obj && typeof obj === 'object' && !Object.isFrozen(obj)) {
       const sanitized = {};
       for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], depth + 1);
       }
       return sanitized;
     }
