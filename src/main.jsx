@@ -8,6 +8,8 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import './index.css';
+import { setupApiClient } from './lib/api-client.js';
+
 
 const handleGlobalTranscription = (text) => {
   // Dispatch a custom event that any page (like ChatPage) can listen for
@@ -50,6 +52,10 @@ function PageLoader() {
     </div>
   );
 }
+
+
+// Setup invisible infrastructure
+setupApiClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
